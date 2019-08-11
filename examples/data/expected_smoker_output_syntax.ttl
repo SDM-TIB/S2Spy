@@ -1,0 +1,23 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix iasis: <http://project-iasis.eu/vocab/>.
+
+iasis:1007602
+  iasis:numberOfCigarettesPerYear "10950" ;
+  iasis:numberOfCigarettesPerYear "1000" ;
+  iasis:smoking "current" ;
+  rdf:type iasis:LCPatient;
+  .
+
+iasis:1013702
+  iasis:numberOfCigarettesPerYear "0" ;
+  iasis:smoking "current" ;
+  rdf:type iasis:LCPatient;
+  .
+
+iasis:1022857
+  iasis:numberOfCigarettesPerYear "7300" ;
+  iasis:smoking "current" ;
+  rdf:type iasis:LCPatient;
+  .
