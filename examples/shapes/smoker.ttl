@@ -33,6 +33,6 @@ _:b1
 .
 
 _:b2
-  sh:path iasis:smoker ;
+  sh:path iasis:smoking ;
   sh:hasValue "current" ;
 .
