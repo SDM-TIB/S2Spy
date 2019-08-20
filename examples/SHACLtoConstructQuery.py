@@ -7,7 +7,7 @@ from targetObjectsOfConstraints import query_o_of, to_of_construct_query
 
 def get_construct_query(sg):
     type, target_value = get_target(sg)
-    print("Target: ", type, target_value)
+    #print("Target: ", type, target_value)
 
     if (type == "tc"):
         target_query = query_class()

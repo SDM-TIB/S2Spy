@@ -13,13 +13,13 @@ def main():
     sg = path.abspath(sg)
 
     construct_query = get_construct_query(sg)
-    print("Construct query:\n", construct_query)
+    #print("Construct query:\n", construct_query)
 
     sparql.setQuery(construct_query)
 
     ######################################
 
-    print('*** Creating file in Turtle Format ***')
+    #print('*** Creating file in Turtle Format ***')
     sparql.setReturnFormat(TURTLE)
     results = sparql.query().convert()
     g = Graph()
@@ -38,8 +38,7 @@ def main():
     conforms, v_graph, v_text = validate(data_ttl_file, shacl_graph=sg, inference='rdfs',
                                          serialize_report_graph=True)
 
-    print(conforms)
-    print(v_graph)
+    #print(v_graph)
     print(v_text)
 
 
