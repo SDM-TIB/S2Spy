@@ -66,7 +66,7 @@ class Validator(object):
             assert result_len > 0, \
                 "A Non-Conformant Validation Report must have at least one result."
         if result_len > 0:
-            v_text += "Results ({}):\n".format(str(result_len))
+            v_text += "Number of constraint violations ({}):\n\n".format(str(result_len))
         vg = rdflib.Graph()
         sg = shacl_graph.graph
         for p, n in sg.namespace_manager.namespaces():
