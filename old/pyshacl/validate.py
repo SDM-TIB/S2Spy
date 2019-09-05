@@ -6,15 +6,15 @@ import owlrl
 
 if owlrl.json_ld_available:
     import rdflib_jsonld
-from pyshacl.errors import ReportableRuntimeError, ValidationFailure
-from pyshacl.inference import CustomRDFSSemantics, CustomRDFSOWLRLSemantics
-from pyshacl.shacl_graph import SHACLGraph
-from pyshacl.consts import RDF_type, SH_conforms, \
+from SDMpyshacl.errors import ReportableRuntimeError, ValidationFailure
+from SDMpyshacl.inference import CustomRDFSSemantics, CustomRDFSOWLRLSemantics
+from SDMpyshacl.shacl_graph import SHACLGraph
+from SDMpyshacl.consts import RDF_type, SH_conforms, \
     SH_result, SH_ValidationReport, RDFS_Resource, SH_resultMessage, \
     SH_sourceShape, SH_sourceConstraint, SH_resultPath
-from pyshacl.rdfutil import load_from_source, clone_graph, \
+from SDMpyshacl.rdfutil import load_from_source, clone_graph, \
     clone_node, compare_blank_node, mix_graphs
-from pyshacl.monkey import apply_patches
+from SDMpyshacl.monkey import apply_patches
 
 log_handler = logging.StreamHandler(stderr)
 log = logging.getLogger(__name__)

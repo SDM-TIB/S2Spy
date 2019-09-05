@@ -1,4 +1,4 @@
-from pyshacl import graph_query_result, get_target
+from SDMpyshacl import graph_query_result, get_target
 
 from targetClassConstraints import query_class, tc_construct_query
 from targetNodeConstraints import query_node, tn_construct_query
