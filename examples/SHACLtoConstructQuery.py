@@ -1,4 +1,4 @@
-from SDMpyshacl import graph_query_result, get_target
+from pyshacl import graph_query_result, get_target
 
 from targetClassConstraints import query_class, tc_construct_query
 from targetNodeConstraints import query_node, tn_construct_query
@@ -7,7 +7,7 @@ from targetObjectsOfConstraints import query_o_of, to_of_construct_query
 
 def get_construct_query(sg):
     type, target_value = get_target(sg)
-    #print("Target: ", type, target_value)
+    print("Target: ", type, target_value)
 
     if (type == "tc"):
         target_query = query_class()

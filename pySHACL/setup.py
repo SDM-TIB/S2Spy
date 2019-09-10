@@ -14,7 +14,7 @@ def open_local(paths, mode='r', encoding='utf8'):
     return io.open(path, mode, encoding=encoding)
 
 
-with open_local(['SDMpyshacl', '__init__.py'], encoding='latin1') as fp:
+with open_local(['pyshacl', '__init__.py'], encoding='latin1') as fp:
     try:
         version = re.findall(r"^__version__ = '([^']+)'\r?$",
                              fp.read(), re.M)[0]
@@ -37,12 +37,12 @@ with open_local(['requirements.txt']) as req:
             requirements.append(f.strip())
 
 setup(
-    name='SDMpyshacl',
+    name='pyshacl',
     packages=[
-        'SDMpyshacl',
-        'SDMpyshacl.constraints', 'SDMpyshacl.constraints.core', 'SDMpyshacl.constraints.sparql',
-        'SDMpyshacl.rules', 'SDMpyshacl.rules.triple', 'SDMpyshacl.rules.sparql',
-        'SDMpyshacl.inference', 'SDMpyshacl.rdfutil', 'SDMpyshacl.monkey'
+        'pyshacl',
+        'pyshacl.constraints', 'pyshacl.constraints.core', 'pyshacl.constraints.sparql',
+        'pyshacl.rules', 'pyshacl.rules.triple', 'pyshacl.rules.sparql',
+        'pyshacl.inference', 'pyshacl.rdfutil', 'pyshacl.monkey'
     ],
     entry_points={'console_scripts': ['pyshacl = pyshacl.cli:main']},
     package_dir={'pyshacl': './pyshacl'},
