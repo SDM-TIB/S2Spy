@@ -3,7 +3,7 @@ from os import path
 from SHACLtoConstructQuery import get_construct_query
 from SPARQLWrapper import SPARQLWrapper, TURTLE
 from rdflib import Graph
-from pyshacl import validate
+from SDMpyshacl import validate
 from utils import lastStringURL
 
 def main():

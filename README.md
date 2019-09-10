@@ -2,4 +2,4 @@
 
 Install the modified pySHACL module:
 1. cd pySHACL
-2. python3 setup.py develop
+2. sudo python3 setup.py develop
