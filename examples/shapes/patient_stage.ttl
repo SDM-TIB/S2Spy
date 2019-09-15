@@ -5,43 +5,105 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix ex: <http://datashapes.org/sh/tests/core/complex/example.test#> .
 @prefix iasis: <http://project-iasis.eu/vocab/>.
+@prefix diag: <http://project-iasis.eu/Diagnosis/> .
+@prefix ns2: <http://project-iasis.eu/TumorStage/> .
 
-<http://datashapes.org/sh/tests/core/complex/personexample.test>
-  rdf:type owl:Ontology ;
-  rdfs:label "Test example" ;
-  owl:imports <http://datashapes.org/dash> ;
-  owl:versionInfo "Version 1" ;
-.
 
-ex:Example
+ex:LCPatientShape
   a sh:NodeShape ;
   sh:closed "false"^^xsd:boolean ;
   sh:ignoredProperties (
       rdf:type
     ) ;
 
-sh:targetClass iasis:Diagnosis ;
+  sh:targetClass iasis:LCPatient ;
   sh:property [
-    sh:path iasis:hasDiagnosisTumorStage ;
+    sh:path iasis:existenceOf_systemicProgression ;
   ];
- sh:targetClass iasis:LCPatient ;
-  sh:property [
-    sh:path iasis:existenceOf_systemicProgression;
-    ];
 
-  sh:or (
+  sh:property [
+    sh:path iasis:hasDiagnosis ;
+    sh:node ex:diagnosisShape ;
+  ];
+  sh:node ex:rule_01 ;
+  sh:node ex:rule_02 ;
+.
+
+# if systemicProgression==True then TumorStage==IV
+ex:rule_01
+    sh:or (
 		[
 		sh:not [
 		    sh:property [
-		    sh:path iasis:hasDiagnosisTumorStage ;
+		    sh:path iasis:existenceOf_systemicProgression ;
 		    sh:datatype xsd:string ;
-			sh:hasValue "IV" ;
+			sh:hasValue "True" ;
 		]]]
 		[sh:property [
-			sh:path iasis:existenceOf_systemicProgression ;
-            sh:datatype xsd:string ;
-			sh:hasValue "True" ;
-            sh:message "If a patient has “stage”= IV them systemicProgression “True”";
+		    sh:path iasis:hasDiagnosis ;
+		    sh:node ex:diagnosis_testing_01;
+            #sh:message " if systemicProgression==True then TumorStage==IV";
         ]]
-        )
-        .
+        );
+.
+
+# if systemicProgression==False then TumorStage!=IV
+ex:rule_02
+    sh:or (
+		[
+		sh:not [
+		    sh:property [
+		    sh:path iasis:existenceOf_systemicProgression ;
+		    sh:datatype xsd:string ;
+			sh:hasValue "False" ;
+		]]]
+		#[sh:node ex:diagnosis_testing ;]
+		[sh:property [
+		    sh:path iasis:hasDiagnosis ;
+		    sh:node ex:diagnosis_testing_02 ;
+            #sh:message "if systemicProgression==False then TumorStage!=IV";
+        ]]
+        );
+.
+
+ex:diagnosisShape
+    a sh:NodeShape ;
+    sh:property [
+          sh:path iasis:hasDiagnosisTumorStage ;
+          sh:node ex:diagnosisTumorShape ;
+    ];
+.
+
+ex:diagnosisTumorShape
+    a sh:NodeShape ;
+      sh:property [
+        sh:path iasis:tumorStageLabel ;
+        sh:datatype xsd:string ;
+      ];
+.
+
+ex:diagnosis_testing_01
+    a sh:NodeShape ;
+    sh:property [
+          sh:path iasis:hasDiagnosisTumorStage ;
+          sh:property [
+            sh:path iasis:tumorStageLabel ;
+            sh:datatype xsd:string ;
+            sh:hasValue "IV" ;
+            sh:message "Error rule 01";
+    ]];
+.
+
+ex:diagnosis_testing_02
+    a sh:NodeShape ;
+    sh:property [
+          sh:path iasis:hasDiagnosisTumorStage ;
+          sh:property [
+            sh:path iasis:tumorStageLabel ;
+            sh:datatype xsd:string ;
+            sh:in ("I" "II" "III") ;
+            sh:message "Error rule 02";
+    ]];
+.
+
+# sh:pattern "^(?!IV).*$" ;

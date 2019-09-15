@@ -1,6 +1,6 @@
 from pyshacl import graph_query_result, get_target
 
-from targetClassConstraints import query_class, tc_construct_query
+from targetClassConstraints import query_class, query_class_inner_nodes, tc_construct_query
 from targetNodeConstraints import query_node, tn_construct_query
 from targetSubjectsOfConstraints import query_s_of, ts_of_construct_query
 from targetObjectsOfConstraints import query_o_of, to_of_construct_query
@@ -11,9 +11,13 @@ def get_construct_query(sg):
 
     if (type == "tc"):
         target_query = query_class()
-        qres = graph_query_result(sg, target_query)  # data obtained from the evaluated query containing target subjects
-                                                     # and predicates that I'm going to use to get the data from the endpoint
-        return tc_construct_query(qres)
+        query_inner_nodes = query_class_inner_nodes()
+
+        qres_base = graph_query_result(sg, target_query)  # data obtained from the evaluated query containing target subjects
+                                                          # and predicates that I'm going to use to get the data from the endpoint
+        qres_inner_nodes = graph_query_result(sg, query_inner_nodes)
+
+        return tc_construct_query(qres_base, qres_inner_nodes)
 
     elif (type == "n"):
         node, prop = query_node()

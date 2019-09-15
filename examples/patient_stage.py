@@ -8,13 +8,13 @@ from rdflib import Graph
 from utils import lastStringURL
 
 def main():
-    sparql = SPARQLWrapper("http://node2.research.tib.eu:18971/sparql")
+    sparql = SPARQLWrapper("http://dbpedia.org/sparql")
 
     sg = "./shapes/patient_stage.ttl"
     sg = path.abspath(sg)
 
     construct_query = get_construct_query(sg)
-    #print("Construct query:\n", construct_query)
+    print("Construct query:\n", construct_query)
 
     sparql.setQuery(construct_query)
 
