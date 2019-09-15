@@ -8,7 +8,7 @@ from rdflib import Graph
 from utils import lastStringURL
 
 def main():
-    sparql = SPARQLWrapper("http://dbpedia.org/sparql")
+    sparql = SPARQLWrapper("http://node2.research.tib.eu:18971/sparql")
 
     sg = "./shapes/patient_stage.ttl"
     sg = path.abspath(sg)
