@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from os import path
 from pyshacl import validate
-from SHACLtoConstructQuery import get_construct_query
+from pyshacl import get_construct_query
 from SPARQLWrapper import SPARQLWrapper, TURTLE
 from rdflib import Graph
 

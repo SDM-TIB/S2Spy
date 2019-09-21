@@ -1,9 +1,9 @@
-from pyshacl import graph_query_result, get_target
+from pyshacl.wrapper import graph_query_result, get_target
 
-from targetClassConstraints import query_class, query_class_inner_nodes, tc_construct_query
-from targetNodeConstraints import query_node, tn_construct_query
-from targetSubjectsOfConstraints import query_s_of, ts_of_construct_query
-from targetObjectsOfConstraints import query_o_of, to_of_construct_query
+from pyshacl.wrapper.queries.targetClassConstraints import query_class, query_class_inner_nodes, tc_construct_query
+from pyshacl.wrapper.queries.targetNodeConstraints import query_node, tn_construct_query
+from pyshacl.wrapper.queries.targetSubjectsOfConstraints import query_s_of, ts_of_construct_query
+from pyshacl.wrapper.queries.targetObjectsOfConstraints import query_o_of, to_of_construct_query
 
 def get_construct_query(sg):
     type, target_value = get_target(sg)

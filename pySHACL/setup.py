@@ -42,7 +42,7 @@ setup(
         'pyshacl',
         'pyshacl.constraints', 'pyshacl.constraints.core', 'pyshacl.constraints.sparql',
         'pyshacl.rules', 'pyshacl.rules.triple', 'pyshacl.rules.sparql',
-        'pyshacl.inference', 'pyshacl.rdfutil', 'pyshacl.monkey'
+        'pyshacl.inference', 'pyshacl.rdfutil', 'pyshacl.monkey', 'pyshacl.wrapper'
     ],
     entry_points={'console_scripts': ['pyshacl = pyshacl.cli:main']},
     package_dir={'pyshacl': './pyshacl'},
