@@ -19,7 +19,7 @@ def shapes_graph_to_test():
     return constraints
 
 def get_reduced_data_from_endpoint(sg):
-    sparql = SPARQLWrapper("http://node3.research.tib.eu:9002/sparql")
+    sparql = SPARQLWrapper("http://node3.research.tib.eu:9003/sparql")
 
     construct_query = get_construct_query(sg)
     print("Construct query:\n", construct_query)
@@ -48,7 +48,7 @@ def main(sg, extended_approach):
         data_ttl_file = get_reduced_data_from_endpoint(sg)
     else:
         # use locally saved data
-        data_ttl_file = "data/hop2.ttl"
+        data_ttl_file = "data/hop3.ttl"
     loading_time_end = time.time()
 
     validation_time_start = time.time()
