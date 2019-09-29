@@ -15,6 +15,9 @@ def shapes_graph_to_test():
     constraints.append("./shapes/smoker.ttl")
     constraints.append("./shapes/patient_stage.ttl")
     constraints.append("./shapes/biomarker.ttl")
+    constraints.append("./shapes/biomarker_tki.ttl")
+    constraints.append("./shapes/chemotherapy_chemoName.ttl")
+    constraints.append("./shapes/brainMetastasis_stage.ttl")
 
     return constraints
 

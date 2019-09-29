@@ -1,0 +1,69 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <http://datashapes.org/sh/tests/core/complex/example.test#> .
+@prefix iasis: <http://project-iasis.eu/vocab/>.
+
+<http://datashapes.org/sh/tests/core/complex/personexample.test>
+  rdf:type owl:Ontology ;
+  rdfs:label "Test example" ;
+  owl:imports <http://datashapes.org/dash> ;
+  owl:versionInfo "Version 1" ;
+.
+
+ex:Example
+  a sh:NodeShape ;
+  sh:closed "false"^^xsd:boolean ;
+  sh:ignoredProperties (
+      rdf:type
+    ) ;
+
+  sh:targetClass iasis:LCPatient ;
+  sh:property [
+  sh:path iasis:existenceOf_biomarker ;
+  ];
+  sh:property [
+    sh:path iasis:existenceOf_tki ;
+  ];
+
+  #If a patient has Tki True then biomarker is True
+  sh:or (
+		[
+		sh:not [
+		    sh:and (
+		    [
+		    sh:property [
+		    sh:path iasis:existenceOf_tki ;
+		    sh:datatype xsd:string ;
+			sh:hasValue "True" ;
+		]])
+		]]
+		[sh:property [
+			sh:path iasis:existenceOf_biomarker ;
+            sh:datatype xsd:string ;
+            sh:hasValue "True" ;
+            sh:message "If a patient has Tki True then biomarker is True";
+        ]]
+        );
+
+    #If a patient has Tki False then biomarker is False
+sh:or (
+		[
+		sh:not [
+		    sh:and (
+		    [
+		    sh:property [
+		    sh:path iasis:existenceOf_tki ;
+		    sh:datatype xsd:string ;
+			sh:hasValue "False" ;
+		]])
+		]]
+		[sh:property [
+			sh:path iasis:existenceOf_biomarker ;
+            sh:datatype xsd:string ;
+            sh:hasValue "False" ;
+            sh:message "If a patient has Tki False then biomarker is False";
+        ]]
+        ).
