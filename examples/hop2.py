@@ -12,18 +12,19 @@ def select_shapes_graph():
     c1 = "./shapes/smoker.ttl"
     c2 = "./shapes/patient_stage.ttl"
     c3 = "./shapes/biomarker.ttl"
+    c4 = "./shapes/patient_diagn_tumtype.ttl"
 
-    sg = c1
+    sg = c4
 
     sg = path.abspath(sg)
 
     return sg
 
 def main(sg):
-    extended_approach = False
+    extended_approach = True
 
     if extended_approach:
-        sparql = SPARQLWrapper("http://node3.research.tib.eu:9002/sparql")
+        sparql = SPARQLWrapper("http://dbpedia.org/sparql")
 
 
         construct_query = get_construct_query(sg)

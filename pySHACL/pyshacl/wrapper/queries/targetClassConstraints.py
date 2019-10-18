@@ -45,10 +45,12 @@ def tc_construct_query(evaluated_query, inner_nodes):
         attrs.append(obj[1])
 
     triples = ""
-    triples += "?s" + " " + "a" + " <" + prefixes[0] + subjs[0] + ">.\n"
+
+    for i, s in enumerate(subjs):
+        triples += "?" + s + " " + "a" + " <" + prefixes[0] + s + ">.\n"
 
     for i, o in enumerate(attrs):
-        triples += "?s" + " <" + prefixes[i] + o + "> " + "?" + o + ".\n"
+        triples += "?" + subjs[i] + " <" + prefixes[i] + o + "> " + "?" + o + ".\n"
 
     query = "CONSTRUCT {\n" + triples + inner_triples + "}\n" + \
                 "WHERE {\n" + triples + inner_triples + "}"
