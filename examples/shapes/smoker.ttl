@@ -13,9 +13,19 @@
 .
 
 iasis:SmokerShape
-  rdf:type sh:NodeShape ;
+  a sh:NodeShape ;
   sh:closed "false"^^xsd:boolean ;
+
   sh:targetClass iasis:LCPatient ;
+
+  sh:property [
+    sh:path iasis:numberOfCigarettesPerYear;
+  ];
+
+  sh:property [
+    sh:path iasis:smoking ;
+  ];
+
   sh:or (
     [
       sh:property [

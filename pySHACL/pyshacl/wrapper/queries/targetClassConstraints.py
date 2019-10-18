@@ -47,7 +47,7 @@ def tc_construct_query(evaluated_query, inner_nodes):
     triples = ""
 
     for i, s in enumerate(subjs):
-        triples += "?" + s + " " + "a" + " <" + prefixes[0] + s + ">.\n"
+        triples += "?" + s + " " + "a" + " <" + prefixes[i] + s + ">.\n"
 
     for i, o in enumerate(attrs):
         triples += "?" + subjs[i] + " <" + prefixes[i] + o + "> " + "?" + o + ".\n"

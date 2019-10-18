@@ -24,7 +24,7 @@ def main(sg):
     extended_approach = True
 
     if extended_approach:
-        sparql = SPARQLWrapper("http://dbpedia.org/sparql")
+        sparql = SPARQLWrapper("http://node3.research.tib.eu:9002/sparql")
 
 
         construct_query = get_construct_query(sg)

@@ -3,18 +3,12 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix ex: <http://datashapes.org/sh/tests/core/complex/example.test#> .
 @prefix iasis: <http://project-iasis.eu/vocab/>.
-@prefix diag: <http://project-iasis.eu/Diagnosis/> .
-@prefix ns2: <http://project-iasis.eu/TumorStage/> .
 
 
-ex:LCPatientShape
+iasis:LCPatientShape
   a sh:NodeShape ;
   sh:closed "false"^^xsd:boolean ;
-  sh:ignoredProperties (
-      rdf:type
-    ) ;
 
   sh:targetClass iasis:LCPatient ;
   sh:property [
@@ -23,14 +17,14 @@ ex:LCPatientShape
 
   sh:property [
     sh:path iasis:hasDiagnosis ;
-    sh:node ex:diagnosisShape ;
+    sh:node iasis:DiagnosisShape ;
   ];
-  sh:node ex:rule_01 ;
-  sh:node ex:rule_02 ;
+  sh:node iasis:rule_01 ;
+  sh:node iasis:rule_02 ;
 .
 
 # if systemicProgression==True then TumorStage==IV
-ex:rule_01
+iasis:rule_01
     sh:or (
 		[
 		sh:not [
@@ -41,14 +35,14 @@ ex:rule_01
 		]]]
 		[sh:property [
 		    sh:path iasis:hasDiagnosis ;
-		    sh:node ex:diagnosis_testing_01;
+		    sh:node iasis:diagnosis_testing_01;
             #sh:message " if systemicProgression==True then TumorStage==IV";
         ]]
         );
 .
 
 # if systemicProgression==False then TumorStage!=IV
-ex:rule_02
+iasis:rule_02
     sh:or (
 		[
 		sh:not [
@@ -57,24 +51,24 @@ ex:rule_02
 		    sh:datatype xsd:string ;
 			sh:hasValue "False" ;
 		]]]
-		#[sh:node ex:diagnosis_testing ;]
+		#[sh:node iasis:diagnosis_testing ;]
 		[sh:property [
 		    sh:path iasis:hasDiagnosis ;
-		    sh:node ex:diagnosis_testing_02 ;
+		    sh:node iasis:diagnosis_testing_02 ;
             #sh:message "if systemicProgression==False then TumorStage!=IV";
         ]]
         );
 .
 
-ex:diagnosisShape
+iasis:DiagnosisShape
     a sh:NodeShape ;
     sh:property [
           sh:path iasis:hasDiagnosisTumorStage ;
-          sh:node ex:diagnosisTumorShape ;
+          sh:node iasis:DiagnosisTumorShape ;
     ];
 .
 
-ex:diagnosisTumorShape
+iasis:DiagnosisTumorShape
     a sh:NodeShape ;
       sh:property [
         sh:path iasis:tumorStageLabel ;
@@ -82,7 +76,7 @@ ex:diagnosisTumorShape
       ];
 .
 
-ex:diagnosis_testing_01
+iasis:diagnosis_testing_01
     a sh:NodeShape ;
     sh:property [
           sh:path iasis:hasDiagnosisTumorStage ;
@@ -94,7 +88,7 @@ ex:diagnosis_testing_01
     ]];
 .
 
-ex:diagnosis_testing_02
+iasis:diagnosis_testing_02
     a sh:NodeShape ;
     sh:property [
           sh:path iasis:hasDiagnosisTumorStage ;
