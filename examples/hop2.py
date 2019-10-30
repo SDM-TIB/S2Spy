@@ -15,8 +15,9 @@ def select_shapes_graph():
     c4 = "./shapes/patient_diagn_tumtype.ttl"
 
     actor = "./shapes/dbpedia/ActorShape.ttl"
+    movie = "./shapes/dbpedia/MovieShape.ttl"
 
-    sg = actor
+    sg = movie
 
     sg = path.abspath(sg)
 

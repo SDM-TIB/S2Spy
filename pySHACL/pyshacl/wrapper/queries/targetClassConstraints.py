@@ -25,9 +25,8 @@ def query_class_inner_nodes():
     }'''
 
 def tc_construct_query(evaluated_query, inner_nodes):
-    prefixes = []
-    subjs = []
-    attrs = []
+    subjs = set()
+    props = []
 
     inner_triples = ''
     for row in inner_nodes:
@@ -38,19 +37,19 @@ def tc_construct_query(evaluated_query, inner_nodes):
 
     for row in evaluated_query:
         node = lastStringURL(row[1])
-        obj = lastStringURL(row[2])
+        subjs.add("?" + node[1] + " a " + " <" + str(row[1]) + ">.\n")
 
-        prefixes.append(node[0] + '/')
-        subjs.append(node[1])
-        attrs.append(obj[1])
+        prop = lastStringURL(row[2])
+        props.append({"subj_var": "?" + node[1], "prop": " <" + str(row[2]) + "> ", "var": " ?" + prop[1]})
+
 
     triples = ""
 
-    for i, s in enumerate(subjs):
-        triples += "?" + s + " " + "a" + " <" + prefixes[i] + s + ">.\n"
+    for s in subjs:
+        triples += s
 
-    for i, o in enumerate(attrs):
-        triples += "?" + subjs[i] + " <" + prefixes[i] + o + "> " + "?" + o + ".\n"
+    for i, p in enumerate(props):
+        triples += p["subj_var"] + p["prop"] + p["var"] + ".\n"
 
     query = "CONSTRUCT {\n" + triples + inner_triples + "}\n" + \
                 "WHERE {\n" + triples + inner_triples + "}"
