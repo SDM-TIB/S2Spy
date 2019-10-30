@@ -4,6 +4,9 @@ from pyshacl.wrapper.queries.targetClassConstraints import query_class, query_cl
 from pyshacl.wrapper.queries.targetNodeConstraints import query_node, tn_construct_query
 from pyshacl.wrapper.queries.targetSubjectsOfConstraints import query_s_of, ts_of_construct_query
 from pyshacl.wrapper.queries.targetObjectsOfConstraints import query_o_of, to_of_construct_query
+from pyshacl.wrapper.queries.noTargetConstraints import query_no_target, nt_construct_query
+
+
 
 def get_construct_query(sg):
     type, target_value = get_target(sg)
@@ -32,8 +35,14 @@ def get_construct_query(sg):
 
         return ts_of_construct_query(target_value)
 
-    else:
+    elif (type == "o_of"):
         target_query = query_o_of()
         qres = graph_query_result(sg, target_query)
 
         return to_of_construct_query(qres, target_value)
+
+    elif (type == "none"):
+        query = query_no_target()
+        qres = graph_query_result(sg, query)
+
+        return nt_construct_query(qres)

@@ -53,4 +53,4 @@ def get_target(shacl_graph, **kwargs):
         for o_of in iter(target_objects_of):
             return ("o_of", o_of)
 
-    return ''
+    return ('none', None)
