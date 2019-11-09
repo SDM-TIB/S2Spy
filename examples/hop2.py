@@ -17,7 +17,7 @@ def select_shapes_graph():
     actor = "./shapes/dbpedia/ActorShape.ttl"
     movie = "./shapes/dbpedia/MovieShape.ttl"
 
-    sg = movie
+    sg = c1
 
     sg = path.abspath(sg)
 
@@ -27,8 +27,7 @@ def main(sg):
     extended_approach = True
 
     if extended_approach:
-        sparql = SPARQLWrapper("http://dbpedia.org/sparql")
-
+        sparql = SPARQLWrapper("http://node3.research.tib.eu:9003/sparql")
 
         construct_query = get_construct_query(sg)
         print("Construct query:\n", construct_query)
@@ -39,22 +38,14 @@ def main(sg):
         results = sparql.query().convert()
         g = Graph()
         g.parse(data=results, format="turtle")
-        g.serialize(format='turtle')
 
-        filename = lastStringURL(sg)[1]
-        file_path = "data/retrieved/" + filename
-        file = open(file_path, "wb")
-        g.serialize(destination=file, format="turtle")
-        file.flush()
-        file.close()
-
-        data_ttl_file = path.abspath(file_path)
-
+        conforms, v_graph, v_text = validate(g, shacl_graph=sg, inference='rdfs',
+                                         serialize_report_graph=True)
     else:
         # use locally saved data
         data_ttl_file = "data/hop2.ttl"
 
-    conforms, v_graph, v_text = validate(data_ttl_file, shacl_graph=sg, inference='rdfs',
+        conforms, v_graph, v_text = validate(data_ttl_file, shacl_graph=sg, inference='rdfs',
                                          serialize_report_graph=True)
 
     print(v_text)
