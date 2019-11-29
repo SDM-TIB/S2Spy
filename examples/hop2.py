@@ -25,6 +25,7 @@ def select_shapes_graph():
 
 def main(sg):
     extended_approach = True
+    save_graph = False
 
     if extended_approach:
         sparql = SPARQLWrapper("http://node3.research.tib.eu:9003/sparql")
@@ -39,7 +40,23 @@ def main(sg):
         g = Graph()
         g.parse(data=results, format="turtle")
 
-        conforms, v_graph, v_text = validate(g, shacl_graph=sg, inference='rdfs',
+        if save_graph:
+            g.serialize(format='turtle')
+
+            filename = lastStringURL(sg)[1]
+            file_path = "data/retrieved/" + filename
+            file = open(file_path, "wb")
+            g.serialize(destination=file, format="turtle")
+            file.flush()
+            file.close()
+
+            data_ttl_file = path.abspath(file_path)
+
+            data_graph = data_ttl_file
+        else:
+            data_graph = g
+
+        conforms, v_graph, v_text = validate(data_graph, shacl_graph=sg, inference='rdfs',
                                          serialize_report_graph=True)
     else:
         # use locally saved data

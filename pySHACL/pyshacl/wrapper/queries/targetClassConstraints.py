@@ -51,6 +51,7 @@ def tc_construct_query(evaluated_query, inner_nodes):
     for i, p in enumerate(props):
         triples += p["subj_var"] + p["prop"] + p["var"] + ".\n"
 
-    query = "SELECT * WHERE {\n" + triples + inner_triples + "}\n"
+    query = "CONSTRUCT {\n" + triples + inner_triples + "}\n" + \
+            "WHERE {\n" + triples + inner_triples + "}"
 
     return query
