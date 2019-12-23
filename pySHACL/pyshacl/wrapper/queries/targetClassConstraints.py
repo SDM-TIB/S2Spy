@@ -37,7 +37,7 @@ def tc_construct_query(evaluated_query, inner_nodes):
 
     for row in evaluated_query:
         node = lastStringURL(row[1])
-        subjs.add("?" + node[1] + " a " + " <" + str(row[1]) + ">.\n")
+        subjs.add("?" + node[1] + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> " + " <" + str(row[1]) + ">.\n")
 
         prop = lastStringURL(row[2])
         props.append({"subj_var": "?" + node[1], "prop": " <" + str(row[2]) + "> ", "var": " ?" + prop[1]})
@@ -51,7 +51,9 @@ def tc_construct_query(evaluated_query, inner_nodes):
     for i, p in enumerate(props):
         triples += p["subj_var"] + p["prop"] + p["var"] + ".\n"
 
-    query = "CONSTRUCT {\n" + triples + inner_triples + "}\n" + \
-            "WHERE {\n" + triples + inner_triples + "}"
+    #query = "CONSTRUCT {\n" + triples + inner_triples + "}\n" + \
+    #        "WHERE {\n" + triples + inner_triples + "}"
+
+    query = "SELECT * WHERE {\n" + triples + inner_triples + "}\n"
 
     return query

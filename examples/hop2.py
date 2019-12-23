@@ -2,8 +2,8 @@
 from os import path
 from pyshacl import validate
 from pyshacl import get_construct_query
-from SPARQLWrapper import SPARQLWrapper, TURTLE
-from rdflib import Graph
+from SPARQLWrapper import SPARQLWrapper, TURTLE, JSONLD, RDF, JSON
+from rdflib import Graph, plugin
 
 from utils import lastStringURL
 import time
@@ -17,7 +17,7 @@ def select_shapes_graph():
     actor = "./shapes/dbpedia/ActorShape.ttl"
     movie = "./shapes/dbpedia/MovieShape.ttl"
 
-    sg = c1
+    sg = actor
 
     sg = path.abspath(sg)
 
@@ -28,25 +28,29 @@ def main(sg):
     save_graph = False
 
     if extended_approach:
-        sparql = SPARQLWrapper("http://node3.research.tib.eu:9003/sparql")
+        start = time.time()
 
-        construct_query = get_construct_query(sg)
-        print("Construct query:\n", construct_query)
+        sparql = SPARQLWrapper("http://dbpedia.org/sparql")
 
-        sparql.setQuery(construct_query)
+        query = get_construct_query(sg)
+        print("Query:\n", query)
 
-        sparql.setReturnFormat(TURTLE)
+        sparql.setQuery(query)
+
+        sparql.setReturnFormat(JSONLD)
         results = sparql.query().convert()
-        g = Graph()
-        g.parse(data=results, format="turtle")
+        #for result in results["results"]["bindings"]:
+        #    print(result)
+        end = time.time()
+
+        print("Runtime: ", end - start)
 
         if save_graph:
-            g.serialize(format='turtle')
 
             filename = lastStringURL(sg)[1]
             file_path = "data/retrieved/" + filename
             file = open(file_path, "wb")
-            g.serialize(destination=file, format="turtle")
+            results.serialize(destination=file, format="json-ld")
             file.flush()
             file.close()
 
@@ -54,10 +58,9 @@ def main(sg):
 
             data_graph = data_ttl_file
         else:
-            data_graph = g
+            data_graph = results
 
-        conforms, v_graph, v_text = validate(data_graph, shacl_graph=sg, inference='rdfs',
-                                         serialize_report_graph=True)
+        #conforms, v_graph, v_text = validate(data_graph, shacl_graph=sg, inference='rdfs', serialize_report_graph=True)
     else:
         # use locally saved data
         data_ttl_file = "data/hop2.ttl"
@@ -65,14 +68,10 @@ def main(sg):
         conforms, v_graph, v_text = validate(data_ttl_file, shacl_graph=sg, inference='rdfs',
                                          serialize_report_graph=True)
 
-    print(v_text)
+    #print(v_text)
 
 if __name__ == '__main__':
 
     sg = select_shapes_graph()
 
-    start = time.time()
     main(sg)
-    end = time.time()
-
-    print("Runtime: ", end - start)

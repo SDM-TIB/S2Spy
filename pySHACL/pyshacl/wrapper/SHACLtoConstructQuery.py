@@ -6,8 +6,6 @@ from pyshacl.wrapper.queries.targetSubjectsOfConstraints import query_s_of, ts_o
 from pyshacl.wrapper.queries.targetObjectsOfConstraints import query_o_of, to_of_construct_query
 from pyshacl.wrapper.queries.noTargetConstraints import query_no_target, nt_construct_query
 
-
-
 def get_construct_query(sg):
     type, target_value = get_target(sg)
     print("Target: ", type, target_value)
