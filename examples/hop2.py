@@ -36,8 +36,7 @@ def get_data_turtle_format(query, results):
     template_for_triples = re.sub(pattern, replace, string)
     print("Template: ", template_for_triples)
 
-    data_turtle_format = ''
-    triples = []
+    triples = ''
     for result in results["results"]["bindings"]:
         template_copy = template_for_triples
         for key, props in result.items():
@@ -46,9 +45,9 @@ def get_data_turtle_format(query, results):
                 template_copy = re.sub(pattern, ' "' + props["value"] + '" ', template_copy)
             elif props["type"] == "uri":
                 template_copy = re.sub(pattern, ' <' + props["value"] + '> ', template_copy)
-            triples.append(template_copy)
+            triples += template_copy + '\n'
 
-    return data_turtle_format.join(triples)
+    return triples
 
 def main(sg, option):
 
