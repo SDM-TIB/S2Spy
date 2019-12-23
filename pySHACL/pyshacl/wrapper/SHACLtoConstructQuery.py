@@ -1,12 +1,12 @@
 from pyshacl.wrapper import graph_query_result, get_target
 
-from pyshacl.wrapper.queries.targetClassConstraints import query_class, query_class_inner_nodes, tc_construct_query
+from pyshacl.wrapper.queries.targetClassConstraints import query_class, query_class_inner_nodes, tc_query
 from pyshacl.wrapper.queries.targetNodeConstraints import query_node, tn_construct_query
 from pyshacl.wrapper.queries.targetSubjectsOfConstraints import query_s_of, ts_of_construct_query
 from pyshacl.wrapper.queries.targetObjectsOfConstraints import query_o_of, to_of_construct_query
 from pyshacl.wrapper.queries.noTargetConstraints import query_no_target, nt_construct_query
 
-def get_construct_query(sg):
+def get_query(sg, option):
     type, target_value = get_target(sg)
     print("Target: ", type, target_value)
 
@@ -18,7 +18,7 @@ def get_construct_query(sg):
                                                           # and predicates that I'm going to use to get the data from the endpoint
         qres_inner_nodes = graph_query_result(sg, query_inner_nodes)
 
-        return tc_construct_query(qres_base, qres_inner_nodes)
+        return tc_query(qres_base, qres_inner_nodes, option)
 
     elif (type == "n"):
         node, prop = query_node()

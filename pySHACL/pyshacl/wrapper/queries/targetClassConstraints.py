@@ -24,7 +24,7 @@ def query_class_inner_nodes():
         FILTER (?node2 = ?node)
     }'''
 
-def tc_construct_query(evaluated_query, inner_nodes):
+def tc_query(evaluated_query, inner_nodes, option):
     subjs = set()
     props = []
 
@@ -51,9 +51,8 @@ def tc_construct_query(evaluated_query, inner_nodes):
     for i, p in enumerate(props):
         triples += p["subj_var"] + p["prop"] + p["var"] + ".\n"
 
-    #query = "CONSTRUCT {\n" + triples + inner_triples + "}\n" + \
-    #        "WHERE {\n" + triples + inner_triples + "}"
-
-    query = "SELECT * WHERE {\n" + triples + inner_triples + "}\n"
-
-    return query
+    if option == 'construct':
+        return "CONSTRUCT {\n" + triples + inner_triples + "}\n" + \
+                "WHERE {\n" + triples + inner_triples + "}"
+    else:
+        return "SELECT * WHERE {\n" + triples + inner_triples + "}\n"
