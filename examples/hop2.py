@@ -5,9 +5,9 @@ from pyshacl import get_query
 from SPARQLWrapper import SPARQLWrapper, JSON
 import re
 import time
+import argparse
 
-
-def select_shapes_graph():
+def get_shapes_graph():
     c1 = "./shapes/smoker.ttl"
     c2 = "./shapes/patient_stage.ttl"
     c3 = "./shapes/biomarker.ttl"
@@ -75,15 +75,16 @@ def main(sg, option):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SHACL constraint evaluation')
-    parser.add_argument('retrieve_type', metavar='R', type=str, default='select',
+    parser.add_argument('retrieve_type', metavar='retrieveType', type=str, default='select',
                         help='Two options available: select / construct')
     args = parser.parse_args()
 
     option = args.retrieve_type
 
-    sg = select_shapes_graph()
+    sg = get_shapes_graph()
 
     start = time.time()
     main(sg, option)
     end = time.time()
-    print("Runtime for %s: %d", (option, end - start))
+    time = end - start
+    print("Runtime for {o} query is {t}".format(o=option, t=time))
