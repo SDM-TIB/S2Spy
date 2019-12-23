@@ -26,7 +26,7 @@ def get_shapes_graph():
 
 def get_data_turtle_format(query, results):
     template_for_triples = query
-    pattern = '.*\{'
+    pattern = '.*\{\n'
     replace = ''
     string = template_for_triples
     template_for_triples = re.sub(pattern, replace, string)
@@ -42,10 +42,10 @@ def get_data_turtle_format(query, results):
         for key, props in result.items():
             pattern = r"\?" + re.escape(key) + r"\b"
             if props["type"] == "literal":
-                template_copy = re.sub(pattern, ' "' + props["value"] + '" ', template_copy)
-            elif props["type"] == "uri":
-                template_copy = re.sub(pattern, ' <' + props["value"] + '> ', template_copy)
-            triples += template_copy + '\n'
+                template_copy = re.sub(pattern, ''.join([' "', props["value"], '" ']), template_copy)
+            else:
+                template_copy = re.sub(pattern, ''.join([' <', props["value"], '> ']), template_copy)
+        triples += template_copy
 
     return triples
 
@@ -81,7 +81,7 @@ def main(sg, option):
         conforms, v_graph, v_text = validate(data_ttl_file, shacl_graph=sg, inference='rdfs',
                                              serialize_report_graph=True)
 
-    print(v_text)
+    #print(v_text)
 
 
 if __name__ == '__main__':
