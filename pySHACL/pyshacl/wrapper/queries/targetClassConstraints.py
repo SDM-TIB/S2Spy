@@ -24,7 +24,7 @@ def query_class_inner_nodes():
         FILTER (?node2 = ?node)
     }'''
 
-def tc_query(evaluated_query, inner_nodes, option):
+def tc_query(evaluated_query, inner_nodes, option='select'):
     subjs = set()
     props = []
 

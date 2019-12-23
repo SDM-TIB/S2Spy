@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from os import path
 from pyshacl import validate
-from pyshacl import get_construct_query
+from pyshacl import get_query
 from SPARQLWrapper import SPARQLWrapper, TURTLE
 from rdflib import Graph
 
@@ -26,7 +26,7 @@ def main(sg):
         sparql = SPARQLWrapper("http://node3.research.tib.eu:9003/sparql")
 
 
-        construct_query = get_construct_query(sg)
+        construct_query = get_query(sg)
         print("Construct query:\n", construct_query)
 
         sparql.setQuery(construct_query)
