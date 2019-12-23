@@ -34,7 +34,7 @@ def get_data_turtle_format(query, results):
     replace = ''
     string = template_for_triples
     template_for_triples = re.sub(pattern, replace, string)
-    print(template_for_triples)
+    print("Template: ", template_for_triples)
 
     data_turtle_format = ''
     triples = []
@@ -42,9 +42,8 @@ def get_data_turtle_format(query, results):
         template_copy = template_for_triples
         for key, props in result.items():
             pattern = r"\?" + re.escape(key) + r"\b"
-            print(pattern)
             if props["type"] == "literal":
-                template_copy = re.sub(pattern, '"' + props["value"] + '"', template_copy)
+                template_copy = re.sub(pattern, ' "' + props["value"] + '" ', template_copy)
             elif props["type"] == "uri":
                 template_copy = re.sub(pattern, ' <' + props["value"] + '> ', template_copy)
             triples.append(template_copy)
