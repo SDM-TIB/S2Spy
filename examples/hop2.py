@@ -34,7 +34,7 @@ def get_data_turtle_format(query, results):
     replace = ''
     string = template_for_triples
     template_for_triples = re.sub(pattern, replace, string)
-    print("Template: ", template_for_triples)
+    print("Template:\n", template_for_triples)
 
     triples = ''
     for result in results["results"]["bindings"]:
@@ -72,8 +72,11 @@ def main(sg, option):
             g.parse(data=results, format="turtle")
             data_graph = g
 
-        conforms, v_graph, v_text = validate(data_graph, shacl_graph=sg, inference='rdfs',
-                                             serialize_report_graph=True, data_graph_format='turtle')
+        if data_graph != '':
+            conforms, v_graph, v_text = validate(data_graph, shacl_graph=sg, inference='rdfs',
+                                                 serialize_report_graph=True, data_graph_format='turtle')
+        else:
+            print("Error: Empty data graph")
     else:
         # use locally saved data
         data_ttl_file = "data/hop2.ttl"
