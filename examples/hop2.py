@@ -18,7 +18,7 @@ def get_shapes_graph():
     actor = "./shapes/dbpedia/ActorShape.ttl"
     movie = "./shapes/dbpedia/MovieShape.ttl"
 
-    sg = c1
+    sg = actor
 
     sg = path.abspath(sg)
 
@@ -54,7 +54,7 @@ def main(sg, option):
     extended_approach = True
 
     if extended_approach:
-        sparql = SPARQLWrapper("http://node3.research.tib.eu:9003/sparql")
+        sparql = SPARQLWrapper("http://dbpedia.org/sparql")
 
         query = get_query(sg, option)
         print("Query:\n", query)

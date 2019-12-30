@@ -43,4 +43,4 @@ def get_query(sg, option):
         query = query_no_target()
         qres = graph_query_result(sg, query)
 
-        return nt_construct_query(qres)
+        return nt_construct_query(qres, option)
