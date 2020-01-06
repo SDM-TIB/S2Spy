@@ -27,6 +27,7 @@ def nt_construct_query(evaluated_query, option='select'):
         props.append({"subj_var": subj_var,
                       "prop": "<" + str(row[2]) + ">",
                       "var_name": "?" + prop[1]})
+        vars.add("?" + prop[1])
 
     triples = ""
 

@@ -43,7 +43,9 @@ def tc_query(evaluated_query, inner_nodes, option='select'):
         subjs.add("?" + node[1] + " <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> " + " <" + str(row[1]) + ">.\n")
 
         prop = lastStringURL(row[2])
-        props.append({"subj_var": "?" + node[1], "prop": " <" + str(row[2]) + "> ", "var": " ?" + prop[1]})
+        props.append({"subj_var": "?" + node[1],
+                      "prop": " <" + str(row[2]) + "> ",
+                      "var": " ?" + prop[1]})
         vars.add("?" + node[1])
         vars.add("?" + prop[1])
 

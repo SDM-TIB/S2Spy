@@ -38,13 +38,22 @@ def get_data_turtle_format(query, results):
 
     triples = ''
     for result in results["results"]["bindings"]:
+        #print(result)
         template_copy = template_for_triples
         for key, props in result.items():
             pattern = r"\?" + re.escape(key) + r"\b"
             if props["type"] == "literal":
-                template_copy = re.sub(pattern, ''.join([' "', props["value"], '" ']), template_copy)
+                template_copy = re.sub(pattern, ''.join([' "', props["value"], '"']), template_copy)
+            elif props["type"] == "uri":
+                template_copy = re.sub(pattern, ''.join([' <', props["value"], '>']), template_copy)
+            elif props["type"] == "typed-literal":
+                #dtype = props["datatype"].rsplit('#', 1)[1]
+                dtype = props["datatype"]
+                template_copy = re.sub(pattern,
+                                       ''.join([' "', props["value"], '"', "^^<", dtype, ">"]),
+                                       template_copy)
             else:
-                template_copy = re.sub(pattern, ''.join([' <', props["value"], '> ']), template_copy)
+                print(props["type"], props)
         triples += template_copy
 
     return triples
@@ -54,6 +63,8 @@ def main(sg, option):
     extended_approach = True
 
     if extended_approach:
+        start = time.time()
+
         sparql = SPARQLWrapper("http://dbpedia.org/sparql")
 
         query = get_query(sg, option)
@@ -63,18 +74,35 @@ def main(sg, option):
         if option == "select":
             sparql.setReturnFormat(JSON)
             results = sparql.query().convert()
+            end = time.time()
+
             data_graph = get_data_turtle_format(query, results)
-            #print(data_graph)
+            end2 = time.time()
+
         else:
             sparql.setReturnFormat(TURTLE)
             results = sparql.query().convert()
+            end = time.time()
+
             g = Graph()
             g.parse(data=results, format="turtle")
             data_graph = g
+            end2 = time.time()
+
+        #print(data_graph)
+
+        total = end - start
+        print("Runtime (retrieving from endpoint) for {o} query is {t}".format(o=option, t=total))
+
+        total2 = end2 - start
+        print("Runtime 2 (Turtle file creation) for {o} query is {t}".format(o=option, t=total2))
 
         if data_graph != '':
             conforms, v_graph, v_text = validate(data_graph, shacl_graph=sg, inference='rdfs',
                                                  serialize_report_graph=True, data_graph_format='turtle')
+            end3 = time.time()
+            total3 = end3 - start
+            print("Runtime 3 (constraints validation) for {o} query is {t}".format(o=option, t=total3))
         else:
             print("Error: Empty data graph")
     else:
@@ -97,8 +125,6 @@ if __name__ == '__main__':
 
     sg = get_shapes_graph()
 
-    start = time.time()
+
     main(sg, option)
-    end = time.time()
-    time = end - start
-    print("Runtime for {o} query is {t}".format(o=option, t=time))
+
