@@ -26,11 +26,11 @@ def get_shapes_graph():
 
 def get_data_turtle_format(query, results):
     template_for_triples = query
-    pattern = '.*\{\n'
+    pattern = r'.*\{\n'
     replace = ''
     string = template_for_triples
     template_for_triples = re.sub(pattern, replace, string)
-    pattern = '\}.*'
+    pattern = r'\}.*'
     replace = ''
     string = template_for_triples
     template_for_triples = re.sub(pattern, replace, string)
@@ -41,13 +41,16 @@ def get_data_turtle_format(query, results):
         template_copy = template_for_triples
         for key, props in result.items():
             pattern = r"\?" + re.escape(key) + r"\b"   # current key pattern
-            subjPattern = r"\?" + key + r"[ <]+"
-            matchSubj = re.match(subjPattern, template_copy)
-            if props["value"] == results["results"]["bindings"][i-1][key]["value"] and not matchSubj:
+            subj_pattern = r"\?" + key + r"[ <]+"
+            match_subj = re.match(subj_pattern, template_copy)
+
+            # remove duplicate triples
+            if props["value"] == results["results"]["bindings"][i-1][key]["value"] and not match_subj:
                 patternLine = r".*\?" + re.escape(key) + r"[ ]*(.)\n"
                 template_copy = re.sub(patternLine, '', template_copy)
                 continue
 
+            # replace triple variables with their correspondent URIs or literals
             if props["type"] == "literal":
                 template_copy = re.sub(pattern,
                                        ''.join([' "', props["value"], '"']),
@@ -74,8 +77,8 @@ def main(sg, option):
     if extended_approach:
         start = time.time()
 
-        sparql = SPARQLWrapper("http://node4.research.tib.eu:9090/sparql")
-        #sparql = SPARQLWrapper("http://dbpedia.org/sparql")
+        #sparql = SPARQLWrapper("http://node4.research.tib.eu:9090/sparql")
+        sparql = SPARQLWrapper("http://dbpedia.org/sparql")
 
         query = get_query(sg, option)
         print("Query:\n", query)
@@ -99,7 +102,7 @@ def main(sg, option):
             data_graph = g
             end2 = time.time()
 
-        #print(data_graph)
+        print(data_graph)
 
         total = end - start
         print("Runtime (retrieving from endpoint) for {o} query is {t}".format(o=option, t=total))
@@ -119,8 +122,8 @@ def main(sg, option):
         # use locally saved data
         data_ttl_file = "data/hop2.ttl"
 
-        conforms, v_graph, v_text = validate(data_ttl_file, shacl_graph=sg, inference='rdfs',
-                                             serialize_report_graph=True)
+        #conforms, v_graph, v_text = validate(data_ttl_file, shacl_graph=sg, inference='rdfs',
+        #                                     serialize_report_graph=True)
 
     #print(v_text)
 

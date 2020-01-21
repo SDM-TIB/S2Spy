@@ -41,5 +41,5 @@ def nt_construct_query(evaluated_query, option='select'):
         return "CONSTRUCT {\n" + triples + "}\n" + \
                 "WHERE {\n" + triples + "}"
     else:
-        return "SELECT " + ' '.join(vars) + \
+        return "SELECT DISTINCT" + ' '.join(vars) + \
                " WHERE {\n" + triples + "}\n"
