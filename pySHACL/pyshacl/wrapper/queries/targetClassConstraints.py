@@ -61,5 +61,5 @@ def tc_query(evaluated_query, inner_nodes, option='select'):
         return "CONSTRUCT {\n" + triples + inner_triples + "}\n" + \
                 "WHERE {\n" + triples + inner_triples + "}"
     else:
-        return "SELECT DISTINCT" + ' '.join(vars) + \
+        return "SELECT DISTINCT " + ' '.join(vars) + \
                " WHERE {\n" + triples + inner_triples + "}\n"

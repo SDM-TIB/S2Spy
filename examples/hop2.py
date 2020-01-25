@@ -18,7 +18,7 @@ def get_shapes_graph():
     actor = "./shapes/dbpedia/ActorShape.ttl"
     movie = "./shapes/dbpedia/MovieShape.ttl"
 
-    sg = actor
+    sg = movie
 
     sg = path.abspath(sg)
 
@@ -34,6 +34,7 @@ def get_data_turtle_format(query, results):
     replace = ''
     string = template_for_triples
     template_for_triples = re.sub(pattern, replace, string)
+
     print("Template:\n", template_for_triples)
 
     triples = ''
@@ -45,7 +46,7 @@ def get_data_turtle_format(query, results):
             match_subj = re.match(subj_pattern, template_copy)
 
             # remove duplicate triples
-            if props["value"] == results["results"]["bindings"][i-1][key]["value"] and not match_subj:
+            if props["value"] == results["results"]["bindings"][i-1][key]["value"] and not match_subj and i > 0:
                 patternLine = r".*\?" + re.escape(key) + r"[ ]*(.)\n"
                 template_copy = re.sub(patternLine, '', template_copy)
                 continue
@@ -71,7 +72,6 @@ def get_data_turtle_format(query, results):
     return triples
 
 def main(sg, option):
-
     extended_approach = True
 
     if extended_approach:
@@ -102,7 +102,7 @@ def main(sg, option):
             data_graph = g
             end2 = time.time()
 
-        print(data_graph)
+        #print(data_graph)
 
         total = end - start
         print("Runtime (retrieving from endpoint) for {o} query is {t}".format(o=option, t=total))
@@ -113,6 +113,7 @@ def main(sg, option):
         if data_graph != '':
             conforms, v_graph, v_text = validate(data_graph, shacl_graph=sg, inference='rdfs',
                                                  serialize_report_graph=True, data_graph_format='turtle')
+            print("Conforms", conforms, v_text)
             end3 = time.time()
             total3 = end3 - start
             print("Runtime 3 (constraints validation) for {o} query is {t}".format(o=option, t=total3))
