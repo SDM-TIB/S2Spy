@@ -52,6 +52,7 @@ class ShapeParser:
 
         return ShapeImpl(
                 name,
+                targetDef,
                 targetQuery,
                 constraintsConjunctions
         )
@@ -95,9 +96,9 @@ class ShapeParser:
             if oMin != None:
                 if oMax != None:
                     pass # TODO
-                return MinOnlyConstraintImpl(varGenerator, id, oPath, oMin, oDatatype, oValue, oShapeRef, oNeg)
+                return MinOnlyConstraintImpl(varGenerator, id, oPath, oMin, oNeg, oDatatype, oValue, oShapeRef)
             if oMax != None:
-                return MaxOnlyConstraintImpl(varGenerator, id, oPath, oMax, oDatatype, oValue, oShapeRef, oNeg)
+                return MaxOnlyConstraintImpl(varGenerator, id, oPath, oMax, oNeg, oDatatype, oValue, oShapeRef)
 
         # TODO
         #return new LocalConstraintImpl(id, oDatatype, oValue, oShapeRef, oNeg);

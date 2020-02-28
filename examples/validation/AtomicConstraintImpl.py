@@ -2,12 +2,14 @@
 
 class AtomicConstraintImpl:
 
-    def __init__(self, id=None, datatype=None, value=None, shapeRef=None, isPos=None):
+    def __init__(self, id=None, isPos=None, violated=False, datatype=None, value=None, shapeRef=None):
         self.id = id
+        self.isPos = isPos
+        self.violated = violated
+
         self.datatype = datatype
         self.value = value
         self.shapeRef = shapeRef
-        self.isPos = isPos
 
         self.variables = ()
 

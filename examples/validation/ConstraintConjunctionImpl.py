@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from validation.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
 
-class ConstraintConjunctionImpl():
+class ConstraintConjunctionImpl:
 
     def __init__(self, id, minConstraints, maxConstraints, localConstraints):
         self.id = id

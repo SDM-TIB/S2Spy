@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+import re
+from validation.ASKQuery import ASKQuery
+
 class ShapeImpl:
 
-    def __init__(self, id, targetQuery, disjuncts):
+    def __init__(self, id, targetDef, targetQuery, disjuncts):
         self.id = id
+        self.targetDef = targetDef.get("query") if targetDef != None else None
         self.targetQuery = targetQuery
-        self.disjuncts = disjuncts
+        self.disjuncts = disjuncts  # conjunctions
         self.rulePatterns = ()
         self.predicates = ()
 
@@ -26,3 +30,18 @@ class ShapeImpl:
 
     def getNegShapeRefs(self):
         return [d.getNegShapeRefs() for d in self.disjuncts]
+
+    def askViolations(self):
+        if self.targetDef != None:  # not checking violations on shapes without target definitions
+            triple = re.findall(r'{.*}', self.targetDef)[0]  # *** considering only one target def
+            triple = triple[1:len(triple)-1]  # removed curly braces
+            triple = triple.strip().split()
+            target = triple[2]
+
+            minConstraints = self.disjuncts[0].minConstraints
+            for c in minConstraints:
+                c.violated = ASKQuery(c.path, target).evaluate("min", c.min)
+
+            maxConstraints = self.disjuncts[0].maxConstraints
+            for c in maxConstraints:
+                c.violated = ASKQuery(c.path, target).evaluate("max", c.max)

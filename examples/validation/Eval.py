@@ -10,12 +10,11 @@ class Eval(object):
         """
 
         self.parseArguments(args)
-        self.schema = None
-        self.endpoint = None
-        self.outputDir = None
-        self.shapeFormat = "JSON"
 
-        self.parseArguments(args)
+        shapes = self.schema.getShapes()
+        for s in shapes:
+            s.askViolations()
+
         #schema.getShapes()
         #        .forEach(sh -> sh.computeConstraintQueries(schema, graph))
         self.createOutputDir()
@@ -28,12 +27,12 @@ class Eval(object):
     def parseArguments(self, args):
         # E.g.: -d. ../examples/shapes/nonRec/2/ "http://dbpedia.org/sparql". /output/
 
-        self.schema = args.d
         self.endpoint = args.endpoint
         self.outputDir = args.outputDir
         self.shapeFormat = "JSON"
 
-        schema = self.getSchema(args.d)
+        schemaDir = args.d
+        self.schema = self.getSchema(schemaDir)
 
         #log.info("endPoint: |" + endpoint.getURL() + "|");
         #schemaDir.ifPresent(d -> log.info("shape directory: |" + d + "|"));

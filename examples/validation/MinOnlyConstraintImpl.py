@@ -4,7 +4,7 @@ from validation.AtomicConstraintImpl import AtomicConstraintImpl
 
 class MinOnlyConstraintImpl(AtomicConstraintImpl):
 
-    def __init__(self, varGenerator, id, path, min, datatype=None, value=None, shapeRef=None, isPos=None):
+    def __init__(self, varGenerator, id, path, min, isPos, datatype=None, value=None, shapeRef=None):
         super().__init__()
         self.varGenerator = varGenerator
         self.path = path
@@ -12,8 +12,9 @@ class MinOnlyConstraintImpl(AtomicConstraintImpl):
         self.variables = self.computeVariables()
 
         self.id = id
-        self.shapeRef = shapeRef
         self.isPos = isPos
+        self.shapeRef = shapeRef
+        self.violated = False
 
     def computeVariables(self):
         atomicConstraint = AtomicConstraintImpl()

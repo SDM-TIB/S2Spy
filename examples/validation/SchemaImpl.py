@@ -9,3 +9,6 @@ class SchemaImpl:
             mapped[s.getId()] = s
         self.shapeMap = mapped
         self.dependencyGraph = DependencyGraphImpl(self.shapeMap)
+
+    def getShapes(self):
+        return self.shapes
