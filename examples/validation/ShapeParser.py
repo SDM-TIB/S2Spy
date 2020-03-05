@@ -66,7 +66,7 @@ class ShapeParser:
 
         minConstraints = [inst for inst in constraints if isinstance(inst, MinOnlyConstraintImpl)]
         maxConstraints = [inst for inst in constraints if isinstance(inst, MaxOnlyConstraintImpl)]
-        localConstraints = [] # *** hardcoded
+        localConstraints = []  # *** hardcoded
 
         return ConstraintConjunctionImpl(
                 id,

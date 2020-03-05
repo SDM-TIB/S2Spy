@@ -1,21 +1,26 @@
 # -*- coding: utf-8 -*-
+import itertools
 from enum import Enum
+
+i = itertools.count()
 
 class VariableGenerator:
     def __init__(self):
         self.index = 0
 
-    def incrementAndGet(self):
-        self.index += 1
-        return self.index
+    #def incrementAndGet(self):
+    #    self.index += 1
+    #    return self.index
 
-    def generateVariable(self, type):
+    @staticmethod
+    def generateVariable(type):
         type = "p_"  # *** hardcoded
-        i = self.incrementAndGet()
-        return str(type) + str(i)
 
-    def getFocusNodeVar(self):
-        return "x"
+        return str(type) + str(next(i))
+
+    @staticmethod
+    def getFocusNodeVar():
+        return "x"  # ***
 
 
 class VariableType(Enum):

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from validation.core.Literal import Literal
 
 class AtomicConstraintImpl:
 
@@ -11,7 +12,7 @@ class AtomicConstraintImpl:
         self.value = value
         self.shapeRef = shapeRef
 
-        self.variables = ()
+        self.variables = []
 
     def getDatatype(self):
         return self.datatype
@@ -35,6 +36,9 @@ class AtomicConstraintImpl:
 
         return vars
 
-    @property
     def getVariables(self):
         return self.variables
+
+    def computeRulePatternBody(self):
+        return [Literal(self.shapeRef, v, self.isPos) for v in self.variables] \
+                    if self.shapeRef is not None else []   # *** (1)

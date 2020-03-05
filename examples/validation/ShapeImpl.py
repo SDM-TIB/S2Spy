@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 import re
 from validation.ASKQuery import ASKQuery
+from validation.VariableGenerator import VariableGenerator
+from validation.core.Literal import Literal
+from validation.core.RulePattern import RulePattern
 
 class ShapeImpl:
 
     def __init__(self, id, targetDef, targetQuery, disjuncts):
         self.id = id
         self.targetDef = targetDef.get("query") if targetDef != None else None
-        self.targetQuery = targetQuery
+        self.targetQuery = targetQuery  # Might be None
         self.disjuncts = disjuncts  # conjunctions
         self.rulePatterns = ()
         self.predicates = ()
@@ -45,3 +48,31 @@ class ShapeImpl:
             maxConstraints = self.disjuncts[0].maxConstraints
             for c in maxConstraints:
                 c.violated = ASKQuery(c.path, target).evaluate("max", c.max)
+
+# Definitions used in the evaluation
+
+    def getTargetQuery(self):
+        return self.targetQuery
+
+    def computeConstraintQueries(self, schema, graph):
+
+        for c in self.disjuncts:
+            c.computeQueries(graph)
+
+        self.rulePatterns = self.computeRulePatterns()
+
+    def computeRulePatterns(self):
+        focusNodeVar = VariableGenerator.getFocusNodeVar()
+        head = Literal(self.id, focusNodeVar, True)
+
+        return [RulePattern(head, self.getDisjunctRPBody(d)) for d in self.disjuncts]
+
+    def getDisjunctRPBody(self, d):
+        focusNodeVar = VariableGenerator.getFocusNodeVar()
+        maxQueries = [Literal(s, focusNodeVar, False) for s in [q.getId() for q in d.getMaxQueries()]]
+
+        return [Literal(d.getMinQuery().getId(),
+                        focusNodeVar,
+                        True
+                        )] + \
+                maxQueries

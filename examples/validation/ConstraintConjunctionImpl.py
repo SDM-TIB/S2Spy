@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import itertools
 from validation.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
+from validation.QueryGenerator import QueryGenerator
 
 class ConstraintConjunctionImpl:
 
@@ -11,20 +13,17 @@ class ConstraintConjunctionImpl:
         self.localConstraints = localConstraints
         self.maxQueryPredicates = []
 
-        self.minQuery = None
-        self.maxQueries = None
+        self.minQuery = []
+        self.maxQueries = []
 
         self.maxQueryPredicates = [self.id + "_max_" + str(i) for i in range(1, len(self.maxConstraints) + 1)]
 
-    @property
     def getId(self):
         return self.id
 
-    @property
     def getMinQuery(self):
         return self.minQuery
 
-    @property
     def getMaxQueries(self):
         return self.maxQueries
 
@@ -42,10 +41,39 @@ class ConstraintConjunctionImpl:
         return [c.getShapeRef() for c in self.getConjuncts() if filterCondidion(c)]
 
     def posRefFilter(self):
-        return lambda c : c.getShapeRef() != None and c.getIsPos() and not isinstance(c, MaxOnlyConstraintImpl)
+        return lambda c: c.getShapeRef() != None and c.getIsPos() and not isinstance(c, MaxOnlyConstraintImpl)
 
     def negRefFilter(self):
-        return lambda c : c.getShapeRef() != None and (not c.getIsPos() or isinstance(c, MaxOnlyConstraintImpl))
+        return lambda c: c.getShapeRef() != None and (not c.getIsPos() or isinstance(c, MaxOnlyConstraintImpl))
 
     def getConjuncts(self):
         return self.minConstraints + self.maxConstraints  # *** tbc
+
+    def computeQueries(self, graphName):
+        # Create a subquery for all local (i.e. without shape propagation) and positive constraints
+        # Every other query for this conjunct will contain this as a subquery.
+        # This is unnecessary in theory, but does not compromise soundness, and makes queries more selective.
+
+        queryGenerator = QueryGenerator()
+        subquery = queryGenerator.generateLocalSubquery(
+                graphName, self.minConstraints + self.localConstraints
+        )
+
+        # Build a unique set of triples (+ filter) for all min constraints (note that the local ones are handled by the subquery)
+        self.minQuery = queryGenerator.generateQuery(
+                self.minQueryPredicate,
+                [c for c in self.minConstraints if c.getShapeRef() is not None],
+                graphName,
+                subquery
+        )
+
+        # Build one set of triples (+ filter) for each max constraint
+        i = itertools.count()
+        self.maxQueries = list(map(lambda c:
+                              queryGenerator.generateQuery(
+                                  self.maxQueryPredicates[next(i)],
+                                  [c],
+                                  graphName,
+                                  subquery
+                                  ), self.maxConstraints
+                              ))
