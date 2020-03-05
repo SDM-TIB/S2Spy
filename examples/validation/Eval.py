@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
 from validation.ShapeParser import ShapeParser
+from validation.RuleBasedValidation import RuleBasedValidation
+from validation.utils import fileManagement
 
-class Eval(object):
+class Eval:
 
     def __init__(self, args):
         """
@@ -23,6 +25,15 @@ class Eval(object):
             s.computeConstraintQueries(self.schema, self.graph)
 
         self.createOutputDir()
+
+        validation = RuleBasedValidation(
+                            self.endpoint,
+                            self.schema,
+                            fileManagement.openFile("validation.log"),
+                            fileManagement.openFile("targets_valid.log"),
+                            fileManagement.openFile("targets_violated.log"),
+                            fileManagement.openFile("stats.txt")
+                    )
 
     def createOutputDir(self):
         path = os.getcwd()
