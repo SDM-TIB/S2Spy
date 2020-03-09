@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from validation.VariableGenerator import VariableType
-from validation.constraints.AtomicConstraintImpl import AtomicConstraintImpl
+from validation.constraints.Constraint import Constraint
 from validation.sparql import ASKQuery
 
 
-class MinOnlyConstraintImpl(AtomicConstraintImpl):
+class MinOnlyConstraintImpl(Constraint):
 
     def __init__(self, varGenerator, id, path, min, isPos, datatype=None, value=None, shapeRef=None):
         super().__init__(id, isPos, None, datatype, value, shapeRef)
@@ -14,7 +14,7 @@ class MinOnlyConstraintImpl(AtomicConstraintImpl):
         self.variables = self.computeVariables()
 
     def computeVariables(self):
-        atomicConstraint = AtomicConstraintImpl()
+        atomicConstraint = Constraint()
         return atomicConstraint.generateVariables(self.varGenerator, VariableType.VALIDATION, self.min)
 
     @property

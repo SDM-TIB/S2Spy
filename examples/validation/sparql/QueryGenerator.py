@@ -4,7 +4,7 @@ from validation.core.Literal import Literal
 from validation.core.Query import Query
 from validation.VariableGenerator import VariableGenerator
 from validation.sparql.SPARQLPrefixHandler import getPrefixString
-from validation.constraints.AtomicConstraintImpl import AtomicConstraintImpl
+from validation.constraints.Constraint import Constraint
 
 
 class QueryGenerator:
@@ -13,7 +13,6 @@ class QueryGenerator:
 
     def generateQuery(self, id, constraints, graph=None, subquery=None):
         # TODO ("Only one max constraint per query is allowed");
-
         rp = self.computeRulePattern(constraints, id)
 
         builder = QueryBuilder(id, graph, subquery, rp.getVariables())
@@ -125,7 +124,7 @@ class QueryBuilder:
     def buildClause(self, c):
         variables = c.getVariables()
 
-        if isinstance(c, AtomicConstraintImpl):
+        if isinstance(c, Constraint):
             path = c.getPath()
 
             if c.getValue() is not None:

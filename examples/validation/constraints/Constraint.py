@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+__author__ = "Monica Figuera and Philipp D. Rohde"
+
 from validation.core.Literal import Literal
 
 
-class AtomicConstraintImpl:
+class Constraint:
 
     def __init__(self, id=None, isPos=None, satisfied=None, datatype=None, value=None, shapeRef=None):
         self.id = id

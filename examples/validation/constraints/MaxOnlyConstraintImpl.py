@@ -1,8 +1,8 @@
 from validation.VariableGenerator import VariableType
-from validation.constraints.AtomicConstraintImpl import AtomicConstraintImpl
+from validation.constraints.Constraint import Constraint
 
 
-class MaxOnlyConstraintImpl(AtomicConstraintImpl):
+class MaxOnlyConstraintImpl(Constraint):
 
     def __init__(self, varGenerator, id, path, max, isPos, datatype=None, value=None, shapeRef=None):
         super().__init__(id, isPos, None, datatype, value, shapeRef)
@@ -12,7 +12,7 @@ class MaxOnlyConstraintImpl(AtomicConstraintImpl):
         self.variables = self.computeVariables()
 
     def computeVariables(self):
-        atomicConstraint = AtomicConstraintImpl()
+        atomicConstraint = Constraint()
         return atomicConstraint.generateVariables(self.varGenerator, VariableType.VALIDATION, self.max + 1)
 
     @property
