@@ -4,13 +4,14 @@ from validation.constraints.Constraint import Constraint
 from validation.sparql import ASKQuery
 
 
-class MinOnlyConstraintImpl(Constraint):
+class MinMaxConstraintImpl(Constraint):
 
-    def __init__(self, varGenerator, id, path, min, isPos, datatype=None, value=None, shapeRef=None):
+    def __init__(self, varGenerator, id, path, min, max, isPos, datatype=None, value=None, shapeRef=None):
         super().__init__(id, isPos, None, datatype, value, shapeRef)
         self.varGenerator = varGenerator
         self.path = path
         self.min = min
+        self.max = max
         self.variables = self.computeVariables()
 
     def computeVariables(self):
@@ -22,22 +23,18 @@ class MinOnlyConstraintImpl(Constraint):
         return self.min
 
     @property
+    def getMax(self):
+        return self.max
+
+    @property
     def getPath(self):
         return self.path
 
     def isSatisfied(self):
-        return False
-#        if self.satisfied is not None:
-#            return self.satisfied
-#        if self.min == 1:
-#            # exists query
-#        else:
-#            # min query
-#        # set self.satisfied
-#        # return self.satisfied
+        return False  # TODO
 
     def getValidInstances(self):
-        return []
+        return []  # TODO
 
     def getViolations(self):
-        return []
+        return []  # TODO

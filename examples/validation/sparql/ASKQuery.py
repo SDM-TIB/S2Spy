@@ -20,7 +20,7 @@ class ASKQuery:
                     }\n\
                 }" % (self.target, self.constraint)
 
-    def ASKQueryCardinConstraint(self, operator, cardinality):
+    def ASKQueryCardConstraint(self, operator, cardinality):
         return "ASK {\n\
                 { SELECT ?s COUNT(?o) AS ?cnt WHERE {\n\
                     ?s a %s.\n\
@@ -31,11 +31,24 @@ class ASKQuery:
                 FILTER (?cnt %s %s)\n\
                 }" % (self.target, self.constraint, operator, str(cardinality))
 
-    def evaluate(self, type, cardinality):
+    def ASKQueryCardRangeConstraint(self, minCard, maxCard):
+        return "ASK {\n\
+                { SELECT ?s COUNT(?o) AS ?cnt WHERE {\n\
+                    ?s a %s.\n\
+                    ?s %s ?o.\n\
+                }\n\
+                GROUP BY(?s)\n\
+                }\n\
+                FILTER (?cnt < %s OR ?cnt > %s)\n\
+                }" % (self.target, self.constraint, str(minCard), str(maxCard))
+
+    def evaluate(self, type, cardinality=None, minCard=None, maxCard=None):
         if type == "min":
-            query = self.ASKQueryCardinConstraint("<", cardinality)
+            query = self.ASKQueryCardConstraint("<", cardinality)
+        elif type == "max":
+            query = self.ASKQueryCardConstraint(">", cardinality)
         else:
-            query = self.ASKQueryCardinConstraint(">", cardinality)
+            query = self.ASKQueryCardRangeConstraint(minCard, maxCard)
 
         #sparql = SPARQLWrapper("http://dbpedia.org/sparql")  # TODO: get URL from parameters / use sparql.SPARQLEndpoint
         #sparql.setQuery(query)

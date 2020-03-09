@@ -24,10 +24,10 @@ class MaxOnlyConstraintImpl(Constraint):
         return self.path
 
     def isSatisfied(self):
-        return False
+        return False  # TODO
 
     def getValidInstances(self):
-        return []
+        return []  # TODO
 
     def getViolations(self):
-        return []
+        return []  # TODO

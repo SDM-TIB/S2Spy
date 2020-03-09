@@ -3,6 +3,7 @@ import os
 import json
 from validation.sparql.SPARQLPrefixHandler import getPrefixString
 from validation.VariableGenerator import VariableGenerator
+from validation.constraints.MinMaxConstraintImpl import MinMaxConstraintImpl
 from validation.constraints.MinOnlyConstraintImpl import MinOnlyConstraintImpl
 from validation.constraints.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
 from validation.constraints.ConstraintConjunctionImpl import ConstraintConjunctionImpl
@@ -34,7 +35,7 @@ class ShapeParser:
         if shapeFormat == "SHACL":
             return ".ttl"
         else:
-            return ".json" # dot added for convenience
+            return ".json"  # dot added for convenience
 
     def parseJson(self, path):
         targetQuery = None
@@ -96,7 +97,7 @@ class ShapeParser:
         if oPath is not None:
             if oMin is not None:
                 if oMax is not None:
-                    pass  # TODO
+                    return MinMaxConstraintImpl(varGenerator, id, oPath, oMin, oMax, oNeg, oDatatype, oValue, oShapeRef)
                 return MinOnlyConstraintImpl(varGenerator, id, oPath, oMin, oNeg, oDatatype, oValue, oShapeRef)
             if oMax is not None:
                 return MaxOnlyConstraintImpl(varGenerator, id, oPath, oMax, oNeg, oDatatype, oValue, oShapeRef)
