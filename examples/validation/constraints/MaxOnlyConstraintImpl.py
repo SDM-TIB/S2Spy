@@ -5,16 +5,11 @@ from validation.constraints.AtomicConstraintImpl import AtomicConstraintImpl
 class MaxOnlyConstraintImpl(AtomicConstraintImpl):
 
     def __init__(self, varGenerator, id, path, max, isPos, datatype=None, value=None, shapeRef=None):
-        super().__init__()
+        super().__init__(id, isPos, None, datatype, value, shapeRef)
         self.varGenerator = varGenerator
         self.path = path
         self.max = max
         self.variables = self.computeVariables()
-
-        self.id = id
-        self.isPos = isPos
-        self.shapeRef = shapeRef
-        self.satisfied = None
 
     def computeVariables(self):
         atomicConstraint = AtomicConstraintImpl()
