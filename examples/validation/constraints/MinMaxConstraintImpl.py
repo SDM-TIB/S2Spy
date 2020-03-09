@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+__author__ = "Philipp D. Rohde"
+
 from validation.VariableGenerator import VariableType
 from validation.constraints.Constraint import Constraint
-from validation.sparql import ASKQuery
+from validation.sparql.ASKQuery import *
+from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 
 
 class MinMaxConstraintImpl(Constraint):
@@ -31,7 +34,10 @@ class MinMaxConstraintImpl(Constraint):
         return self.path
 
     def isSatisfied(self):
-        return False  # TODO
+        if self.satisfied is None:
+            self.satisfied = ASKQueryCardRangeConstraint(self.path, None, self.min, self.max).evaluate()  # TODO: insert target
+
+        return self.satisfied
 
     def getValidInstances(self):
         return []  # TODO

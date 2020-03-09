@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+__author__ = "Monica Figuera and Philipp D. Rohde"
+
 from validation.VariableGenerator import VariableType
 from validation.constraints.Constraint import Constraint
-from validation.sparql import ASKQuery
+from validation.sparql.ASKQuery import *
 
 
 class MinOnlyConstraintImpl(Constraint):
@@ -26,15 +28,14 @@ class MinOnlyConstraintImpl(Constraint):
         return self.path
 
     def isSatisfied(self):
-        return False
-#        if self.satisfied is not None:
-#            return self.satisfied
-#        if self.min == 1:
-#            # exists query
-#        else:
-#            # min query
-#        # set self.satisfied
-#        # return self.satisfied
+        if self.satisfied is not None:
+            return self.satisfied
+        if self.min == 1:
+            self.satisfied = ASKQueryExistsConstraint(self.path, None).evaluate()  # TODO: insert target
+        else:
+            self.satisfied = ASKQueryMinCardConstraint(self.path, None, self.min).evaluate()  # TODO: insert target
+
+        return self.satisfied
 
     def getValidInstances(self):
         return []

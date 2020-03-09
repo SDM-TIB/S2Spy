@@ -98,7 +98,7 @@ class ShapeParser:
             if oMin is not None:
                 if oMax is not None:
                     return MinMaxConstraintImpl(varGenerator, id, oPath, oMin, oMax, oNeg, oDatatype, oValue, oShapeRef)
-                return MinOnlyConstraintImpl(varGenerator, id, oPath, oMin, oNeg, oDatatype, oValue, oShapeRef)
+                return MinOnlyConstraintImpl(varGenerator, id, oPath, oMin, oNeg, oDatatype, oValue, oShapeRef).isSatisfied()
             if oMax is not None:
                 return MaxOnlyConstraintImpl(varGenerator, id, oPath, oMax, oNeg, oDatatype, oValue, oShapeRef)
 

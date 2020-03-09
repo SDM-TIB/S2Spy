@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+__author__ = "Monica Figuera and Philipp D. Rohde"
+
 from validation.VariableGenerator import VariableType
 from validation.constraints.Constraint import Constraint
 
@@ -24,7 +27,10 @@ class MaxOnlyConstraintImpl(Constraint):
         return self.path
 
     def isSatisfied(self):
-        return False  # TODO
+        if self.satisfied is None:
+            self.satisfied = ASKQueryMaxCardConstraint(self.path, None, self.max).evaluate()  # TODO: insert target
+
+        return self.satisfied
 
     def getValidInstances(self):
         return []  # TODO
