@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
+from validation.endpoint.SPARQLEndpoint import SPARQLEndpoint
 from validation.ShapeParser import ShapeParser
 from validation.RuleBasedValidation import RuleBasedValidation
 from validation.utils import fileManagement
 
 class Eval:
-
     def __init__(self, args):
         """
         :type args: ...
         """
-        self.endpoint = args.endpoint
+        self.endpoint = SPARQLEndpoint(args.endpoint)
         self.outputDir = args.outputDir
         self.shapeFormat = "JSON"
 
@@ -21,19 +21,21 @@ class Eval:
 
         shapes = self.schema.getShapes()
         for s in shapes:
-            s.askViolations()
+            #s.askViolations()
             s.computeConstraintQueries(self.schema, self.graph)
 
         self.createOutputDir()
 
         validation = RuleBasedValidation(
-                            self.endpoint,
-                            self.schema,
-                            fileManagement.openFile("validation.log"),
-                            fileManagement.openFile("targets_valid.log"),
-                            fileManagement.openFile("targets_violated.log"),
-                            fileManagement.openFile("stats.txt")
+                        self.endpoint,
+                        self.schema,
+                        fileManagement.openFile("validation.log"),
+                        fileManagement.openFile("targets_valid.log"),
+                        fileManagement.openFile("targets_violated.log"),
+                        fileManagement.openFile("stats.txt")
                     )
+
+        validation.exec()
 
     def createOutputDir(self):
         path = os.getcwd()

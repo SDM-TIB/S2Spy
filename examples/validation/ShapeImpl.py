@@ -54,6 +54,9 @@ class ShapeImpl:
     def getTargetQuery(self):
         return self.targetQuery
 
+    def getDisjuncts(self):
+        return self.disjuncts
+
     def computeConstraintQueries(self, schema, graph):
 
         for c in self.disjuncts:
