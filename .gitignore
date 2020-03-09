@@ -19,4 +19,4 @@ sparql2neo4j/
 **/.DS_Store
 
 venv/
-examples/output/
+output/
