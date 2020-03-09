@@ -3,7 +3,7 @@ from validation.core.RulePattern import RulePattern
 from validation.core.Literal import Literal
 from validation.core.Query import Query
 from validation.VariableGenerator import VariableGenerator
-from validation.SPARQLPrefixHandler import getPrefixString
+from validation.sparql.SPARQLPrefixHandler import getPrefixString
 from validation.constraints.AtomicConstraintImpl import AtomicConstraintImpl
 
 

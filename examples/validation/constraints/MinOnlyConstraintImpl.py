@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from validation.VariableGenerator import VariableType
 from validation.constraints.AtomicConstraintImpl import AtomicConstraintImpl
-from validation import ASKQuery
+from validation.sparql import ASKQuery
 
 
 class MinOnlyConstraintImpl(AtomicConstraintImpl):

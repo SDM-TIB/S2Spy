@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
-from validation.ASKQuery import ASKQuery
+from validation.sparql.ASKQuery import ASKQuery
 from validation.VariableGenerator import VariableGenerator
 from validation.core.Literal import Literal
 from validation.core.RulePattern import RulePattern

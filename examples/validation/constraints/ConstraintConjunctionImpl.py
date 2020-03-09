@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import itertools
 from validation.constraints.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
-from validation.QueryGenerator import QueryGenerator
+from validation.sparql.QueryGenerator import QueryGenerator
 
 
 class ConstraintConjunctionImpl:

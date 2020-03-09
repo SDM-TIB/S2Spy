@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 __author__ = "Philipp D. Rohde"
 
 from SPARQLWrapper import SPARQLWrapper, XML

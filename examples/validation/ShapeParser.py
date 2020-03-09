@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import json
-from validation.SPARQLPrefixHandler import getPrefixString
+from validation.sparql.SPARQLPrefixHandler import getPrefixString
 from validation.VariableGenerator import VariableGenerator
 from validation.constraints.MinOnlyConstraintImpl import MinOnlyConstraintImpl
 from validation.constraints.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl

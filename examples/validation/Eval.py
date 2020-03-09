@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from validation.endpoint.SPARQLEndpoint import SPARQLEndpoint
+from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 from validation.ShapeParser import ShapeParser
 from validation.RuleBasedValidation import RuleBasedValidation
 from validation.utils import fileManagement

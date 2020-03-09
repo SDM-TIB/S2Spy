@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+__author__ = "Monica Figuera and Philipp D. Rohde"
+
 import re
-from validation.endpoint import SPARQLEndpoint
+from validation.sparql import SPARQLEndpoint
 
 
 class ASKQuery:
+
     def __init__(self, constraint, target):
         self.constraint = constraint
         self.target = target
@@ -34,7 +37,7 @@ class ASKQuery:
         else:
             query = self.ASKQueryCardinConstraint(">", cardinality)
 
-        #sparql = SPARQLWrapper("http://dbpedia.org/sparql")  # TODO: get URL from parameters / use endpoint.SPARQLEndpoint
+        #sparql = SPARQLWrapper("http://dbpedia.org/sparql")  # TODO: get URL from parameters / use sparql.SPARQLEndpoint
         #sparql.setQuery(query)
         #sparql.setReturnFormat(XML)
         #results = sparql.query().convert()
