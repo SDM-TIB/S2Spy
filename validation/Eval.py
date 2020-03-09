@@ -4,6 +4,7 @@ from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 from validation.ShapeParser import ShapeParser
 from validation.RuleBasedValidation import RuleBasedValidation
 from validation.utils import fileManagement
+from validation.core.ValidationTask import ValidationTask
 
 
 class Eval:
@@ -17,6 +18,16 @@ class Eval:
 
         self.schema = None
         self.graph = None
+
+        self.task = None
+        if args.g:
+            self.task = ValidationTask.GRAPH_VALIDATION
+        elif args.s:
+            self.task = ValidationTask.SHAPE_VALIDATION
+        elif args.t:
+            self.task = ValidationTask.INSTANCES_VALID
+        elif args.v:
+            self.task = ValidationTask.INSTACES_VIOLATION
 
         self.parseArguments(args)
 
