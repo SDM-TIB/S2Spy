@@ -17,3 +17,6 @@ sparql2neo4j/
 
 .idea/
 **/.DS_Store
+
+venv/
+examples/output/
