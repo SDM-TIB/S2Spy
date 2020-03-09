@@ -4,10 +4,10 @@ from validation.core.Literal import Literal
 
 class AtomicConstraintImpl:
 
-    def __init__(self, id=None, isPos=None, violated=False, datatype=None, value=None, shapeRef=None):
+    def __init__(self, id=None, isPos=None, satisfied=None, datatype=None, value=None, shapeRef=None):
         self.id = id
         self.isPos = isPos
-        self.violated = violated
+        self.satisfied = satisfied
 
         self.datatype = datatype
         self.value = value
@@ -43,3 +43,7 @@ class AtomicConstraintImpl:
     def computeRulePatternBody(self):
         return [Literal(self.shapeRef, v, self.isPos) for v in self.variables] \
                     if self.shapeRef is not None else []   # *** (1)
+
+    def isSatisfied(self):
+        """Checks whether the constraint is satisfied in the endpoint or not."""
+        raise NotImplementedError("Please implement this method in subclasses")

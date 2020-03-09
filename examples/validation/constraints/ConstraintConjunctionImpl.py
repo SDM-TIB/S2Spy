@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import itertools
-from validation.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
+from validation.constraints.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
 from validation.QueryGenerator import QueryGenerator
 
 

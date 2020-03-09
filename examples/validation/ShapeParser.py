@@ -3,9 +3,9 @@ import os
 import json
 from validation.SPARQLPrefixHandler import getPrefixString
 from validation.VariableGenerator import VariableGenerator
-from validation.MinOnlyConstraintImpl import MinOnlyConstraintImpl
-from validation.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
-from validation.ConstraintConjunctionImpl import ConstraintConjunctionImpl
+from validation.constraints.MinOnlyConstraintImpl import MinOnlyConstraintImpl
+from validation.constraints.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
+from validation.constraints.ConstraintConjunctionImpl import ConstraintConjunctionImpl
 from validation.ShapeImpl import ShapeImpl
 from validation.SchemaImpl import SchemaImpl
 

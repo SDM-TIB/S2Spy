@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from validation.VariableGenerator import VariableType
-from validation.AtomicConstraintImpl import AtomicConstraintImpl
+from validation.constraints.AtomicConstraintImpl import AtomicConstraintImpl
 
 
 class MinOnlyConstraintImpl(AtomicConstraintImpl):
@@ -15,7 +15,7 @@ class MinOnlyConstraintImpl(AtomicConstraintImpl):
         self.id = id
         self.isPos = isPos
         self.shapeRef = shapeRef
-        self.violated = False
+        self.satisfied = None
 
     def computeVariables(self):
         atomicConstraint = AtomicConstraintImpl()
@@ -28,3 +28,9 @@ class MinOnlyConstraintImpl(AtomicConstraintImpl):
     @property
     def getPath(self):
         return self.path
+
+#    def isSatisfied(self):
+#        if self.satisfied is not None:
+#            return self.satisfied
+#        if self.min == 1:
+#
