@@ -4,6 +4,7 @@ from enum import Enum
 
 i = itertools.count()
 
+
 class VariableGenerator:
     def __init__(self):
         self.index = 0
@@ -15,7 +16,6 @@ class VariableGenerator:
     @staticmethod
     def generateVariable(type):
         type = "p_"  # *** hardcoded
-
         return str(type) + str(next(i))
 
     @staticmethod

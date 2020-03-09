@@ -3,6 +3,7 @@ from validation.utils import fileManagement
 from validation.EvalPath import EvalPath
 from validation.core.RuleMap import RuleMap
 
+
 class RuleBasedValidation:
     def __init__(self, endpoint, schema, logOutput, validTargetsOuput, invalidTargetsOuput, statsOutput):
         self.endpoint = endpoint
@@ -71,7 +72,6 @@ class RuleBasedValidation:
 
         # termination condition 1: all targets are validated/violated
         # termination condition 2: all shapes have been visited
-
 
     def validateFocusShapes(self, state, focusShapes, depth):
         for s in focusShapes:

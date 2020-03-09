@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from validation.core.Literal import Literal
 
+
 class AtomicConstraintImpl:
 
     def __init__(self, id=None, isPos=None, violated=False, datatype=None, value=None, shapeRef=None):

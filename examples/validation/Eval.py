@@ -5,6 +5,7 @@ from validation.ShapeParser import ShapeParser
 from validation.RuleBasedValidation import RuleBasedValidation
 from validation.utils import fileManagement
 
+
 class Eval:
     def __init__(self, args):
         """

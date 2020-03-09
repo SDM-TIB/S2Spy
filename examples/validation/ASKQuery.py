@@ -2,6 +2,7 @@
 import re
 from SPARQLWrapper import SPARQLWrapper, XML
 
+
 class ASKQuery:
     def __init__(self, constraint, target):
         self.constraint = constraint

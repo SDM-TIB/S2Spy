@@ -3,6 +3,7 @@ import itertools
 from validation.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
 from validation.QueryGenerator import QueryGenerator
 
+
 class ConstraintConjunctionImpl:
 
     def __init__(self, id, minConstraints, maxConstraints, localConstraints):
@@ -41,10 +42,10 @@ class ConstraintConjunctionImpl:
         return [c.getShapeRef() for c in self.getConjuncts() if filterCondidion(c)]
 
     def posRefFilter(self):
-        return lambda c: c.getShapeRef() != None and c.getIsPos() and not isinstance(c, MaxOnlyConstraintImpl)
+        return lambda c: c.getShapeRef() is not None and c.getIsPos() and not isinstance(c, MaxOnlyConstraintImpl)
 
     def negRefFilter(self):
-        return lambda c: c.getShapeRef() != None and (not c.getIsPos() or isinstance(c, MaxOnlyConstraintImpl))
+        return lambda c: c.getShapeRef() is not None and (not c.getIsPos() or isinstance(c, MaxOnlyConstraintImpl))
 
     def getConjuncts(self):
         return self.minConstraints + self.maxConstraints  # *** tbc

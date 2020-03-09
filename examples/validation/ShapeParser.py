@@ -9,6 +9,7 @@ from validation.ConstraintConjunctionImpl import ConstraintConjunctionImpl
 from validation.ShapeImpl import ShapeImpl
 from validation.SchemaImpl import SchemaImpl
 
+
 class ShapeParser:
 
     def __init__(self):
@@ -42,9 +43,9 @@ class ShapeParser:
         obj = json.load(file)
         targetDef = obj.get("targetDef")
 
-        if targetDef != None:
+        if targetDef is not None:
             query = targetDef["query"]
-            if query != None:
+            if query is not None:
                 targetQuery = getPrefixString() + query
 
         name = obj["name"]
@@ -84,20 +85,20 @@ class ShapeParser:
         path = obj.get("path")
         negated = obj.get("negated")
 
-        oMin = None if (min == None) else int(min)
-        oMax = None if (max == None) else int(max)
-        oShapeRef = None if (shapeRef == None) else str(shapeRef)
-        oDatatype = None if (datatype == None) else str(datatype)
-        oValue = None if (value == None) else str(value)
-        oPath = None if (path == None) else str(path)
-        oNeg = True if (negated == None) else not negated # True means is a positive constraint
+        oMin = None if (min is None) else int(min)
+        oMax = None if (max is None) else int(max)
+        oShapeRef = None if (shapeRef is None) else str(shapeRef)
+        oDatatype = None if (datatype is None) else str(datatype)
+        oValue = None if (value is None) else str(value)
+        oPath = None if (path is None) else str(path)
+        oNeg = True if (negated is None) else not negated  # True means it is a positive constraint
 
-        if oPath != None:
-            if oMin != None:
-                if oMax != None:
-                    pass # TODO
+        if oPath is not None:
+            if oMin is not None:
+                if oMax is not None:
+                    pass  # TODO
                 return MinOnlyConstraintImpl(varGenerator, id, oPath, oMin, oNeg, oDatatype, oValue, oShapeRef)
-            if oMax != None:
+            if oMax is not None:
                 return MaxOnlyConstraintImpl(varGenerator, id, oPath, oMax, oNeg, oDatatype, oValue, oShapeRef)
 
         # TODO

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from validation.DependencyGraphImpl import DependencyGraphImpl
 
+
 class SchemaImpl:
     def __init__(self, shapes):
         self.shapes = shapes

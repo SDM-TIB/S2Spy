@@ -2,6 +2,7 @@
 from validation.VariableGenerator import VariableType
 from validation.AtomicConstraintImpl import AtomicConstraintImpl
 
+
 class MinOnlyConstraintImpl(AtomicConstraintImpl):
 
     def __init__(self, varGenerator, id, path, min, isPos, datatype=None, value=None, shapeRef=None):

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-
 from validation.core.RulePattern  import RulePattern
 from validation.core.Literal      import Literal
 from validation.core.Query        import Query
 from validation.VariableGenerator import VariableGenerator
 from validation.SPARQLPrefixHandler import getPrefixString
 from validation.AtomicConstraintImpl import AtomicConstraintImpl
+
 
 class QueryGenerator:
     def __init__(self):
@@ -146,7 +146,6 @@ class QueryBuilder:
 
         if len(variables) > 1:
             self.addCardinalityFilter(variables)
-
 
     def buildQuery(self, rulePattern):
         return Query(

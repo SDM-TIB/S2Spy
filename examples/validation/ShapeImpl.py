@@ -5,11 +5,12 @@ from validation.VariableGenerator import VariableGenerator
 from validation.core.Literal import Literal
 from validation.core.RulePattern import RulePattern
 
+
 class ShapeImpl:
 
     def __init__(self, id, targetDef, targetQuery, disjuncts):
         self.id = id
-        self.targetDef = targetDef.get("query") if targetDef != None else None
+        self.targetDef = targetDef.get("query") if targetDef is not None else None
         self.targetQuery = targetQuery  # Might be None
         self.disjuncts = disjuncts  # conjunctions
         self.rulePatterns = ()
@@ -35,7 +36,7 @@ class ShapeImpl:
         return [d.getNegShapeRefs() for d in self.disjuncts]
 
     def askViolations(self):
-        if self.targetDef != None:  # not checking violations on shapes without target definitions
+        if self.targetDef is not None:  # not checking violations on shapes without target definitions
             triple = re.findall(r'{.*}', self.targetDef)[0]  # *** considering only one target def
             triple = triple[1:len(triple)-1]  # removed curly braces
             triple = triple.strip().split()
@@ -78,4 +79,4 @@ class ShapeImpl:
                         focusNodeVar,
                         True
                         )] + \
-                maxQueries
+            maxQueries
