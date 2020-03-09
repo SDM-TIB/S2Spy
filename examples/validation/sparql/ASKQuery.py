@@ -7,7 +7,7 @@ from validation.sparql import SPARQLEndpoint
 
 class ASKQuery:
 
-    def __init__(self, constraint, target):
+    def __init__(self, constraint, target, type):
         self.constraint = constraint
         self.target = target
         self.type = type

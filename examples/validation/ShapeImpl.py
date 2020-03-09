@@ -12,7 +12,7 @@ class ShapeImpl:
         self.id = id
         self.targetDef = targetDef.get("query") if targetDef is not None else None
         self.targetQuery = targetQuery  # Might be None
-        self.disjuncts = disjuncts  # conjunctions
+        self.disjuncts = disjuncts  # conjunctions; TODO: have a list of constraints
         self.rulePatterns = ()
         self.predicates = ()
 

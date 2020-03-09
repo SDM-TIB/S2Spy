@@ -29,7 +29,7 @@ class MinOnlyConstraintImpl(AtomicConstraintImpl):
 #        if self.satisfied is not None:
 #            return self.satisfied
 #        if self.min == 1:
-#            # exists query
+#            # exists query?
 #        else:
 #            # min query
 #        # set self.satisfied
