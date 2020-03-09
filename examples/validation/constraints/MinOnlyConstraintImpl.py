@@ -8,8 +8,8 @@ from validation.sparql.ASKQuery import *
 
 class MinOnlyConstraintImpl(Constraint):
 
-    def __init__(self, varGenerator, id, path, min, isPos, datatype=None, value=None, shapeRef=None):
-        super().__init__(id, isPos, None, datatype, value, shapeRef)
+    def __init__(self, varGenerator, id, path, min, isPos, datatype=None, value=None, shapeRef=None, targetDef=None):
+        super().__init__(id, isPos, None, datatype, value, shapeRef, targetDef)
         self.varGenerator = varGenerator
         self.path = path
         self.min = min
@@ -31,9 +31,9 @@ class MinOnlyConstraintImpl(Constraint):
         if self.satisfied is not None:
             return self.satisfied
         if self.min == 1:
-            self.satisfied = ASKQueryExistsConstraint(self.path, None).evaluate()  # TODO: insert target
+            self.satisfied = ASKQueryExistsConstraint(self.path, self.target).evaluate()
         else:
-            self.satisfied = ASKQueryMinCardConstraint(self.path, None, self.min).evaluate()  # TODO: insert target
+            self.satisfied = ASKQueryMinCardConstraint(self.path, self.target, self.min).evaluate()
 
         return self.satisfied
 

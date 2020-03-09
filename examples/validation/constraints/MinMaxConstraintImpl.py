@@ -9,8 +9,8 @@ from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 
 class MinMaxConstraintImpl(Constraint):
 
-    def __init__(self, varGenerator, id, path, min, max, isPos, datatype=None, value=None, shapeRef=None):
-        super().__init__(id, isPos, None, datatype, value, shapeRef)
+    def __init__(self, varGenerator, id, path, min, max, isPos, datatype=None, value=None, shapeRef=None, targetDef=None):
+        super().__init__(id, isPos, None, datatype, value, shapeRef, targetDef)
         self.varGenerator = varGenerator
         self.path = path
         self.min = min
@@ -35,7 +35,7 @@ class MinMaxConstraintImpl(Constraint):
 
     def isSatisfied(self):
         if self.satisfied is None:
-            self.satisfied = ASKQueryCardRangeConstraint(self.path, None, self.min, self.max).evaluate()  # TODO: insert target
+            self.satisfied = ASKQueryCardRangeConstraint(self.path, self.target, self.min, self.max).evaluate()
 
         return self.satisfied
 

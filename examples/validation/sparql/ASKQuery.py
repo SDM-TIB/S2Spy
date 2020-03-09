@@ -3,6 +3,7 @@ __author__ = "Monica Figuera and Philipp D. Rohde"
 
 import re
 from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
+from validation.sparql.SPARQLPrefixHandler import getPrefixString
 
 
 class ASKQuery:
@@ -16,7 +17,7 @@ class ASKQuery:
         return False
 
         # TODO: use the code below once other query generation issues are fixed
-        #results = SPARQLEndpoint.instance.runQuery(None, self.query)  # TODO: generate ID for the query?
+        #results = SPARQLEndpoint.instance.runQuery(None, getPrefixString() + self.query)  # TODO: generate ID for the query?
         #if re.search("true", results.toxml()):
         #    return True
         #else:

@@ -6,7 +6,7 @@ from validation.core.Literal import Literal
 
 class Constraint:
 
-    def __init__(self, id=None, isPos=None, satisfied=None, datatype=None, value=None, shapeRef=None):
+    def __init__(self, id=None, isPos=None, satisfied=None, datatype=None, value=None, shapeRef=None, targetDef=None):
         self.id = id
         self.isPos = isPos
         self.satisfied = satisfied
@@ -14,6 +14,7 @@ class Constraint:
         self.datatype = datatype
         self.value = value
         self.shapeRef = shapeRef
+        self.target = targetDef
 
         self.variables = []
 
@@ -25,6 +26,9 @@ class Constraint:
 
     def getShapeRef(self):
         return self.shapeRef
+
+    def getTarget(self):
+        return self.target
 
     def getId(self):
         return self.id

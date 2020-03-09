@@ -48,9 +48,10 @@ class ShapeParser:
             query = targetDef["query"]
             if query is not None:
                 targetQuery = getPrefixString() + query
+            targetDef = targetDef["class"]
 
         name = obj["name"]
-        constraintsConjunctions = self.parseConstraints(name, obj["constraintDef"]["conjunctions"])
+        constraintsConjunctions = self.parseConstraints(name, obj["constraintDef"]["conjunctions"], targetDef)
 
         return ShapeImpl(
                 name,
@@ -59,12 +60,12 @@ class ShapeParser:
                 constraintsConjunctions
         )
 
-    def parseConstraints(self, shapeName, array):
-        return [self.parseDisjunct(array[i], shapeName + "_d" + str(i + 1)) for i in range(len(array))]
+    def parseConstraints(self, shapeName, array, targetDef):
+        return [self.parseDisjunct(array[i], shapeName + "_d" + str(i + 1), targetDef) for i in range(len(array))]
 
-    def parseDisjunct(self, array, id):
+    def parseDisjunct(self, array, id, targetDef):
         varGenerator = VariableGenerator()
-        constraints = [self.parseConstraint(varGenerator, array[i], id + "_c" + str(i + 1)) for i in range(len(array))]
+        constraints = [self.parseConstraint(varGenerator, array[i], id + "_c" + str(i + 1), targetDef) for i in range(len(array))]
 
         minConstraints = [inst for inst in constraints if isinstance(inst, MinOnlyConstraintImpl)]
         maxConstraints = [inst for inst in constraints if isinstance(inst, MaxOnlyConstraintImpl)]
@@ -77,7 +78,7 @@ class ShapeParser:
                 localConstraints
         )
 
-    def parseConstraint(self, varGenerator, obj, id):
+    def parseConstraint(self, varGenerator, obj, id, targetDef):
         min = obj.get("min")
         max = obj.get("max")
         shapeRef = obj.get("shape")
@@ -97,10 +98,10 @@ class ShapeParser:
         if oPath is not None:
             if oMin is not None:
                 if oMax is not None:
-                    return MinMaxConstraintImpl(varGenerator, id, oPath, oMin, oMax, oNeg, oDatatype, oValue, oShapeRef)
-                return MinOnlyConstraintImpl(varGenerator, id, oPath, oMin, oNeg, oDatatype, oValue, oShapeRef).isSatisfied()
+                    return MinMaxConstraintImpl(varGenerator, id, oPath, oMin, oMax, oNeg, oDatatype, oValue, oShapeRef, targetDef)
+                return MinOnlyConstraintImpl(varGenerator, id, oPath, oMin, oNeg, oDatatype, oValue, oShapeRef, targetDef)
             if oMax is not None:
-                return MaxOnlyConstraintImpl(varGenerator, id, oPath, oMax, oNeg, oDatatype, oValue, oShapeRef)
+                return MaxOnlyConstraintImpl(varGenerator, id, oPath, oMax, oNeg, oDatatype, oValue, oShapeRef, targetDef)
 
         # TODO
         #return new LocalConstraintImpl(id, oDatatype, oValue, oShapeRef, oNeg);

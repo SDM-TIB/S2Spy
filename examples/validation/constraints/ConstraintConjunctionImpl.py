@@ -4,6 +4,7 @@ from validation.constraints.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
 from validation.sparql.QueryGenerator import QueryGenerator
 
 
+# TODO: this will be replaced by a list of constraints in the shape
 class ConstraintConjunctionImpl:
 
     def __init__(self, id, minConstraints, maxConstraints, localConstraints):

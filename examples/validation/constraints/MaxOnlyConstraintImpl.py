@@ -7,8 +7,8 @@ from validation.constraints.Constraint import Constraint
 
 class MaxOnlyConstraintImpl(Constraint):
 
-    def __init__(self, varGenerator, id, path, max, isPos, datatype=None, value=None, shapeRef=None):
-        super().__init__(id, isPos, None, datatype, value, shapeRef)
+    def __init__(self, varGenerator, id, path, max, isPos, datatype=None, value=None, shapeRef=None, targetDef=None):
+        super().__init__(id, isPos, None, datatype, value, shapeRef, targetDef)
         self.varGenerator = varGenerator
         self.path = path
         self.max = max
@@ -28,7 +28,7 @@ class MaxOnlyConstraintImpl(Constraint):
 
     def isSatisfied(self):
         if self.satisfied is None:
-            self.satisfied = ASKQueryMaxCardConstraint(self.path, None, self.max).evaluate()  # TODO: insert target
+            self.satisfied = ASKQueryMaxCardConstraint(self.path, self.target, self.max).evaluate()
 
         return self.satisfied
 
