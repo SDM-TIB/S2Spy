@@ -17,7 +17,6 @@ class ShapeImpl:
         self.predicates = ()
 
         self.computePredicateSet()
-
         # e.g., [ActorShape, ActorShape_d1, ActorShape_d1_pos]
         # e.g., [MovieShape, MovieShape_d1, MovieShape_d1_pos, MovieShape_d1_max_1]
 
@@ -59,7 +58,6 @@ class ShapeImpl:
         return self.disjuncts
 
     def computeConstraintQueries(self, schema, graph):
-
         for c in self.disjuncts:
             c.computeQueries(graph)
 

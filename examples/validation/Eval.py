@@ -23,7 +23,7 @@ class Eval:
         shapes = self.schema.getShapes()
         for s in shapes:
             #s.askViolations()
-            s.computeConstraintQueries(self.schema, self.graph)
+            s.computeConstraintQueries(self.schema, self.graph)  # TODO: compute queries once they are needed!? (in the constraint itself on validation)
 
         self.createOutputDir()
 

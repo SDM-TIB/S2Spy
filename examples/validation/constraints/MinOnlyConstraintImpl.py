@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from validation.VariableGenerator import VariableType
 from validation.constraints.AtomicConstraintImpl import AtomicConstraintImpl
+from validation import ASKQuery
 
 
 class MinOnlyConstraintImpl(AtomicConstraintImpl):
@@ -33,4 +34,8 @@ class MinOnlyConstraintImpl(AtomicConstraintImpl):
 #        if self.satisfied is not None:
 #            return self.satisfied
 #        if self.min == 1:
-#
+#            # exists query
+#        else:
+#            # min query
+#        # set self.satisfied
+#        # return self.satisfied

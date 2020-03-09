@@ -34,7 +34,6 @@ class ASKQuery:
         else:
             query = self.ASKQueryCardinConstraint(">", cardinality)
 
-        print("Query: ", query)
         sparql = SPARQLWrapper("http://dbpedia.org/sparql")  # TODO: get URL from parameters
         sparql.setQuery(query)
         sparql.setReturnFormat(XML)
