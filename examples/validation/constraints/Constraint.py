@@ -47,5 +47,13 @@ class Constraint:
                     if self.shapeRef is not None else []   # *** (1)
 
     def isSatisfied(self):
-        """Checks whether the constraint is satisfied in the endpoint or not."""
+        """Checks whether the constraint is satisfied in the endpoint or not. Needs to be implemented by subclasses."""
+        raise NotImplementedError("Please implement this method in subclasses")
+
+    def getValidInstances(self):
+        """Reports all instances that validate the constraint. Needs to be implemented by subclasses."""
+        raise NotImplementedError("Please implement this method in subclasses")
+
+    def getViolations(self):
+        """Reports all instances that violate the constraint. Needs to be implemented by subclasses."""
         raise NotImplementedError("Please implement this method in subclasses")

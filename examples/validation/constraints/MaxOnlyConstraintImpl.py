@@ -22,3 +22,12 @@ class MaxOnlyConstraintImpl(Constraint):
     @property
     def getPath(self):
         return self.path
+
+    def isSatisfied(self):
+        return False
+
+    def getValidInstances(self):
+        return []
+
+    def getViolations(self):
+        return []

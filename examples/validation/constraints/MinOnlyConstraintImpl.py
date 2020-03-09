@@ -25,7 +25,8 @@ class MinOnlyConstraintImpl(Constraint):
     def getPath(self):
         return self.path
 
-#    def isSatisfied(self):
+    def isSatisfied(self):
+        return False
 #        if self.satisfied is not None:
 #            return self.satisfied
 #        if self.min == 1:
@@ -34,3 +35,9 @@ class MinOnlyConstraintImpl(Constraint):
 #            # min query
 #        # set self.satisfied
 #        # return self.satisfied
+
+    def getValidInstances(self):
+        return []
+
+    def getViolations(self):
+        return []

@@ -10,7 +10,7 @@ class ShapeImpl:
 
     def __init__(self, id, targetDef, targetQuery, disjuncts):
         self.id = id
-        self.targetDef = targetDef.get("query") if targetDef is not None else None
+        self.targetDef = targetDef.get("query") if targetDef is not None else None  # TODO: have class only?!
         self.targetQuery = targetQuery  # Might be None
         self.disjuncts = disjuncts  # conjunctions; TODO: have a list of constraints
         self.rulePatterns = ()
