@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
-from SPARQLWrapper import SPARQLWrapper, XML
+from validation.endpoint import SPARQLEndpoint
 
 
 class ASKQuery:
@@ -34,10 +34,11 @@ class ASKQuery:
         else:
             query = self.ASKQueryCardinConstraint(">", cardinality)
 
-        sparql = SPARQLWrapper("http://dbpedia.org/sparql")  # TODO: get URL from parameters
-        sparql.setQuery(query)
-        sparql.setReturnFormat(XML)
-        results = sparql.query().convert()
+        #sparql = SPARQLWrapper("http://dbpedia.org/sparql")  # TODO: get URL from parameters / use endpoint.SPARQLEndpoint
+        #sparql.setQuery(query)
+        #sparql.setReturnFormat(XML)
+        #results = sparql.query().convert()
+        results = SPARQLEndpoint.runQuery(None, query)  # TODO: generate ID for the query?
         if re.search("true", results.toxml()):
             return True
         else:
