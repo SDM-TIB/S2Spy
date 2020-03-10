@@ -55,6 +55,11 @@ class ShapeNetwork:
         # TODO
         return
 
+    def shapesSatisfiable(self):
+        """Reports for each shape if it is satisfiable or not."""
+        # TODO
+        return
+
     def getValidInstances(self):
         """Reports all instances that validate the constraints of the graph."""
         # TODO
