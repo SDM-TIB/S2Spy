@@ -21,24 +21,24 @@ class ShapeNetwork:
         # TODO
         return
 
-    def validate(self, validationTask):
+    def validate(self):
         """Execute one of the validation tasks in validation.core.ValidationTask."""
-        # TODO: if the task can be set here; then it does not need to be stored during initialization
+        # TODO: validate 'start' first and then traverse the graph according to graphTraversal
         start = self.getStartingPoint()
-        if validationTask == ValidationTask.GRAPH_VALIDATION:
+        if self.validationTask == ValidationTask.GRAPH_VALIDATION:
             # TODO
             return
-        elif validationTask == ValidationTask.SHAPE_VALIDATION:
+        elif self.validationTask == ValidationTask.SHAPE_VALIDATION:
             # TODO
             return
-        elif validationTask == ValidationTask.INSTANCES_VALID:
+        elif self.validationTask == ValidationTask.INSTANCES_VALID:
             # TODO
             return
-        elif validationTask == ValidationTask.INSTACES_VIOLATION:
+        elif self.validationTask == ValidationTask.INSTACES_VIOLATION:
             # TODO
             return
         else:
-            raise TypeError("Invalid validation task: " + validationTask)
+            raise TypeError("Invalid validation task: " + self.validationTask)
 
     def computeInAndOutDegree(self):
         """Computes the in- and outdegree of each shape."""
