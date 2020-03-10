@@ -18,6 +18,20 @@ class ShapeParser:
     def __init__(self):
         return
 
+    def parseShapesFromDir(self, path, shapeFormat):
+        fileExtension = self.getFileExtension(shapeFormat)
+        filesAbsPaths = []
+        # r=root, d=directories, f = files
+        for r, d, f in os.walk(path):
+            for file in f:
+                if fileExtension in file:
+                    filesAbsPaths.append(os.path.join(r, file))
+
+        if shapeFormat == "JSON":
+            return [self.parseJson(p) for p in filesAbsPaths]
+        else:  # TODO: implement parsing of TTL format
+            print("Unexpected format: " + shapeFormat)
+
     def parseSchemaFromDir(self, path, shapeFormat):
         fileExtension = self.getFileExtension(shapeFormat)
         filesAbsPaths = []
