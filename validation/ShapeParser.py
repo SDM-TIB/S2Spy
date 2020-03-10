@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+__author__ = "Monica Figuera and Philipp D. Rohde"
+
 import os
 import json
 from validation.sparql.SPARQLPrefixHandler import getPrefixString
@@ -6,12 +8,12 @@ from validation.VariableGenerator import VariableGenerator
 from validation.constraints.MinMaxConstraintImpl import MinMaxConstraintImpl
 from validation.constraints.MinOnlyConstraintImpl import MinOnlyConstraintImpl
 from validation.constraints.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
-from validation.constraints.ConstraintConjunctionImpl import ConstraintConjunctionImpl
-from validation.ShapeImpl import ShapeImpl
+from validation.Shape import Shape
 from validation.SchemaImpl import SchemaImpl
 
 
 class ShapeParser:
+    # TODO: Schema will become Graph
 
     def __init__(self):
         return
@@ -51,32 +53,14 @@ class ShapeParser:
             targetDef = targetDef["class"]
 
         name = obj["name"]
-        constraintsConjunctions = self.parseConstraints(name, obj["constraintDef"]["conjunctions"], targetDef)
+        constraints = self.parseConstraints(name, obj["constraintDef"]["conjunctions"], targetDef)
 
-        return ShapeImpl(
-                name,
-                targetDef,
-                targetQuery,
-                constraintsConjunctions
-        )
+        return Shape(name, targetDef, targetQuery, constraints)
 
     def parseConstraints(self, shapeName, array, targetDef):
-        return [self.parseDisjunct(array[i], shapeName + "_d" + str(i + 1), targetDef) for i in range(len(array))]
-
-    def parseDisjunct(self, array, id, targetDef):
         varGenerator = VariableGenerator()
-        constraints = [self.parseConstraint(varGenerator, array[i], id + "_c" + str(i + 1), targetDef) for i in range(len(array))]
-
-        minConstraints = [inst for inst in constraints if isinstance(inst, MinOnlyConstraintImpl)]
-        maxConstraints = [inst for inst in constraints if isinstance(inst, MaxOnlyConstraintImpl)]
-        localConstraints = []  # *** hardcoded
-
-        return ConstraintConjunctionImpl(
-                id,
-                minConstraints,
-                maxConstraints,
-                localConstraints
-        )
+        id = shapeName + "_d1"  # str(i + 1) but there is only one set of conjunctions
+        return [self.parseConstraint(varGenerator, array[0][i], id + "_c" + str(i + 1), targetDef) for i in range(len(array))]
 
     def parseConstraint(self, varGenerator, obj, id, targetDef):
         min = obj.get("min")
