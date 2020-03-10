@@ -4,6 +4,7 @@ __author__ = "Monica Figuera and Philipp D. Rohde"
 import re
 from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 from validation.sparql.SPARQLPrefixHandler import getPrefixString
+# TODO: What is the constraint has a value?
 
 
 class ASKQuery:
