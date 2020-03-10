@@ -14,6 +14,7 @@ class ShapeNetwork:
         self.graphTraversal = graphTraversal
         self.validationTask = validationTask
         self.parallel = workInParallel
+        self.dependencies, self.reverse_dependencies = self.computeEdges()
         # TODO: compute edges; in- and outdegree; dependencies
 
     def getStartingPoint(self):
@@ -42,13 +43,31 @@ class ShapeNetwork:
 
     def computeInAndOutDegree(self):
         """Computes the in- and outdegree of each shape."""
-        # TODO
+        for s in self.shapes:
+            s.outDegree = len(self.dependencies[s.getId()]) if s.getId() in self.dependencies.keys() else 0
+            s.inDegree = 0
+            for node in self.dependencies.keys():
+                edges = self.dependencies[node]
+                if s.getId() in edges:
+                    s.inDegree += 1
+        # TODO: is there a better/easier way to compute the indegree?
         return
 
     def computeEdges(self):
         """Computes the edges in the network."""
-        # TODO
-        return
+        dependencies = {}
+        reverse_dependecies = {}
+        for s in self.shapes:
+            refs = s.getShapeRefs()
+            if refs:
+                name = s.getId()
+                dependencies[name] = refs
+                for ref in refs:
+                    if ref in reverse_dependecies.keys():
+                        reverse_dependecies[ref].append(name)
+                    else:
+                        reverse_dependecies[ref] = [name]
+        return dependencies, reverse_dependecies
 
     def isSatisfied(self):
         """Checks whether the graph is satisfiable or not."""
