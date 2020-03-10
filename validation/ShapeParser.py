@@ -5,9 +5,9 @@ import os
 import json
 from validation.sparql.SPARQLPrefixHandler import getPrefixString
 from validation.VariableGenerator import VariableGenerator
-from validation.constraints.MinMaxConstraintImpl import MinMaxConstraintImpl
-from validation.constraints.MinOnlyConstraintImpl import MinOnlyConstraintImpl
-from validation.constraints.MaxOnlyConstraintImpl import MaxOnlyConstraintImpl
+from validation.constraints.MinMaxConstraint import MinMaxConstraint
+from validation.constraints.MinOnlyConstraint import MinOnlyConstraint
+from validation.constraints.MaxOnlyConstraint import MaxOnlyConstraint
 from validation.Shape import Shape
 from validation.SchemaImpl import SchemaImpl
 
@@ -82,10 +82,10 @@ class ShapeParser:
         if oPath is not None:
             if oMin is not None:
                 if oMax is not None:
-                    return MinMaxConstraintImpl(varGenerator, id, oPath, oMin, oMax, oNeg, oDatatype, oValue, oShapeRef, targetDef)
-                return MinOnlyConstraintImpl(varGenerator, id, oPath, oMin, oNeg, oDatatype, oValue, oShapeRef, targetDef)
+                    return MinMaxConstraint(varGenerator, id, oPath, oMin, oMax, oNeg, oDatatype, oValue, oShapeRef, targetDef)
+                return MinOnlyConstraint(varGenerator, id, oPath, oMin, oNeg, oDatatype, oValue, oShapeRef, targetDef)
             if oMax is not None:
-                return MaxOnlyConstraintImpl(varGenerator, id, oPath, oMax, oNeg, oDatatype, oValue, oShapeRef, targetDef)
+                return MaxOnlyConstraint(varGenerator, id, oPath, oMax, oNeg, oDatatype, oValue, oShapeRef, targetDef)
 
         # TODO
         #return new LocalConstraintImpl(id, oDatatype, oValue, oShapeRef, oNeg);

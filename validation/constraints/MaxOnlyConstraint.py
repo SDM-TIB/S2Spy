@@ -6,39 +6,35 @@ from validation.constraints.Constraint import Constraint
 from validation.sparql.ASKQuery import *
 
 
-class MinOnlyConstraintImpl(Constraint):
+class MaxOnlyConstraint(Constraint):
 
-    def __init__(self, varGenerator, id, path, min, isPos, datatype=None, value=None, shapeRef=None, targetDef=None):
+    def __init__(self, varGenerator, id, path, max, isPos, datatype=None, value=None, shapeRef=None, targetDef=None):
         super().__init__(id, isPos, None, datatype, value, shapeRef, targetDef)
         self.varGenerator = varGenerator
         self.path = path
-        self.min = min
+        self.max = max
         self.variables = self.computeVariables()
 
     def computeVariables(self):
         atomicConstraint = Constraint()
-        return atomicConstraint.generateVariables(self.varGenerator, VariableType.VALIDATION, self.min)
+        return atomicConstraint.generateVariables(self.varGenerator, VariableType.VALIDATION, self.max + 1)
 
     @property
-    def getMin(self):
-        return self.min
+    def getMax(self):
+        return self.max
 
     @property
     def getPath(self):
         return self.path
 
     def isSatisfied(self):
-        if self.satisfied is not None:
-            return self.satisfied
-        if self.min == 1:
-            self.satisfied = ASKQueryExistsConstraint(self.path, self.target).evaluate()
-        else:
-            self.satisfied = ASKQueryMinCardConstraint(self.path, self.target, self.min).evaluate()
+        if self.satisfied is None:
+            self.satisfied = ASKQueryMaxCardConstraint(self.path, self.target, self.max).evaluate()
 
         return self.satisfied
 
     def getValidInstances(self):
-        return []
+        return []  # TODO
 
     def getViolations(self):
-        return []
+        return []  # TODO

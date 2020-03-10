@@ -1,22 +1,28 @@
 # -*- coding: utf-8 -*-
-__author__ = "Monica Figuera and Philipp D. Rohde"
+__author__ = "Philipp D. Rohde"
 
 from validation.VariableGenerator import VariableType
 from validation.constraints.Constraint import Constraint
+from validation.sparql.ASKQuery import *
 
 
-class MaxOnlyConstraintImpl(Constraint):
+class MinMaxConstraint(Constraint):
 
-    def __init__(self, varGenerator, id, path, max, isPos, datatype=None, value=None, shapeRef=None, targetDef=None):
+    def __init__(self, varGenerator, id, path, min, max, isPos, datatype=None, value=None, shapeRef=None, targetDef=None):
         super().__init__(id, isPos, None, datatype, value, shapeRef, targetDef)
         self.varGenerator = varGenerator
         self.path = path
+        self.min = min
         self.max = max
         self.variables = self.computeVariables()
 
     def computeVariables(self):
         atomicConstraint = Constraint()
-        return atomicConstraint.generateVariables(self.varGenerator, VariableType.VALIDATION, self.max + 1)
+        return atomicConstraint.generateVariables(self.varGenerator, VariableType.VALIDATION, self.min)
+
+    @property
+    def getMin(self):
+        return self.min
 
     @property
     def getMax(self):
@@ -28,7 +34,7 @@ class MaxOnlyConstraintImpl(Constraint):
 
     def isSatisfied(self):
         if self.satisfied is None:
-            self.satisfied = ASKQueryMaxCardConstraint(self.path, self.target, self.max).evaluate()
+            self.satisfied = ASKQueryCardRangeConstraint(self.path, self.target, self.min, self.max).evaluate()
 
         return self.satisfied
 
