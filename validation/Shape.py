@@ -20,6 +20,7 @@ class Shape:
         self.satisfied = None
         self.inDegree = None
         self.outDegree = None
+        print("Shape refs:", self.getShapeRefs())
 #        self.computePredicateSet()
         # e.g., [ActorShape, ActorShape_d1, ActorShape_d1_pos]
         # e.g., [MovieShape, MovieShape_d1, MovieShape_d1_pos, MovieShape_d1_max_1]
@@ -64,7 +65,7 @@ class Shape:
         return self.constraints
 
     def getShapeRefs(self):
-        return [c.getShapeRef() for c in self.constraints]
+        return [c.getShapeRef() for c in self.constraints if c.getShapeRef() is not None]
 
     def isSatisfied(self):
         if self.satisfied is None:
