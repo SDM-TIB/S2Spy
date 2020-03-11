@@ -13,12 +13,14 @@ class GraphTraversal(Enum):
         visited = []
         if self == GraphTraversal.DFS:
             self.__dfs__(visited, dependencies, reversed_dependencies, starting_point)
-        # TODO: implement BFS
+        elif self == GraphTraversal.BFS:
+            self.__bfs__(visited, dependencies, reversed_dependencies, starting_point)
         return visited
 
     def __dfs__(self, visited, dependencies, reversed_dependencies, node):
         """Implementation of depth-first search with the ability to go back
         if the algorithm is in a sink but there are still unvisited nodes."""
+        # TODO: rearrange the graph (do not prioritize dependencies, i.e., use edges = dep + rev_dep)?
         if node not in visited:
             visited.append(node)
             for neighbour in dependencies[node]:
@@ -32,3 +34,7 @@ class GraphTraversal(Enum):
                     self.__dfs__(visited, dependencies, reversed_dependencies, neighbour)
             for neighbour in reversed_dependencies[node]:
                 self.__dfs__(visited, dependencies, reversed_dependencies, neighbour)
+
+    def __bfs__(self, visited, dependencies, reversed_dependencies, node):
+        # TODO
+        return
