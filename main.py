@@ -13,6 +13,8 @@ if __name__ == '__main__':
                         help='SPARQL Endpoint')
     parser.add_argument('outputDir', metavar='outputDir', type=str, default=None,
                         help='Name of the directory where results of validation will be saved')
+    parser.add_argument(dest='graphTraversal', type=str, default='DFS', choices=['BFS', 'DFS'],
+                        help='The algorithm used for graph traversal (BFS / DFS)')
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-g", action="store_true", help="validate the whole graph")

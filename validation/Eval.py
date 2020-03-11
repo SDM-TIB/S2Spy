@@ -4,6 +4,7 @@ from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 from validation.ShapeParser import ShapeParser
 from validation.RuleBasedValidation import RuleBasedValidation
 from validation.utils import fileManagement
+from validation.core.GraphTraversal import GraphTraversal
 from validation.core.ValidationTask import ValidationTask
 
 
@@ -29,6 +30,10 @@ class Eval:
         elif args.v:
             self.task = ValidationTask.INSTACES_VIOLATION
 
+        if args.graphTraversal == "DFS":
+            self.graphTraversal = GraphTraversal.DFS
+        elif args.graphTraversal == "BFS":
+            self.graphTraversal = GraphTraversal.BFS
         self.parseArguments(args)
 
         shapes = self.schema.getShapes()
