@@ -38,7 +38,7 @@ class MinOnlyConstraint(Constraint):
         return self.satisfied
 
     def getValidInstances(self):
-        return []
+        return []  # TODO
 
     def getViolations(self):
-        return []
+        return []  # TODO

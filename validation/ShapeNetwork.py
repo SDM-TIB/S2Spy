@@ -55,19 +55,16 @@ class ShapeNetwork:
 
     def computeEdges(self):
         """Computes the edges in the network."""
-        dependencies = {}
-        reverse_dependecies = {}
+        dependencies = {s.getId(): [] for s in self.shapes}
+        reverse_dependencies = {s.getId(): [] for s in self.shapes}
         for s in self.shapes:
             refs = s.getShapeRefs()
             if refs:
                 name = s.getId()
                 dependencies[name] = refs
                 for ref in refs:
-                    if ref in reverse_dependecies.keys():
-                        reverse_dependecies[ref].append(name)
-                    else:
-                        reverse_dependecies[ref] = [name]
-        return dependencies, reverse_dependecies
+                    reverse_dependencies[ref].append(name)
+        return dependencies, reverse_dependencies
 
     def isSatisfied(self):
         """Checks whether the graph is satisfiable or not."""
