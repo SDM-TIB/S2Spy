@@ -10,12 +10,13 @@ class ShapeNetwork:
 
     def __init__(self, schemaDir, schemaFormat, endpointURL, graphTraversal, validationTask, workInParallel=False):
         self.shapes = ShapeParser().parseShapesFromDir(schemaDir, schemaFormat)
+        self.shapesDict = {shape.getId(): shape for shape in self.shapes}  # TODO: use only the dict?
         self.endpoint = SPARQLEndpoint(endpointURL)
         self.graphTraversal = graphTraversal
         self.validationTask = validationTask
         self.parallel = workInParallel
         self.dependencies, self.reverse_dependencies = self.computeEdges()
-        # TODO: compute edges; in- and outdegree; dependencies
+        self.computeInAndOutDegree()
 
     def getStartingPoint(self):
         """Use heuristics to determine the first shape for evaluation of the constraints."""
@@ -24,13 +25,14 @@ class ShapeNetwork:
 
     def validate(self):
         """Execute one of the validation tasks in validation.core.ValidationTask."""
-        # TODO: validate 'start' first and then traverse the graph according to graphTraversal
+        # TODO: reports
         start = self.getStartingPoint()
+        node_order = self.graphTraversal.traverse_graph(self.dependencies, self.reverse_dependencies, start)
         if self.validationTask == ValidationTask.GRAPH_VALIDATION:
-            # TODO
+            isSatisfied = self.isSatisfied(node_order)
             return
         elif self.validationTask == ValidationTask.SHAPE_VALIDATION:
-            # TODO
+            shapeReport = self.shapesSatisfiable(node_order)
             return
         elif self.validationTask == ValidationTask.INSTANCES_VALID:
             # TODO
@@ -66,15 +68,19 @@ class ShapeNetwork:
                     reverse_dependencies[ref].append(name)
         return dependencies, reverse_dependencies
 
-    def isSatisfied(self):
+    def isSatisfied(self, nodes):
         """Checks whether the graph is satisfiable or not."""
-        # TODO
-        return
+        for node in nodes:
+            if not self.shapesDict[node].isSatisfied():
+                return False
+        return True
 
-    def shapesSatisfiable(self):
+    def shapesSatisfiable(self, nodes):
         """Reports for each shape if it is satisfiable or not."""
-        # TODO
-        return
+        report = {}
+        for node in nodes:
+            report[node] = self.shapesDict[node].isSatisfied()
+        return report
 
     def getValidInstances(self):
         """Reports all instances that validate the constraints of the graph."""
