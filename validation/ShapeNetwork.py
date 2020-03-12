@@ -20,20 +20,32 @@ class ShapeNetwork:
 
     def getStartingPoint(self):
         """Use heuristics to determine the first shape for evaluation of the constraints."""
+        # TODO: use parameters to allow customization of the heuristics used
+        possible_starting_points = []
+        # heuristic 1: target definition available
+        for s in self.shapes:
+            if s.targetDef is not None:
+                possible_starting_points.append(s.getId())
+
+        # heuristic 2: in- and outdegree
         # TODO
-        return
+
+        # heuristic 3: number of properties
+        # TODO
+
+        return possible_starting_points
 
     def validate(self):
         """Execute one of the validation tasks in validation.core.ValidationTask."""
         # TODO: reports
         start = self.getStartingPoint()
-        node_order = self.graphTraversal.traverse_graph(self.dependencies, self.reverse_dependencies, start)
+        node_order = self.graphTraversal.traverse_graph(self.dependencies, self.reverse_dependencies, start[0])  # TODO: deal with more than one possible starting point
         if self.validationTask == ValidationTask.GRAPH_VALIDATION:
             isSatisfied = self.isSatisfied(node_order)
-            return
+            return isSatisfied
         elif self.validationTask == ValidationTask.SHAPE_VALIDATION:
             shapeReport = self.shapesSatisfiable(node_order)
-            return
+            return shapeReport
         elif self.validationTask == ValidationTask.INSTANCES_VALID:
             # TODO
             return

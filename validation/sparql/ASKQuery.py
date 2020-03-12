@@ -15,14 +15,14 @@ class ASKQuery:
         self.query = None
 
     def evaluate(self):
-        return False
+        #return False
 
         # TODO: use the code below once other query generation issues are fixed
-        #results = SPARQLEndpoint.instance.runQuery(None, getPrefixString() + self.query)  # TODO: generate ID for the query?
-        #if re.search("true", results.toxml()):
-        #    return True
-        #else:
-        #    return False
+        results = SPARQLEndpoint.instance.runQuery(None, getPrefixString() + self.query)  # TODO: generate ID for the query?
+        if re.search("true", results.toxml()):
+            return True
+        else:
+            return False
 
 
 class ASKQueryCardConstraint(ASKQuery):
