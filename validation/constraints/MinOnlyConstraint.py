@@ -30,11 +30,8 @@ class MinOnlyConstraint(Constraint):
     def isSatisfied(self):
         if self.satisfied is not None:
             return self.satisfied
-        if self.min == 1:
-            self.satisfied = ASKQueryExistsConstraint(self.path, self.target).evaluate()
-        else:
-            self.satisfied = ASKQueryMinCardConstraint(self.path, self.target, self.min).evaluate()
 
+        self.satisfied = not ASKQueryMinCardConstraint(self.path, self.target, self.min, self.value).evaluate()
         return self.satisfied
 
     def getValidInstances(self):

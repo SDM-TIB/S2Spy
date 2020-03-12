@@ -29,7 +29,7 @@ class MaxOnlyConstraint(Constraint):
 
     def isSatisfied(self):
         if self.satisfied is None:
-            self.satisfied = ASKQueryMaxCardConstraint(self.path, self.target, self.max).evaluate()
+            self.satisfied = not ASKQueryMaxCardConstraint(self.path, self.target, self.max, self.value).evaluate()
 
         return self.satisfied
 

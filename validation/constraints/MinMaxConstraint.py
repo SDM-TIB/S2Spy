@@ -34,7 +34,7 @@ class MinMaxConstraint(Constraint):
 
     def isSatisfied(self):
         if self.satisfied is None:
-            self.satisfied = ASKQueryCardRangeConstraint(self.path, self.target, self.min, self.max).evaluate()
+            self.satisfied = not ASKQueryCardRangeConstraint(self.path, self.target, self.min, self.max, self.value).evaluate()
 
         return self.satisfied
 

@@ -4,18 +4,48 @@ __author__ = "Monica Figuera and Philipp D. Rohde"
 import re
 from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 from validation.sparql.SPARQLPrefixHandler import getPrefixString
-# TODO: What if the constraint has a value?
+# TODO: Use RDF-MTs for calculating class of shapes without target definition
 
 
 class ASKQuery:
-    def __init__(self, constraint, target, type):
+    def __init__(self, constraint, target, value):
         self.constraint = constraint
         self.target = target
-        self.type = type
-        self.query = None
+        self.value = value
+
+    def getQuery(self):
+        query = "ASK {\n"
+
+        inverse_path = self.constraint.startswith("^")
+        subj = "?s" if not inverse_path else "?o"
+        pred = self.constraint if not inverse_path else self.constraint[1:]
+        if not inverse_path:
+            obj = "?o" if self.value is None else self.value
+        else:
+            obj = "?s" if self.value is None else self.value
+
+        if self.target is not None:
+            query += "\t%s a %s\n" % (subj, self.target)
+
+        if isinstance(self, ASKQueryCardConstraint):
+            if isinstance(self, ASKQueryMinCardConstraint) and self.cardinality == 1:  # exists constraint
+                query += "\tFILTER NOT EXISTS {\n\t\t%s %s %s\n\t}" % (subj, pred, obj)
+            else:  # real cardinality constraint
+                query += "\t{\n\t\tSELECT %s COUNT(%s) AS ?cnt WHERE {\n\t\t\t%s %s %s\n\t\t} GROUP BY %s\n\t}\n" % (subj, obj, subj, pred, obj, subj)
+                if isinstance(self, ASKQueryMinCardConstraint):
+                    query += "\tFILTER( ?cnt < %s )" % str(self.cardinality)
+                elif isinstance(self, ASKQueryMaxCardConstraint):
+                    query += "\tFILTER( ?cnt > %s )" % str(self.cardinality)
+                elif isinstance(self, ASKQueryCardRangeConstraint):
+                    query += "\tFILTER( ?cnt < %s OR ?cnt > %s)" % (str(self.min), str(self.max))
+        else:
+            raise TypeError("Unsupported ASK query type: " + str(self.__class__))
+
+        query += "\n}"
+        return query
 
     def evaluate(self):
-        results = SPARQLEndpoint.instance.runQuery(None, getPrefixString() + self.query)  # TODO: generate ID for the query?
+        results = SPARQLEndpoint.instance.runQuery(None, getPrefixString() + self.getQuery())  # TODO: generate ID for the query?
         if re.search("true", results.toxml()):
             return True
         else:
@@ -23,53 +53,24 @@ class ASKQuery:
 
 
 class ASKQueryCardConstraint(ASKQuery):
-    def __init__(self, constraint, target, type, operator, cardinality):
-        super().__init__(constraint, target, type)
-        self.operator = operator
+    def __init__(self, constraint, target, type, cardinality, value=None):
+        super().__init__(constraint, target, value)
+        self.type = type
         self.cardinality = cardinality
-        self.query = "ASK {\n\
-                { SELECT ?s COUNT(?o) AS ?cnt WHERE {\n\
-                    ?s a %s.\n\
-                    ?s %s ?o.\n\
-                }\n\
-                GROUP BY(?s)\n\
-                }\n\
-                FILTER (?cnt %s %s)\n\
-                }" % (self.target, self.constraint, operator, str(cardinality))
 
 
 class ASKQueryMinCardConstraint(ASKQueryCardConstraint):
-    def __init__(self, constraint, target, cardinality):
-        super().__init__(constraint, target, "min", "<", cardinality)
+    def __init__(self, constraint, target, cardinality, value):
+        super().__init__(constraint, target, "min", cardinality, value)
 
 
 class ASKQueryMaxCardConstraint(ASKQueryCardConstraint):
-    def __init__(self, constraint, target, cardinality):
-        super().__init__(constraint, target, "max", ">", cardinality)
+    def __init__(self, constraint, target, cardinality, value):
+        super().__init__(constraint, target, "max", cardinality, value)
 
 
-class ASKQueryCardRangeConstraint(ASKQuery):
-    def __init__(self, constraint, target, min, max):
-        super().__init__(constraint, target, "minmax")
+class ASKQueryCardRangeConstraint(ASKQueryCardConstraint):
+    def __init__(self, constraint, target, min, max, value):
+        super().__init__(constraint, target, "in", [min, max], value)
         self.min = min
         self.max = max
-        self.query = "ASK {\n\
-                { SELECT ?s COUNT(?o) AS ?cnt WHERE {\n\
-                    ?s a %s.\n\
-                    ?s %s ?o.\n\
-                }\n\
-                GROUP BY(?s)\n\
-                }\n\
-                FILTER (?cnt < %s OR ?cnt > %s)\n\
-                }" % (self.target, self.constraint, str(min), str(max))
-
-
-class ASKQueryExistsConstraint(ASKQuery):
-    def __init__(self, constraint, target):
-        super().__init__(constraint, target, "exists")
-        self.query = "ASK {\n\
-                    ?s a %s\n\
-                    FILTER NOT EXISTS {\n\
-                    ?s %s ?o.\n\
-                    }\n\
-                }" % (self.target, self.constraint)
