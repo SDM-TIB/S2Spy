@@ -4,7 +4,7 @@ __author__ = "Monica Figuera and Philipp D. Rohde"
 import re
 from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 from validation.sparql.SPARQLPrefixHandler import getPrefixString
-# TODO: What is the constraint has a value?
+# TODO: What if the constraint has a value?
 
 
 class ASKQuery:
@@ -15,9 +15,6 @@ class ASKQuery:
         self.query = None
 
     def evaluate(self):
-        #return False
-
-        # TODO: use the code below once other query generation issues are fixed
         results = SPARQLEndpoint.instance.runQuery(None, getPrefixString() + self.query)  # TODO: generate ID for the query?
         if re.search("true", results.toxml()):
             return True
