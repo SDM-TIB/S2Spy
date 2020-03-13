@@ -4,7 +4,7 @@ from validation.Eval import *
 
 if __name__ == '__main__':
     '''input example:
-    python3 main.py -d ./shapes/nonRec/2/ -g "http://dbpedia.org/sparql" ./output/'''
+    python3 main.py -d ./shapes/nonRec/2/ -g "http://dbpedia.org/sparql" ./output/ DFS'''
 
     parser = argparse.ArgumentParser(description='SHACL Constraint Validation over a SPARQL Endpoint')
     parser.add_argument('-d', metavar='schemaDir', type=str, default=None,

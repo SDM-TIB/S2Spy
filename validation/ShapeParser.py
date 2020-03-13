@@ -9,11 +9,9 @@ from validation.constraints.MinMaxConstraint import MinMaxConstraint
 from validation.constraints.MinOnlyConstraint import MinOnlyConstraint
 from validation.constraints.MaxOnlyConstraint import MaxOnlyConstraint
 from validation.Shape import Shape
-from validation.SchemaImpl import SchemaImpl
 
 
 class ShapeParser:
-    # TODO: Schema will become Graph
 
     def __init__(self):
         return
@@ -30,21 +28,6 @@ class ShapeParser:
         if shapeFormat == "JSON":
             return [self.parseJson(p) for p in filesAbsPaths]
         else:  # TODO: implement parsing of TTL format
-            print("Unexpected format: " + shapeFormat)
-
-    def parseSchemaFromDir(self, path, shapeFormat):
-        fileExtension = self.getFileExtension(shapeFormat)
-        filesAbsPaths = []
-        # r=root, d=directories, f = files
-        for r, d, f in os.walk(path):
-            for file in f:
-                if fileExtension in file:
-                    filesAbsPaths.append(os.path.join(r, file))
-
-        if shapeFormat == "JSON":
-            shapes = [self.parseJson(p) for p in filesAbsPaths]
-            return SchemaImpl(shapes)
-        else:
             print("Unexpected format: " + shapeFormat)
 
     def getFileExtension(self, shapeFormat):

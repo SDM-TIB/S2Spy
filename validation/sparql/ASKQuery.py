@@ -25,7 +25,16 @@ class ASKQuery:
             obj = "?s" if self.value is None else self.value
 
         if self.target is not None:
-            query += "\t%s a %s\n" % (subj, self.target)
+            if not isinstance(self.target, list):
+                query += "\t%s a %s\n" % (subj, self.target)
+            elif self.target:  # list and not empty
+                query += "\t%s a ?type .\n" % subj
+                query += "\tFILTER ("
+                for i, type in enumerate(self.target):
+                    if i != 0:
+                        query += " OR "
+                    query += "?type = %s" % type
+                query += ")\n"
 
         if isinstance(self, ASKQueryCardConstraint):
             if isinstance(self, ASKQueryMinCardConstraint) and self.cardinality == 1:  # exists constraint

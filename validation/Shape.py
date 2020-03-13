@@ -6,23 +6,21 @@ from validation.sparql.ASKQuery import ASKQuery
 from validation.VariableGenerator import VariableGenerator
 from validation.core.Literal import Literal
 from validation.core.RulePattern import RulePattern
+from validation.utils.SourceDescription import SourceDescription
 
 
 class Shape:
 
     def __init__(self, id, targetDef, targetQuery, constraints):
         self.id = id
-        self.targetDef = targetDef
+        self.predicates = self.computePredicateSet()
+        self.targetDef = targetDef if targetDef is not None else self.computeTargetDef()
         self.targetQuery = targetQuery  # Might be None
         self.constraints = constraints
         self.rulePatterns = ()
-        self.predicates = ()
         self.satisfied = None
         self.inDegree = None
         self.outDegree = None
-#        self.computePredicateSet()
-        # e.g., [ActorShape, ActorShape_d1, ActorShape_d1_pos]
-        # e.g., [MovieShape, MovieShape_d1, MovieShape_d1_pos, MovieShape_d1_max_1]
 
     def getId(self):
         return self.id
@@ -31,10 +29,19 @@ class Shape:
         self.inDegree = inDegree
         self.outDegree = outDegree
 
-#    def computePredicateSet(self):
-#        disjuncts = [d.getPredicates() for d in self.disjuncts]
-#        predicates = [self.id] + disjuncts[0]
-#        return predicates
+    def computePredicateSet(self):
+        predicates = set()
+        for c in self.constraints:
+            pred = c.path
+            if not pred.startswith("^"):
+                predicates.add(pred)
+        return predicates
+
+    def computeTargetDef(self):
+        targets = SourceDescription.instance.get_classes(self.predicates)
+        for c in self.constraints:
+            c.target = targets
+        return targets
 
 #    def getPosShapeRefs(self):
 #        return [d.getPosShapeRefs() for d in self.disjuncts]
