@@ -33,7 +33,7 @@ class ASKQuery:
                 for i, type in enumerate(self.target):
                     if i != 0:
                         query += " OR "
-                    query += "?type = %s" % type
+                    query += "?type = <%s>" % type
                 query += ")\n"
 
         if isinstance(self, ASKQueryCardConstraint):

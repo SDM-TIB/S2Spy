@@ -26,6 +26,7 @@ class SourceDescription:
             """Returns for a given list of predicates all classes that have all predicates."""
             classes = []
             for i, pred in enumerate(predicates):
+                pred = pred.replace("dbo:", "http://dbpedia.org/ontology/")
                 if i == 0:
                     classes.extend(self.predicates[pred])
                 else:

@@ -13,10 +13,10 @@ class Shape:
 
     def __init__(self, id, targetDef, targetQuery, constraints):
         self.id = id
+        self.constraints = constraints
         self.predicates = self.computePredicateSet()
         self.targetDef = targetDef if targetDef is not None else self.computeTargetDef()
         self.targetQuery = targetQuery  # Might be None
-        self.constraints = constraints
         self.rulePatterns = ()
         self.satisfied = None
         self.inDegree = None
