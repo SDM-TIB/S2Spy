@@ -41,7 +41,9 @@ class Shape:
         targets = SourceDescription.instance.get_classes(self.predicates)
         for c in self.constraints:
             c.target = targets
-        return targets
+        # fix: set target for constraints only (needed for the queries)
+        # but not for the shape since it will interfere with the heuristics
+        return None
 
 #    def getPosShapeRefs(self):
 #        return [d.getPosShapeRefs() for d in self.disjuncts]
