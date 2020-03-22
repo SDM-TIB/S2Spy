@@ -7,7 +7,7 @@ from validation.VariableGenerator import VariableGenerator
 from validation.core.Literal import Literal
 from validation.core.RulePattern import RulePattern
 from validation.utils.SourceDescription import SourceDescription
-
+from validation.sparql.QueryGenerator import QueryGenerator
 
 class Shape:
 
@@ -90,9 +90,33 @@ class Shape:
     def getViolations(self):
         return  # TODO
 
-#    def computeConstraintQueries(self, schema, graph):
-#        for c in self.disjuncts:
-#            c.computeQueries(graph)
+    def computeConstraintQueries(self):
+
+        minConstraints = [c for c in self.constraints if c.min != -1]
+        maxConstraints = [c for c in self.constraints if c.max != -1]
+        queryGenerator = QueryGenerator()
+
+        subquery = queryGenerator.generateLocalSubquery(None, minConstraints)
+
+        # Build a unique set of triples (+ filter) for all min constraints
+        minQuery = queryGenerator.generateQuery(
+                "MIN_temp",
+                [c for c in minConstraints if c.getShapeRef() is not None],
+                None,
+                subquery
+        )
+        print("Min query:\n", minQuery.sparql)
+
+        # Build one set of triples (+ filter) for each max constraint
+        #i = itertools.count()
+        maxQueries = [queryGenerator.generateQuery(
+                                        "MAX_temp",
+                                        [c],
+                                        None,
+                                        subquery) for c in maxConstraints]
+
+        for elem in maxQueries:
+            print("Max query:\n", elem.sparql)
 #
 #        self.rulePatterns = self.computeRulePatterns()
 

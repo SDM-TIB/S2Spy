@@ -32,13 +32,14 @@ class Eval:
         elif args.graphTraversal == "BFS":
             self.graphTraversal = GraphTraversal.BFS
 
+        self.createOutputDir()
         schemaDir = args.d
         workInParallel = False
         self.network = ShapeNetwork(schemaDir, self.shapeFormat, args.endpoint, self.graphTraversal, self.task, workInParallel)
 
         report = self.network.validate()  # run the evaluation of the SHACL constraints over the specified endpoint
         print("Report:", report)
-#        self.createOutputDir()
+
 #
 #        validation = RuleBasedValidation(
 #                        self.endpoint,

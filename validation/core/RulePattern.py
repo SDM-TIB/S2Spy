@@ -12,9 +12,9 @@ class RulePattern:
             if type(body[0]) == list:
                 body = body[0]          # *** (1)
 
-        print("Rule Pattern - head: ", head.getPredicate(), " ", head.getArg(), " body: ", str([b.getPredicate() + " " + b.getArg() + " " + str(b.getIsPos()) for b in body]))
+        #print("Rule Pattern - head: ", head.getPredicate(), " ", head.getArg(), " body: ", str([b.getPredicate() + " " + b.getArg() + " " + str(b.getIsPos()) for b in body]))
 
-        self.variables = [head.getArg()].extend([a.getArg() for a in body])
+        self.variables = [head.getArg()] + [a.getArg() for a in body if a is not None]
 
     def getVariables(self):
         return self.variables

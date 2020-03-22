@@ -12,6 +12,7 @@ class MaxOnlyConstraint(Constraint):
         super().__init__(id, isPos, None, datatype, value, shapeRef, targetDef)
         self.varGenerator = varGenerator
         self.path = path
+        self.min = -1
         self.max = max
         self.variables = self.computeVariables()
 

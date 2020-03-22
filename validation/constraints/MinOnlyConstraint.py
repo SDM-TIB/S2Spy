@@ -13,6 +13,7 @@ class MinOnlyConstraint(Constraint):
         self.varGenerator = varGenerator
         self.path = path
         self.min = min
+        self.max = -1
         self.variables = self.computeVariables()
 
     def computeVariables(self):

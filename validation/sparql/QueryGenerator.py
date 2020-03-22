@@ -16,7 +16,8 @@ class QueryGenerator:
         rp = self.computeRulePattern(constraints, id)
 
         builder = QueryBuilder(id, graph, subquery, rp.getVariables())
-        map(lambda c: builder.buildClause(c), constraints)
+        for c in constraints:
+            builder.buildClause(c)
 
         return builder.buildQuery(rp)
 
@@ -45,7 +46,8 @@ class QueryGenerator:
                 VariableGenerator.getFocusNodeVar()
         )
 
-        map(lambda c: builder.buildClause(c), localPosConstraints)
+        for c in localPosConstraints:
+            builder.buildClause(c)
 
         return builder.getSparql(False)
 
@@ -56,10 +58,10 @@ class QueryBuilder:
     def __init__(self, id, graph, subquery, projectedVariables):
         self.id = id
         self.graph = graph
+        self.subQuery = subquery
         self.projectedVariables = projectedVariables
         self.filters = []
         self.triples = []
-        self.subQuery = subquery
 
     def addTriple(self, path, object):
         self.triples.append(
@@ -85,20 +87,21 @@ class QueryBuilder:
 
     def getSparql(self, includePrefixes):  # assuming optional graph
         grapNotPresent = ""  # ***
-        return getPrefixString() if includePrefixes else "" + \
+        prefixes = getPrefixString() if includePrefixes else ""
+        return prefixes + \
                 self.getProjectionString() + \
-                " WHERE{" + \
+                " WHERE {" + \
                 (grapNotPresent) + \
-                "\n\n" + \
+                "\n" + \
                 self.getTriplePatterns() + \
                 "\n" + \
-                ("{\n" + self.subQuery.get() + "\n}\n" if self.subQuery is not None else "") + \
+                ("{\n" + self.subQuery + "\n}\n" if self.subQuery is not None else "") + \
                 (grapNotPresent) + \
                 "\n}"
 
     def getProjectionString(self):
         return "SELECT DISTINCT " + \
-                ", ".join(map(lambda v : "?" + v, self.projectedVariables))
+                ", ".join(["?" + v for v in self.projectedVariables])
 
     def getTriplePatterns(self):
         tripleString = "\n".join(self.triples)
@@ -117,23 +120,24 @@ class QueryBuilder:
                 ) + ")"
 
     def addCardinalityFilter(self, variables):
-        for i in enumerate(variables):
-            for j in enumerate(variables):
-                self.filters.append("?" + variables.get(i) + " != ?" + variables.get(j))
+        for i in range(0, len(variables)):
+            for j in range(i + 1, len(variables)):
+                self.filters.append("?" + variables[i] + " != ?" + variables[j])
 
     def buildClause(self, c):
         variables = c.getVariables()
 
         if isinstance(c, Constraint):
-            path = c.getPath()
+            path = c.path
 
-            if c.getValue() is not None:
-                self.addTriple(path, c.getValue().get())
+            if c.getValue() is not None:        # means there is a existing reference to another shape
+                self.addTriple(path, c.getValue())
                 return
 
-            map(lambda v: self.addTriple(path, "?" + v), variables)
+            for v in variables:
+                self.addTriple(path, "?" + v)
 
-        elif c.getValue() is not None:
+        if c.getValue() is not None:
             self.addConstantFilter(
                     variables.iterator().next(),
                     c.getValue().get(),
@@ -141,7 +145,8 @@ class QueryBuilder:
             )
 
         if c.getDatatype() is not None:
-            variables = map(self.addDatatypeFilter(variables, c.getDatatype().get(), c.isPos()), variables)
+            for v in variables:
+                self.addDatatypeFilter(v, c.getDatatype(), c.isPos())
 
         if len(variables) > 1:
             self.addCardinalityFilter(variables)

@@ -5,7 +5,7 @@ from validation.core.ValidationTask import ValidationTask
 from validation.ShapeParser import ShapeParser
 from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 from validation.utils.SourceDescription import SourceDescription
-
+from validation.utils import fileManagement
 
 class ShapeNetwork:
 
@@ -49,6 +49,9 @@ class ShapeNetwork:
             shapeReport = self.shapesSatisfiable(node_order)
             return shapeReport
         elif self.validationTask == ValidationTask.INSTANCES_VALID:
+            f = fileManagement.openFile("targets_valid.log")
+            fileManagement.closeFile(f)
+            self.getValidInstances(node_order, f)
             # TODO
             return
         elif self.validationTask == ValidationTask.INSTACES_VIOLATION:
@@ -96,8 +99,14 @@ class ShapeNetwork:
             report[node] = self.shapesDict[node].isSatisfied()
         return report
 
-    def getValidInstances(self):
+    def getValidInstances(self, nodes, f):
         """Reports all instances that validate the constraints of the graph."""
+        for s in self.shapes:
+            s.computeConstraintQueries()
+
+        report = {}
+        for node in nodes:
+            constraints = self.shapesDict[node].constraints
         # TODO
         return
 
