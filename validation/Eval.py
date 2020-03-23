@@ -2,7 +2,6 @@
 import os
 from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 from validation.ShapeParser import ShapeParser
-from validation.RuleBasedValidation import RuleBasedValidation
 from validation.utils import fileManagement
 from validation.core.GraphTraversal import GraphTraversal
 from validation.core.ValidationTask import ValidationTask

@@ -24,6 +24,9 @@ class Shape:
         self.inDegree = None
         self.outDegree = None
 
+        self.minQuery = ""
+        self.maxQueries = ""
+
     def getId(self):
         return self.id
 
@@ -102,7 +105,7 @@ class Shape:
 
         # Build a unique set of triples (+ filter) for all min constraints
         minId = self.constraintsId + "_pos"
-        minQuery = queryGenerator.generateQuery(
+        self.minQuery = queryGenerator.generateQuery(
                 minId,
                 [c for c in minConstraints if c.getShapeRef() is not None],
                 None,
@@ -112,25 +115,25 @@ class Shape:
         # Build one set of triples (+ filter) for each max constraint
         maxIds = [self.constraintsId + "_max_" + str(i) for i in range(1, len(maxConstraints) + 1)]
         i = itertools.count()
-        maxQueries = [queryGenerator.generateQuery(
+        self.maxQueries = [queryGenerator.generateQuery(
                                         maxIds[next(i)],
                                         [c],
                                         None,
                                         subquery) for c in maxConstraints]
 
-        self.rulePatterns = self.computeRulePatterns(minQuery, maxQueries)
+        self.rulePatterns = self.computeRulePatterns()
 
-    def computeRulePatterns(self, minQuery, maxQueries):
+    def computeRulePatterns(self):
         focusNodeVar = VariableGenerator.getFocusNodeVar()
         head = Literal(self.id, focusNodeVar, True)
 
-        return [RulePattern(head, self.getDisjunctRPBody(minQuery, maxQueries))]
+        return [RulePattern(head, self.getDisjunctRPBody())]
 
-    def getDisjunctRPBody(self, minQuery, maxQueries):
+    def getDisjunctRPBody(self):
         focusNodeVar = VariableGenerator.getFocusNodeVar()
-        maxQueries = [Literal(s, focusNodeVar, False) for s in [q.getId() for q in maxQueries]]
+        maxQueries = [Literal(s, focusNodeVar, False) for s in [q.getId() for q in self.maxQueries]]
 
-        return [Literal(minQuery.id,
+        return [Literal(self.minQuery.id,
                         focusNodeVar,
                         True
                         )] + \

@@ -6,6 +6,7 @@ from validation.ShapeParser import ShapeParser
 from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 from validation.utils.SourceDescription import SourceDescription
 from validation.utils import fileManagement
+from validation.RuleBasedValidation import RuleBasedValidation
 
 class ShapeNetwork:
 
@@ -50,8 +51,8 @@ class ShapeNetwork:
             return shapeReport
         elif self.validationTask == ValidationTask.INSTANCES_VALID:
             f = fileManagement.openFile("targets_valid.log")
-            fileManagement.closeFile(f)
             self.getValidInstances(node_order, f)
+            fileManagement.closeFile(f)
             # TODO
             return
         elif self.validationTask == ValidationTask.INSTACES_VIOLATION:
@@ -104,9 +105,18 @@ class ShapeNetwork:
         for s in self.shapes:
             s.computeConstraintQueries()
 
+        validation = RuleBasedValidation(
+                        self.endpoint,
+                        nodes,
+                        self.shapesDict,
+                        fileManagement.openFile("targets_valid.log")
+                    )
+
+        validation.exec()
+
         report = {}
         for node in nodes:
-            constraints = self.shapesDict[node].constraints
+            report[node] = self.shapesDict[node].getValidInstances()
         # TODO
         return
 
@@ -114,3 +124,4 @@ class ShapeNetwork:
         """Reports all instances that violate the constraints of the graph."""
         # TODO
         return
+

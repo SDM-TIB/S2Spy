@@ -24,3 +24,6 @@ class Literal:
         return self.isPos == literal.isPos and \
                self.pred == literal.pred and \
                self.arg == literal.arg
+
+    def getNegation(self):
+        return Literal(self.pred, self.arg, not self.isPos)

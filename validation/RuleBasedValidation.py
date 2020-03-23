@@ -5,13 +5,11 @@ from validation.core.RuleMap import RuleMap
 
 
 class RuleBasedValidation:
-    def __init__(self, endpoint, schema, logOutput, validTargetsOuput, invalidTargetsOuput, statsOutput):
+    def __init__(self, endpoint, node_order, shapesDict, validTargetsOuput):
         self.endpoint = endpoint
-        self.schema = schema
-        self.logOutput = logOutput
+        self.node_order = node_order
+        self.shapesDict = shapesDict
         self.validTargetsOuput = validTargetsOuput
-        self.invalidTargetsOuput = invalidTargetsOuput
-        self.statsOutput = statsOutput
 
         self.targetShapes = self.extractTargetShapes()  # set of shapes
         self.targetShapePredicates = [shape.getId() for shape in self.targetShapes]  # set of strings
@@ -20,11 +18,7 @@ class RuleBasedValidation:
         self.resultSet = None  # TODO new RuleBasedResultSet();
 
     def exec(self):
-        self.logOutput.write("Retrieving targets ...")
         targets = self.extractTargetAtoms()
-        self.logOutput.write("\nTargets retrieved.")
-        self.logOutput.write("Number of targets:\n" + str(len(targets)))
-        #stats.recordInitialTargets(targets.size());
 
         evalPathsMap = {}
 
@@ -46,25 +40,23 @@ class RuleBasedValidation:
             self.targetShapes
         )
 
-        fileManagement.closeFile(self.logOutput)
         fileManagement.closeFile(self.validTargetsOuput)
-        fileManagement.closeFile(self.invalidTargetsOuput)
-        fileManagement.closeFile(self.statsOutput)
 
     def extractTargetAtoms(self):
         return [self.targetAtoms(shape, shape.getTargetQuery())
                 for shape in self.targetShapes if shape.getTargetQuery() is not None]
 
     def targetAtoms(self, shape, targetQuery):
-        self.logOutput.write("Evaluating query:\n" + targetQuery)
         eval = self.endpoint.runQuery(
                 shape.getId(),
                 targetQuery
         )
-        return ""
+        return ""  # TODO
 
     def extractTargetShapes(self):
-        return [shape for shape in self.schema.getShapes() if shape.getTargetQuery() is not None]
+
+        return [self.shapesDict[shape] for shape in self.shapesDict
+                if self.shapesDict[shape].getTargetQuery() is not None]
 
     def validate(self, depth, state, focusShapes):  # Algorithm 1 modified (SHACL2SPARQL)
 
@@ -73,30 +65,51 @@ class RuleBasedValidation:
         # termination condition 1: all targets are validated/violated
         # termination condition 2: all shapes have been visited
 
+    def registerTarget(self, t, isValid, depth, state, logMessage, focusShape):
+        log = str(t) + ", depth " + depth
+                #(focusShape.map(shape -> ", focus shape " + shape).orElse("")) + ", " + logMessage
+        evalPaths = None
+        if isValid:
+            self.validTargetsOuput.write(log)
+            evalPaths = state.getEvalPaths(focusShape.get()) if focusShape is not None else set()
+            self.resultSet.registerValidTarget(t, depth, focusShape, evalPaths)
+        else:
+            pass
+            #self.invalidTargetsOuput.write(log);
+            #Shape shape = focusShape.orElseThrow(
+            #        () -> new RuntimeException("A violation result must have a focus shape"));
+            #resultSet.registerInvalidTarget(t, depth, shape, state.getEvalPaths(shape));
+
+    def saturate(self, state, depth, s):
+        negated = self.negateUnMatchableHeads(state, depth, s)
+        inferred = self.applyRules(state, depth, s)
+        if negated or inferred:
+            pass
+            #self.saturate(state, depth, s)
+
+    def applyRules(self, state, depth, s):
+        return True   # TODO
+
+    def getRules(self, head, bodies, state, retainedRules):
+        return
+
     def validateFocusShapes(self, state, focusShapes, depth):
         for s in focusShapes:
             self.evalShape(state, s, depth)
 
     def evalShape(self, state, s, depth):
-        self.logOutput.write("evaluating queries for shape " + s.getId())
-        for d in s.getDisjuncts():
-            self.evalDisjunct(state, d, s)
+        self.evalConstraints(state, s)
 
         #state.evaluatedPredicates.addAll(s.getPredicates());
         #state.addVisitedShape(s);
         #saveRuleNumber(state);
 
-        #self.logOutput.start("saturation ...")
-        #saturate(state, depth, s)
-        #stats.recordSaturationTime(self.logOutput.elapsed())
-        self.logOutput.write("\nvalid targets: " + str(len(state.validTargets)))
-        self.logOutput.write("\nInvalid targets: " + str(len(state.invalidTargets)))
-        self.logOutput.write("\nRemaining targets: " + str(len(state.remainingTargets)))
+        self.saturate(state, depth, s)
 
-    def evalDisjunct(self, state, d, s):
-        self.evalQuery(state, d.getMinQuery(), s)
+    def evalConstraints(self, state, s):
+        self.evalQuery(state, s.minQuery, s)
 
-        for q in d.getMaxQueries():
+        for q in s.maxQueries:
             self.evalQuery(state, q, s)
 
     def evalQuery(self, state, q, s):
@@ -104,6 +117,14 @@ class RuleBasedValidation:
         #logOutput.start("Evaluating query:\n" + q.getSparql());
         eval = self.endpoint.runQuery(q.getId(), q.getSparql())
 
+    def negateUnMatchableHeads(self, state, depth, s):
+        return  # TODO
+
+    def getNegatedAtom(self, a):
+        return a.getNegation() if a.isPos() else a
+
+    def isSatisfiable(self, a, state, ruleHeads):
+        return (not a.getPredicate() in state.evaluatedPredicates) or (a.getAtom() in ruleHeads) or (a in state.assignment)
 
 class EvalState:
     def __init__(self, targetLiterals, ruleMap, assignment, visitedShapes, evaluatedPredicates, validTargets, invalidTargets, evalPathsMap):
