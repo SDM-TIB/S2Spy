@@ -50,14 +50,13 @@ class ShapeParser:
             targetDef = targetDef["class"]
 
         name = obj["name"]
-        constraints = self.parseConstraints(name, obj["constraintDef"]["conjunctions"], targetDef)
+        id = name + "_d1"  # str(i + 1) but there is only one set of conjunctions
+        constraints = self.parseConstraints(name, obj["constraintDef"]["conjunctions"], targetDef, id)
+        return Shape(name, targetDef, targetQuery, constraints, id)
 
-        return Shape(name, targetDef, targetQuery, constraints)
-
-    def parseConstraints(self, shapeName, array, targetDef):
+    def parseConstraints(self, shapeName, array, targetDef, constraintsId):
         varGenerator = VariableGenerator()
-        id = shapeName + "_d1"  # str(i + 1) but there is only one set of conjunctions
-        return [self.parseConstraint(varGenerator, array[0][i], id + "_c" + str(i + 1), targetDef) for i in range(len(array[0]))]
+        return [self.parseConstraint(varGenerator, array[0][i], constraintsId + "_c" + str(i + 1), targetDef) for i in range(len(array[0]))]
 
     def parseConstraint(self, varGenerator, obj, id, targetDef):
         min = obj.get("min")

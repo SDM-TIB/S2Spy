@@ -2,6 +2,7 @@
 __author__ = "Philipp D. Rohde and Monica Figuera"
 
 import re
+import itertools
 from validation.sparql.ASKQuery import ASKQuery
 from validation.VariableGenerator import VariableGenerator
 from validation.core.Literal import Literal
@@ -11,9 +12,10 @@ from validation.sparql.QueryGenerator import QueryGenerator
 
 class Shape:
 
-    def __init__(self, id, targetDef, targetQuery, constraints):
+    def __init__(self, id, targetDef, targetQuery, constraints, constraintsId):
         self.id = id
         self.constraints = constraints
+        self.constraintsId = constraintsId
         self.predicates = self.computePredicateSet()
         self.targetDef = targetDef if targetDef is not None else self.computeTargetDef()
         self.targetQuery = targetQuery  # Might be None
@@ -99,39 +101,37 @@ class Shape:
         subquery = queryGenerator.generateLocalSubquery(None, minConstraints)
 
         # Build a unique set of triples (+ filter) for all min constraints
+        minId = self.constraintsId + "_pos"
         minQuery = queryGenerator.generateQuery(
-                "MIN_temp",
+                minId,
                 [c for c in minConstraints if c.getShapeRef() is not None],
                 None,
                 subquery
         )
-        print("Min query:\n", minQuery.sparql)
 
         # Build one set of triples (+ filter) for each max constraint
-        #i = itertools.count()
+        maxIds = [self.constraintsId + "_max_" + str(i) for i in range(1, len(maxConstraints) + 1)]
+        i = itertools.count()
         maxQueries = [queryGenerator.generateQuery(
-                                        "MAX_temp",
+                                        maxIds[next(i)],
                                         [c],
                                         None,
                                         subquery) for c in maxConstraints]
 
-        for elem in maxQueries:
-            print("Max query:\n", elem.sparql)
-#
-#        self.rulePatterns = self.computeRulePatterns()
+        self.rulePatterns = self.computeRulePatterns(minQuery, maxQueries)
 
-#    def computeRulePatterns(self):
-#        focusNodeVar = VariableGenerator.getFocusNodeVar()
-#        head = Literal(self.id, focusNodeVar, True)
-#
-#        return [RulePattern(head, self.getDisjunctRPBody(d)) for d in self.disjuncts]
+    def computeRulePatterns(self, minQuery, maxQueries):
+        focusNodeVar = VariableGenerator.getFocusNodeVar()
+        head = Literal(self.id, focusNodeVar, True)
 
-#    def getDisjunctRPBody(self, d):
-#        focusNodeVar = VariableGenerator.getFocusNodeVar()
-#        maxQueries = [Literal(s, focusNodeVar, False) for s in [q.getId() for q in d.getMaxQueries()]]
-#
-#        return [Literal(d.getMinQuery().getId(),
-#                        focusNodeVar,
-#                        True
-#                        )] + \
-#            maxQueries
+        return [RulePattern(head, self.getDisjunctRPBody(minQuery, maxQueries))]
+
+    def getDisjunctRPBody(self, minQuery, maxQueries):
+        focusNodeVar = VariableGenerator.getFocusNodeVar()
+        maxQueries = [Literal(s, focusNodeVar, False) for s in [q.getId() for q in maxQueries]]
+
+        return [Literal(minQuery.id,
+                        focusNodeVar,
+                        True
+                        )] + \
+                maxQueries
