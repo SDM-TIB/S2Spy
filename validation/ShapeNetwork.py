@@ -104,12 +104,12 @@ class ShapeNetwork:
         """Reports all instances that validate the constraints of the graph."""
         for s in self.shapes:
             s.computeConstraintQueries()
-
+        print("node order", nodes)
         validation = RuleBasedValidation(
                         self.endpoint,
                         nodes,
                         self.shapesDict,
-                        fileManagement.openFile("targets_valid.log")
+                        f
                     )
 
         validation.exec()

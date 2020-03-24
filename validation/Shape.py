@@ -30,6 +30,9 @@ class Shape:
     def getId(self):
         return self.id
 
+    def getPredicates(self):
+        return self.predicates
+
     def setDegree(self, inDegree, outDegree):
         self.inDegree = inDegree
         self.outDegree = outDegree

@@ -2,7 +2,7 @@
 from validation.utils import fileManagement
 from validation.EvalPath import EvalPath
 from validation.core.RuleMap import RuleMap
-
+from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 
 class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, validTargetsOuput):
@@ -18,52 +18,57 @@ class RuleBasedValidation:
         self.resultSet = None  # TODO new RuleBasedResultSet();
 
     def exec(self):
-        targets = self.extractTargetAtoms()
-
-        evalPathsMap = {}
-
-        for shape in self.targetShapes:
-            evalPathsMap[shape] = EvalPath()
+        firstShapeEval = self.shapesDict[self.node_order.pop(0)]
+        targets = self.extractTargetAtoms(firstShapeEval)
+        evalPathsMap = {firstShapeEval.id: EvalPath()}
 
         self.validate(
             0,
             EvalState(
                 targets,
-                RuleMap(),
-                set(),
-                set(),
-                set(),
-                set(),
-                set(),
                 evalPathsMap
             ),
-            self.targetShapes
+            firstShapeEval
         )
 
         fileManagement.closeFile(self.validTargetsOuput)
 
-    def extractTargetAtoms(self):
-        return [self.targetAtoms(shape, shape.getTargetQuery())
-                for shape in self.targetShapes if shape.getTargetQuery() is not None]
+    def extractTargetAtoms(self, shape):
+        if shape.getTargetQuery() is None:
+            return []
+        else:
+            return [self.targetAtoms(shape, shape.getTargetQuery())]
 
     def targetAtoms(self, shape, targetQuery):
         eval = self.endpoint.runQuery(
                 shape.getId(),
-                targetQuery
+                targetQuery,
+                "JSON"
         )
         return ""  # TODO
 
     def extractTargetShapes(self):
-
         return [self.shapesDict[shape] for shape in self.shapesDict
                 if self.shapesDict[shape].getTargetQuery() is not None]
 
-    def validate(self, depth, state, focusShapes):  # Algorithm 1 modified (SHACL2SPARQL)
-
-        self.validateFocusShapes(state, focusShapes, depth)
-
+    def validate(self, depth, state, focusShape):  # Algorithm 1 modified (SHACL2SPARQL)
         # termination condition 1: all targets are validated/violated
+        if len(state.remainingTargets) == 0:
+            return
+
         # termination condition 2: all shapes have been visited
+        if len(state.visitedShapes) == len(self.shapesDict):
+            for t in state.remainingTargets:
+                self.registerTarget(t, True, depth, state, "not violated after termination", [])
+            return
+
+        print("focus shape: ", focusShape)
+        self.evalShape(state, focusShape, depth)
+        if len(self.node_order) == 0:
+            return
+
+        nextEvalShape = self.shapesDict[self.node_order.pop(0)]
+        self.validate(depth + 1, state, nextEvalShape)
 
     def registerTarget(self, t, isValid, depth, state, logMessage, focusShape):
         log = str(t) + ", depth " + depth
@@ -93,16 +98,15 @@ class RuleBasedValidation:
     def getRules(self, head, bodies, state, retainedRules):
         return
 
-    def validateFocusShapes(self, state, focusShapes, depth):
-        for s in focusShapes:
-            self.evalShape(state, s, depth)
+    #def validateFocusShapes(self, state, focusShapes, depth):
+    #    for s in focusShapes:
+    #        self.evalShape(state, s, depth)
 
     def evalShape(self, state, s, depth):
         self.evalConstraints(state, s)
-
-        #state.evaluatedPredicates.addAll(s.getPredicates());
-        #state.addVisitedShape(s);
-        #saveRuleNumber(state);
+        state.evaluatedPredicates.update(s.getPredicates())
+        state.visitedShapes.add(s)
+        #saveRuleNumber(state)
 
         self.saturate(state, depth, s)
 
@@ -113,9 +117,8 @@ class RuleBasedValidation:
             self.evalQuery(state, q, s)
 
     def evalQuery(self, state, q, s):
-        print("query to be evaluated", q.getId(), q.getSparql())
-        #logOutput.start("Evaluating query:\n" + q.getSparql());
-        eval = self.endpoint.runQuery(q.getId(), q.getSparql())
+        eval = self.endpoint.runQuery(q.getId(), q.getSparql(), 'JSON')
+        #print(eval)
 
     def negateUnMatchableHeads(self, state, depth, s):
         return  # TODO
@@ -127,12 +130,12 @@ class RuleBasedValidation:
         return (not a.getPredicate() in state.evaluatedPredicates) or (a.getAtom() in ruleHeads) or (a in state.assignment)
 
 class EvalState:
-    def __init__(self, targetLiterals, ruleMap, assignment, visitedShapes, evaluatedPredicates, validTargets, invalidTargets, evalPathsMap):
+    def __init__(self, targetLiterals, evalPathsMap):
         self.remainingTargets = targetLiterals
-        self.ruleMap = ruleMap
-        self.assignment = assignment
-        self.visitedShapes = visitedShapes
-        self.evaluatedPredicates = evaluatedPredicates
-        self.validTargets = validTargets
-        self.invalidTargets = invalidTargets
+        self.ruleMap = RuleMap()
+        self.assignment = set()
+        self.visitedShapes = set()
+        self.evaluatedPredicates = set()
+        self.validTargets = set()
+        self.invalidTargets = set()
         self.evalPathsMap = evalPathsMap  # Map from shape name to a set of evaluation paths

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = "Philipp D. Rohde"
 
-from SPARQLWrapper import SPARQLWrapper, XML
+from SPARQLWrapper import SPARQLWrapper, XML, JSON
 
 
 class SPARQLEndpoint:
@@ -14,10 +14,12 @@ class SPARQLEndpoint:
             self.endpoint = SPARQLWrapper(endpointURL)
             self.endpoint.setReturnFormat(XML)
 
-        def runQuery(self, queryId, queryString):
+        def runQuery(self, queryId, queryString, format=None):
             print("URL:", self.endpointURL)
             print("query id: ", queryId, " - query str: ", queryString)
             self.endpoint.setQuery(queryString)
+            if format == 'JSON':
+                self.endpoint.setReturnFormat(JSON)
             return self.endpoint.query().convert()
 
     instance = None
