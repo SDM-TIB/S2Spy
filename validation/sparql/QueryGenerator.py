@@ -23,13 +23,17 @@ class QueryGenerator:
 
     @staticmethod
     def computeRulePattern(constraints, id):
+        body = []
+        for c in constraints:
+            body = body + c.computeRulePatternBody()
+
         return RulePattern(
                 Literal(
                         id,
                         VariableGenerator.getFocusNodeVar(),
                         True
                 ),
-                [c.computeRulePatternBody() for c in constraints]
+                body
         )
 
     @staticmethod

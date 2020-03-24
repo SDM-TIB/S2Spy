@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from validation.core.Literal import Literal
 
 class RulePattern:
     # If a value for each variable is produced (by a solution mapping), then the rule pattern can be instantiated.
@@ -8,13 +9,33 @@ class RulePattern:
         self.head = head
         self.literals = body
 
-        if len(body) > 0:
-            if type(body[0]) == list:
-                body = body[0]          # *** (1)
-
         print("Rule Pattern - head: ", head.getPredicate(), " ", head.getArg(), " body: ", str([b.getPredicate() + " " + b.getArg() + " " + str(b.getIsPos()) for b in body]))
 
         self.variables = [head.getArg()] + [a.getArg() for a in body if a is not None]
+
+    def getHead(self):
+        return self.head
+
+    def instantiateAtom(self, a, bs):
+        # given a binding with many possible projected variables, returns the atom that matches the variable
+        arg = ""
+        for k in bs.keys():
+            if k == a.getArg():
+                arg = bs[k]["value"]  # e.g., http://dbpedia.org/resource/Titanic_(1953_film)
+        if arg == "":
+            print("error instantiating atom", a, bs)  # ***
+
+        return Literal(
+                a.getPredicate(),
+                arg,
+                a.getIsPos()
+        )
+
+    def instantiateBody(self, bs):
+        for i, a in enumerate(self.literals):
+            self.literals[i] = self.instantiateAtom(a, bs)  # atom should be a literal not an array of literal
+
+        return self.literals
 
     def getVariables(self):
         return self.variables

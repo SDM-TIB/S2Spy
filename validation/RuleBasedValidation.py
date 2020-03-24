@@ -2,7 +2,7 @@
 from validation.utils import fileManagement
 from validation.EvalPath import EvalPath
 from validation.core.RuleMap import RuleMap
-from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
+from validation.core.Literal import Literal
 
 class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, validTargetsOuput):
@@ -45,7 +45,10 @@ class RuleBasedValidation:
                 targetQuery,
                 "JSON"
         )
-        return ""  # TODO
+        bindings = eval["results"]["bindings"]
+        targetLiterals = [Literal(shape.getId(), b["x"]["value"], True) for b in bindings]
+
+        return targetLiterals
 
     def extractTargetShapes(self):
         return [self.shapesDict[shape] for shape in self.shapesDict
@@ -62,8 +65,7 @@ class RuleBasedValidation:
                 self.registerTarget(t, True, depth, state, "not violated after termination", [])
             return
 
-        print("focus shape: ", focusShape)
-        self.evalShape(state, focusShape, depth)
+        self.evalShape(state, focusShape, depth)  # validate selected shape
         if len(self.node_order) == 0:
             return
 
@@ -98,10 +100,6 @@ class RuleBasedValidation:
     def getRules(self, head, bodies, state, retainedRules):
         return
 
-    #def validateFocusShapes(self, state, focusShapes, depth):
-    #    for s in focusShapes:
-    #        self.evalShape(state, s, depth)
-
     def evalShape(self, state, s, depth):
         self.evalConstraints(state, s)
         state.evaluatedPredicates.update(s.getPredicates())
@@ -117,16 +115,53 @@ class RuleBasedValidation:
             self.evalQuery(state, q, s)
 
     def evalQuery(self, state, q, s):
-        eval = self.endpoint.runQuery(q.getId(), q.getSparql(), 'JSON')
+        eval = self.endpoint.runQuery(q.getId(), q.getSparql(), "JSON")
+        bindings = eval["results"]["bindings"]
+        for b in bindings:
+            self.evalBindingSet(state, b, q.getRulePattern(), s.rulePatterns)
+
         #print(eval)
+    def evalBindingSet(self, state, bs, queryRP, shapeRPs):
+        self.addRule(state, bs, queryRP)
+        for p in shapeRPs:
+            self.addRule(state, bs, p)
+
+    def addRule(self, state, bs, pattern):
+        bindingVars = bs.keys()
+
+        if all(elem in pattern.getVariables() for elem in bindingVars):
+            state.ruleMap.addRule(
+                    pattern.instantiateAtom(pattern.getHead(), bs),
+                    pattern.instantiateBody(bs)
+            )
+
 
     def negateUnMatchableHeads(self, state, depth, s):
-        return  # TODO
+        ruleHeads = state.ruleMap.keySet()
+
+        initialAssignmentSize = len(state.assignment)
+
+        # first negate unmatchable body atoms
+
+        notSatifBodyAtoms = [a for a in state.ruleMap.getAllBodyAtoms() if not self.isSatisfiable(a, state, ruleHeads)]
+        #for i, a in enumerate(notSatifBodyAtoms):
+        #    notSatifBodyAtoms[i] = self.getNegatedAtom(a)
+        #    state.assignment.append(notSatifBodyAtoms[i])
+
+        # then negate unmatchable targets
+        # TODO
+
+        return initialAssignmentSize != len(state.assignment)
 
     def getNegatedAtom(self, a):
-        return a.getNegation() if a.isPos() else a
+        return True  # TODO
 
-    def isSatisfiable(self, a, state, ruleHeads):
+    def isSatisfiable(self, atomSet, state, ruleHeads):
+        if len(atomSet) > 0:
+            a = atomSet.pop()
+        else:
+            return False
+
         return (not a.getPredicate() in state.evaluatedPredicates) or (a.getAtom() in ruleHeads) or (a in state.assignment)
 
 class EvalState:

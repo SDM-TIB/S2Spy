@@ -48,7 +48,7 @@ class Constraint:
 
     def computeRulePatternBody(self):
         return [Literal(self.shapeRef, v, self.isPos) for v in self.variables] \
-                    if self.shapeRef is not None else []   # *** (1)
+                    if self.shapeRef is not None else []
 
     def isSatisfied(self):
         """Checks whether the constraint is satisfied in the endpoint or not. Needs to be implemented by subclasses."""
