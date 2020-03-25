@@ -21,9 +21,9 @@ class RulePattern:
         arg = ""
         for k in bs.keys():
             if k == a.getArg():
-                arg = bs[k]["value"]  # e.g., http://dbpedia.org/resource/Titanic_(1953_film)
+                arg = bs[k]["value"]  # instance, e.g., http://dbpedia.org/resource/Titanic_(1953_film)
         if arg == "":
-            print("error instantiating atom", a, bs)  # ***
+            print("error instantiating atom", a, bs)  # *** I should never enter this conditional
 
         return Literal(
                 a.getPredicate(),
@@ -32,10 +32,10 @@ class RulePattern:
         )
 
     def instantiateBody(self, bs):
+        instances = []
         for i, a in enumerate(self.literals):
-            self.literals[i] = self.instantiateAtom(a, bs)  # atom should be a literal not an array of literal
-
-        return self.literals
+            instances.append(self.instantiateAtom(a, bs))
+        return instances
 
     def getVariables(self):
         return self.variables

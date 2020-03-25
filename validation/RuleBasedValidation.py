@@ -128,7 +128,6 @@ class RuleBasedValidation:
 
     def addRule(self, state, bs, pattern):
         bindingVars = bs.keys()
-
         if all(elem in pattern.getVariables() for elem in bindingVars):
             state.ruleMap.addRule(
                     pattern.instantiateAtom(pattern.getHead(), bs),
@@ -142,8 +141,9 @@ class RuleBasedValidation:
         initialAssignmentSize = len(state.assignment)
 
         # first negate unmatchable body atoms
-
-        notSatifBodyAtoms = [a for a in state.ruleMap.getAllBodyAtoms() if not self.isSatisfiable(a, state, ruleHeads)]
+        print("All body atoms:", state.ruleMap.getAllBodyAtoms())
+        #notSatifBodyAtoms = [a for a in state.ruleMap.getAllBodyAtoms() if not self.isSatisfiable(a.pop(), state, ruleHeads)]
+        #print("notsat", notSatifBodyAtoms)
         #for i, a in enumerate(notSatifBodyAtoms):
         #    notSatifBodyAtoms[i] = self.getNegatedAtom(a)
         #    state.assignment.append(notSatifBodyAtoms[i])
@@ -156,12 +156,7 @@ class RuleBasedValidation:
     def getNegatedAtom(self, a):
         return True  # TODO
 
-    def isSatisfiable(self, atomSet, state, ruleHeads):
-        if len(atomSet) > 0:
-            a = atomSet.pop()
-        else:
-            return False
-
+    def isSatisfiable(self, a, state, ruleHeads):
         return (not a.getPredicate() in state.evaluatedPredicates) or (a.getAtom() in ruleHeads) or (a in state.assignment)
 
 class EvalState:
