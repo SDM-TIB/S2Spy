@@ -102,7 +102,7 @@ class RuleBasedValidation:
 
     def evalShape(self, state, s, depth):
         self.evalConstraints(state, s)
-        state.evaluatedPredicates.update(s.getPredicates())
+        state.evaluatedPredicates.update(s.queriesIds)
         state.visitedShapes.add(s)
         #saveRuleNumber(state)
 
@@ -127,8 +127,8 @@ class RuleBasedValidation:
             self.addRule(state, bs, p)
 
     def addRule(self, state, bs, pattern):
-        bindingVars = bs.keys()
-        if all(elem in pattern.getVariables() for elem in bindingVars):
+        bindingVars = list(bs.keys())
+        if all(elem in bindingVars for elem in pattern.getVariables()):
             state.ruleMap.addRule(
                     pattern.instantiateAtom(pattern.getHead(), bs),
                     pattern.instantiateBody(bs)

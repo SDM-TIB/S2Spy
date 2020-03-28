@@ -11,12 +11,13 @@ class RuleMap:
                 head = k
 
         if bodies is None:
-            s = set()
-            for elem in body:
-                s.add(elem)
+            if len(body) > 0:
+                s = set()
+                for elem in body:
+                    s.add(elem)
 
-            self.map[head] = s
-            self.ruleNumber += 1
+                self.map[head] = s
+                self.ruleNumber += 1
         else:
             for elem in body:
                 if elem not in self.map[head]:
@@ -24,7 +25,7 @@ class RuleMap:
                 self.ruleNumber += 1
 
     def getAllBodyAtoms(self):
-        return self.map.values()
+        return list(set().union(*self.map.values()))
 
     def keySet(self):
         return self.map.keys()

@@ -26,6 +26,7 @@ class Shape:
 
         self.minQuery = ""
         self.maxQueries = ""
+        self.queriesIds = []
 
     def getId(self):
         return self.id
@@ -44,6 +45,9 @@ class Shape:
             if not pred.startswith("^"):
                 predicates.add(pred)
         return predicates
+
+    def computeQueriesIds(self, minQueryId, maxQueriesIds):
+        self.queriesIds = [self.id] + [self.id + "_d1"] + [minQueryId] + [q for q in maxQueriesIds]
 
     def computeTargetDef(self):
         targets = SourceDescription.instance.get_classes(self.predicates)
@@ -123,6 +127,8 @@ class Shape:
                                         [c],
                                         None,
                                         subquery) for c in maxConstraints]
+
+        self.computeQueriesIds(minId, maxIds)
 
         self.rulePatterns = self.computeRulePatterns()
 

@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import argparse
 from validation.Eval import *
+import time
 
 if __name__ == '__main__':
     '''input example:
     python3 main.py -d ./shapes/nonRec/2/ -g "http://dbpedia.org/sparql" ./output/ DFS'''
+
+    start = time.time()
 
     parser = argparse.ArgumentParser(description='SHACL Constraint Validation over a SPARQL Endpoint')
     parser.add_argument('-d', metavar='schemaDir', type=str, default=None,
@@ -25,3 +28,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     Eval(args)
+
+    end = time.time()
+    print("Total runtime: ", end - start)
