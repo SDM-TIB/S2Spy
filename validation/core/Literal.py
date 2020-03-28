@@ -9,6 +9,9 @@ class Literal:
     def getPredicate(self):
         return self.pred
 
+    def getAtom(self):
+        return self if self.isPos else self.getNegation()
+
     def getArg(self):
         return self.arg
 

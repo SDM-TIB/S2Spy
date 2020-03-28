@@ -37,7 +37,7 @@ class RuleBasedValidation:
         if shape.getTargetQuery() is None:
             return []
         else:
-            return [self.targetAtoms(shape, shape.getTargetQuery())]
+            return self.targetAtoms(shape, shape.getTargetQuery())
 
     def targetAtoms(self, shape, targetQuery):
         eval = self.endpoint.runQuery(
@@ -73,7 +73,7 @@ class RuleBasedValidation:
         self.validate(depth + 1, state, nextEvalShape)
 
     def registerTarget(self, t, isValid, depth, state, logMessage, focusShape):
-        log = str(t) + ", depth " + depth
+        log = str(t) + ", depth " + str(depth)
                 #(focusShape.map(shape -> ", focus shape " + shape).orElse("")) + ", " + logMessage
         evalPaths = None
         if isValid:
@@ -95,9 +95,19 @@ class RuleBasedValidation:
             #self.saturate(state, depth, s)
 
     def applyRules(self, state, depth, s):
-        return True   # TODO
+        retainedRules = RuleMap()
+        freshLiterals = [self._applyRules(key, value, state, retainedRules) for key, value in state.ruleMap.map.items()
+                         if self._applyRules(key, value, state, retainedRules) is not None]
 
-    def getRules(self, head, bodies, state, retainedRules):
+        state.ruleMap = retainedRules
+        state.assignment.update(freshLiterals)
+
+        if len(freshLiterals) == 0:
+            return False
+
+        return True
+
+    def _applyRules(self, head, bodies, state, retainedRules):
         return
 
     def evalShape(self, state, s, depth):
@@ -120,7 +130,6 @@ class RuleBasedValidation:
         for b in bindings:
             self.evalBindingSet(state, b, q.getRulePattern(), s.rulePatterns)
 
-        #print(eval)
     def evalBindingSet(self, state, bs, queryRP, shapeRPs):
         self.addRule(state, bs, queryRP)
         for p in shapeRPs:
@@ -134,24 +143,34 @@ class RuleBasedValidation:
                     pattern.instantiateBody(bs)
             )
 
-
     def negateUnMatchableHeads(self, state, depth, s):
         ruleHeads = state.ruleMap.keySet()
 
         initialAssignmentSize = len(state.assignment)
 
         # first negate unmatchable body atoms
-        print("All body atoms:", state.ruleMap.getAllBodyAtoms())
-        #notSatifBodyAtoms = [a for a in state.ruleMap.getAllBodyAtoms() if not self.isSatisfiable(a.pop(), state, ruleHeads)]
-        #print("notsat", notSatifBodyAtoms)
-        #for i, a in enumerate(notSatifBodyAtoms):
-        #    notSatifBodyAtoms[i] = self.getNegatedAtom(a)
-        #    state.assignment.append(notSatifBodyAtoms[i])
+        #print("All body atoms:", state.ruleMap.getAllBodyAtoms())
+        notSatifBodyAtoms = [a for a in state.ruleMap.getAllBodyAtoms() if not self.isSatisfiable(a, state, ruleHeads)]
+        for i, a in enumerate(notSatifBodyAtoms):
+            notSatifBodyAtoms[i] = self.getNegatedAtom(a)
+            state.assignment.add(notSatifBodyAtoms[i])
 
         # then negate unmatchable targets
-        # TODO
+        part2 = dict()
+        part2["true"] = [a for a in state.remainingTargets if self.isSatisfiable(a, state, ruleHeads)]
+        part2["false"] = [a for a in state.remainingTargets if not self.isSatisfiable(a, state, ruleHeads)]
 
-        return initialAssignmentSize != len(state.assignment)
+        inValidTargets = part2["false"]
+        state.invalidTargets.update(inValidTargets)
+
+        for t in inValidTargets:
+            self.registerTarget(t, False, depth, state, "", None)  # *** optional shape
+
+        state.assignment.update([t.getNegation() for t in inValidTargets])  # (?)
+
+        state.remainingTargets = set(part2["true"])
+
+        return initialAssignmentSize != len(state.assignment)  # no new assignments
 
     def getNegatedAtom(self, a):
         return True  # TODO
