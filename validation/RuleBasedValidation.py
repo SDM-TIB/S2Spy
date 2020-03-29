@@ -3,7 +3,7 @@ from validation.utils import fileManagement
 from validation.EvalPath import EvalPath
 from validation.core.RuleMap import RuleMap
 from validation.core.Literal import Literal
-
+import time
 class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, validTargetsOuput):
         self.endpoint = endpoint
@@ -116,13 +116,19 @@ class RuleBasedValidation:
     def evalQuery(self, state, q, s):
         eval = self.endpoint.runQuery(q.getId(), q.getSparql(), "JSON")
         bindings = eval["results"]["bindings"]
+        count = 0
+        start = time.time()
         for b in bindings:
             self.evalBindingSet(state, b, q.getRulePattern(), s.rulePatterns)
+            count += 1
+        end = time.time()
+        print("Rule maps runtime: ", end - start, " - Bindings count:", count)
 
     def evalBindingSet(self, state, bs, queryRP, shapeRPs):
         self._evalBindingSet(state, bs, queryRP)  # slow execution
-        for p in shapeRPs:
-            self._evalBindingSet(state, bs, p)
+        #for p in shapeRPs:
+        #    self._evalBindingSet(state, bs, p)
+
 
     def _evalBindingSet(self, state, bs, pattern):
         bindingVars = list(bs.keys())

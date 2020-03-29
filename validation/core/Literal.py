@@ -30,3 +30,7 @@ class Literal:
 
     def getNegation(self):
         return Literal(self.pred, self.arg, not self.isPos)
+
+    def getStr(self):
+        sign = "" if self.isPos else "!"
+        return sign + self.getPredicate() + "(" + self.getArg() + ")"
