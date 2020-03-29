@@ -11,9 +11,6 @@ class RuleBasedValidation:
         self.shapesDict = shapesDict
         self.validTargetsOuput = validTargetsOuput
 
-        self.targetShapes = self.extractTargetShapes()  # set of shapes
-        self.targetShapePredicates = [shape.getId() for shape in self.targetShapes]  # set of strings
-
         self.stats = None  # TODO new RuleBasedValidStats();
         self.resultSet = None  # TODO new RuleBasedResultSet();
 
@@ -50,10 +47,6 @@ class RuleBasedValidation:
 
         return targetLiterals
 
-    def extractTargetShapes(self):
-        return [self.shapesDict[shape] for shape in self.shapesDict
-                if self.shapesDict[shape].getTargetQuery() is not None]
-
     def validate(self, depth, state, focusShape):  # Algorithm 1 modified (SHACL2SPARQL)
         # termination condition 1: all targets are validated/violated
         if len(state.remainingTargets) == 0:
@@ -81,11 +74,7 @@ class RuleBasedValidation:
             evalPaths = state.getEvalPaths(focusShape.get()) if focusShape is not None else set()
             self.resultSet.registerValidTarget(t, depth, focusShape, evalPaths)
         else:
-            pass
-            #self.invalidTargetsOuput.write(log);
-            #Shape shape = focusShape.orElseThrow(
-            #        () -> new RuntimeException("A violation result must have a focus shape"));
-            #resultSet.registerInvalidTarget(t, depth, shape, state.getEvalPaths(shape));
+            pass  # TODO
 
     def saturate(self, state, depth, s):
         negated = self.negateUnMatchableHeads(state, depth, s)
@@ -131,11 +120,11 @@ class RuleBasedValidation:
             self.evalBindingSet(state, b, q.getRulePattern(), s.rulePatterns)
 
     def evalBindingSet(self, state, bs, queryRP, shapeRPs):
-        self.addRule(state, bs, queryRP)
+        self._evalBindingSet(state, bs, queryRP)  # slow execution
         for p in shapeRPs:
-            self.addRule(state, bs, p)
+            self._evalBindingSet(state, bs, p)
 
-    def addRule(self, state, bs, pattern):
+    def _evalBindingSet(self, state, bs, pattern):
         bindingVars = list(bs.keys())
         if all(elem in bindingVars for elem in pattern.getVariables()):
             state.ruleMap.addRule(
@@ -149,7 +138,6 @@ class RuleBasedValidation:
         initialAssignmentSize = len(state.assignment)
 
         # first negate unmatchable body atoms
-        #print("All body atoms:", state.ruleMap.getAllBodyAtoms())
         notSatifBodyAtoms = [a for a in state.ruleMap.getAllBodyAtoms() if not self.isSatisfiable(a, state, ruleHeads)]
         for i, a in enumerate(notSatifBodyAtoms):
             notSatifBodyAtoms[i] = self.getNegatedAtom(a)
@@ -173,7 +161,7 @@ class RuleBasedValidation:
         return initialAssignmentSize != len(state.assignment)  # no new assignments
 
     def getNegatedAtom(self, a):
-        return True  # TODO
+        return a.getNegation() if a.getIsPos() else a
 
     def isSatisfiable(self, a, state, ruleHeads):
         return (not a.getPredicate() in state.evaluatedPredicates) or (a.getAtom() in ruleHeads) or (a in state.assignment)
