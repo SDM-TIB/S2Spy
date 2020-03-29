@@ -125,9 +125,9 @@ class RuleBasedValidation:
         print("Rule maps runtime: ", end - start, " - Bindings count:", count)
 
     def evalBindingSet(self, state, bs, queryRP, shapeRPs):
-        self._evalBindingSet(state, bs, queryRP)  # slow execution
-        #for p in shapeRPs:
-        #    self._evalBindingSet(state, bs, p)
+        self._evalBindingSet(state, bs, queryRP)
+        for p in shapeRPs:
+            self._evalBindingSet(state, bs, p)
 
 
     def _evalBindingSet(self, state, bs, pattern):
