@@ -97,7 +97,23 @@ class RuleBasedValidation:
         return True
 
     def _applyRules(self, head, bodies, state, retainedRules):
-        return
+        if any([self.applyRule(head, [b], state, retainedRules) for b in bodies]):  # [b] ***
+            return head
+        return None
+
+    def applyRule(self, head, body, state, retainedRules):
+        if all(elem in state.assignment for elem in body):
+            return True
+
+        noneMatch = iter([a.getNegation() not in state.assignment for a in body])
+        try:
+            first = next(noneMatch)
+        except StopIteration:
+            pass
+        if all(first == rest for rest in noneMatch):
+            retainedRules.addRule(head, body)
+
+        return False
 
     def evalShape(self, state, s, depth):
         self.evalConstraints(state, s)
