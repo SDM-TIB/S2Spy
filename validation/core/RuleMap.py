@@ -9,17 +9,16 @@ class RuleMap:
             head = head.getStr()
         bodies = self.mapStr.get(head)
         if bodies is None:
-            if len(body) > 0:
-                s = set()
-                setStr = set()
-                for elem in body:
-                    s.add(elem)
-                    setStr.add(elem.getStr())
+            s = set()
+            setStr = set()
+            for elem in body:
+                s.add(elem)
+                setStr.add(elem.getStr())
 
-                self.map[head] = s
-                self.ruleNumber += 1
+            self.map[head] = s
+            self.ruleNumber += 1
 
-                self.mapStr[head] = setStr
+            self.mapStr[head] = setStr
         else:
             self.map[head].update([elem for elem in body if elem.getStr() not in self.mapStr[head]])
             self.mapStr[head].update([elem.getStr() for elem in body])

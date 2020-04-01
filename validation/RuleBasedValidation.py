@@ -126,11 +126,11 @@ class RuleBasedValidation:
 
     def applyRule(self, head, body, state, retainedRules):
         bodyStrMap = [elem.getStr() for elem in body]
-        if all(elem in state.assignment for elem in bodyStrMap):
+        if set(bodyStrMap) <= state.assignment:
             return True
 
-        matches = [a.getNegation().getStr() for a in body if a.getNegation().getStr() not in state.assignment]  # ***
-        if len(matches) != 0:
+        matches = [a.getNegation().getStr() for a in body if a.getNegation().getStr() in state.assignment]  # ***
+        if len(matches) == 0:  # no match
             retainedRules.addRule(head, body)
 
         return False
@@ -178,14 +178,13 @@ class RuleBasedValidation:
     # may be able to infer that 'a' cannot hold:
     #   if 'a' is not in state.assignment
     #   if the query has already been evaluated,
-    #   or if there is not rule with 'a' as its head.
+    #   and if there is not rule with 'a' as its head.
     # Thus, in such case, 'not a' is added to state.assignment.
     def negateUnMatchableHeads(self, state, depth, s):
         ruleHeads = state.ruleMap.keySet()
         initialAssignmentSize = len(state.assignment)
 
-        # first negate unmatchable body atoms
-        # add not satisfied body atoms
+        # first negate unmatchable body atoms (add not satisfied body atoms)
         state.assignment.update([self.getNegatedAtom(a).getStr() for a in state.ruleMap.getAllBodyAtoms()
                                  if not self.isSatisfiable(a, state, ruleHeads)])
 
