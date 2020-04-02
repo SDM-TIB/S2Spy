@@ -3,7 +3,7 @@ import os
 
 def openFile(fileName):
     path = os.getcwd()
-    return open(path + "/output/" + fileName, "a")
+    return open(path + "/output/" + fileName, "w")
 
 def closeFile(file):
     file.close()

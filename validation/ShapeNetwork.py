@@ -49,14 +49,22 @@ class ShapeNetwork:
         elif self.validationTask == ValidationTask.SHAPE_VALIDATION:
             shapeReport = self.shapesSatisfiable(node_order)
             return shapeReport
-        elif self.validationTask == ValidationTask.INSTANCES_VALID:
-            f = fileManagement.openFile("targets_valid.log")
-            self.getValidInstances(node_order, f)
-            fileManagement.closeFile(f)
-            # TODO
-            return
-        elif self.validationTask == ValidationTask.INSTACES_VIOLATION:
-            # TODO
+        elif self.validationTask == ValidationTask.INSTANCES_VALID \
+                or self.validationTask == ValidationTask.INSTACES_VIOLATION:
+            for s in self.shapes:
+                s.computeConstraintQueries()
+            print("node order", node_order)
+            validation = RuleBasedValidation(
+                self.endpoint,
+                node_order,
+                self.shapesDict,
+                fileManagement.openFile("targets_valid.log"),
+                fileManagement.openFile("targets_violated.log")
+            )
+            if self.validationTask == ValidationTask.INSTANCES_VALID:
+                self.getValidInstances(validation)
+            elif self.validationTask == ValidationTask.INSTACES_VIOLATION:
+                self.getViolations(validation)
             return
         else:
             raise TypeError("Invalid validation task: " + self.validationTask)
@@ -100,28 +108,17 @@ class ShapeNetwork:
             report[node] = self.shapesDict[node].isSatisfied()
         return report
 
-    def getValidInstances(self, nodes, f):
+    def getValidInstances(self, validation):
         """Reports all instances that validate the constraints of the graph."""
-        for s in self.shapes:
-            s.computeConstraintQueries()
-        print("node order", nodes)
-        validation = RuleBasedValidation(
-                        self.endpoint,
-                        nodes,
-                        self.shapesDict,
-                        f
-                    )
+        validation.exec("valid")
 
-        validation.exec()
-
-        report = {}
-        for node in nodes:
-            report[node] = self.shapesDict[node].getValidInstances()
-        # TODO
+        #report = {}
+        #for node in nodes:
+        #    report[node] = self.shapesDict[node].getValidInstances()
         return
 
-    def getViolations(self):
+    def getViolations(self, validation):
         """Reports all instances that violate the constraints of the graph."""
-        # TODO
+        validation.exec("violated")
         return
 

@@ -7,20 +7,21 @@ import time
 import re
 
 class RuleBasedValidation:
-    def __init__(self, endpoint, node_order, shapesDict, validTargetsOuput):
+    def __init__(self, endpoint, node_order, shapesDict, validOutput=None, violatedOutput=None):
         self.endpoint = endpoint
         self.node_order = node_order
         self.shapesDict = shapesDict
-        self.validTargetsOuput = validTargetsOuput
+        self.validOutput = validOutput
+        self.violatedOutput = violatedOutput
         self.targetShapePredicates = []
 
-        self.stats = None  # TODO new RuleBasedValidStats();
-        self.resultSet = None  # TODO new RuleBasedResultSet();
+        self.option = "valid"
 
-    def exec(self):
+    def exec(self, option):
         firstShapeEval = self.shapesDict[self.node_order.pop(0)]
         targets = self.extractTargetAtoms(firstShapeEval)
         evalPathsMap = {firstShapeEval.id: EvalPath()}
+        self.option = option
 
         self.validate(
             0,
@@ -31,7 +32,8 @@ class RuleBasedValidation:
             firstShapeEval
         )
 
-        fileManagement.closeFile(self.validTargetsOuput)
+        fileManagement.closeFile(self.validOutput)
+        fileManagement.closeFile(self.violatedOutput)
 
     def extractTargetAtoms(self, shape):
         if shape.getTargetQuery() is None:
@@ -57,8 +59,9 @@ class RuleBasedValidation:
 
         # termination condition 2: all shapes have been visited
         if len(state.visitedShapes) == len(self.shapesDict):
-            for t in state.remainingTargets:
-                self.registerTarget(t, True, depth, state, "not violated after termination", [])
+            if self.option == "valid":
+                for t in state.remainingTargets:
+                    self.registerTarget(t, True, depth, "not violated after termination", None)
             return
 
         self.evalShape(state, focusShape, depth)  # validate selected shape
@@ -66,13 +69,17 @@ class RuleBasedValidation:
             return
 
         self.currentEvalShape = self.shapesDict[self.node_order.pop(0)]
-        self.targetShapePredicates = self.currentEvalShape.id  # ***
+        self.targetShapePredicates = self.currentEvalShape.id  # (?) ***
 
         self.validate(depth + 1, state, self.currentEvalShape)
 
-    def registerTarget(self, t, isValid, depth, state, logMessage, focusShape):
-        # save result to output file
-        return True
+    def registerTarget(self, t, isValid, depth, logMessage, focusShape):
+        fshape = ", focus shape " + focusShape.id if focusShape is not None else ""
+        log = t.getStr() + ", depth " + str(depth) + fshape + ", " + logMessage + "\n"
+        if isValid:
+            self.validOutput.write(log)
+        else:
+            self.violatedOutput.write(log)
 
     def saturate(self, state, depth, s):
         negated = self.negateUnMatchableHeads(state, depth, s)
@@ -87,10 +94,17 @@ class RuleBasedValidation:
         pred = re.split("!", pred)[0]
         return pred
 
+    # INFER procedure performs 2 types of inferences:
+    # 1. If the set of rules contains a rule and each of the rule bodies has already been inferred
+    #    => head of the rule is inferred, rule dropped.
+    # 2. If the negation of any rule body has already been inferred
+    #    => this rule cannot be applied (rule head not inferred) so the entire entire rule is dropped.
     def applyRules(self, state, depth, s):
-        retainedRules = RuleMap()
-        freshLiterals = [self._applyRules(head, [bodies], state, retainedRules) for head, bodies in state.ruleMap.map.items()
-                         if self._applyRules(head, [bodies], state, retainedRules) is not None]  # *** [bodies]
+        retainedRules = RuleMap()                                                               # (2)
+        freshLiterals = list(filter(lambda rule: rule is not None,                              # (4)
+                                    [self._applyRules(head, [bodies], state, retainedRules)
+                                     for head, bodies in state.ruleMap.map.items()])            # (3)
+                             )
 
         state.ruleMap = retainedRules
         state.assignment.update(freshLiterals)
@@ -113,7 +127,12 @@ class RuleBasedValidation:
         state.validTargets.update(part2["true"])
         state.invalidTargets.update(part2["false"])
 
-        # TODO: register valid/invalid targets
+        if self.option == "valid":
+            for t in part2["true"]:
+                self.registerTarget(t, True, depth, "", s)
+        elif self.option == "violated":
+            for t in part2["false"]:
+                self.registerTarget(t, False, depth, "", s)
 
         print("Remaining targets: " + str(len(state.remainingTargets)))
 
@@ -183,11 +202,13 @@ class RuleBasedValidation:
     def negateUnMatchableHeads(self, state, depth, s):
         ruleHeads = state.ruleMap.keySet()
         initialAssignmentSize = len(state.assignment)
-
+        start = time.time()
         # first negate unmatchable body atoms (add not satisfied body atoms)
-        state.assignment.update([self.getNegatedAtom(a).getStr() for a in state.ruleMap.getAllBodyAtoms()
-                                 if not self.isSatisfiable(a, state, ruleHeads)])
-
+        notSatif = [self.getNegatedAtom(a).getStr() for a in state.ruleMap.getAllBodyAtoms()
+                                 if not self.isSatisfiable(a, state, ruleHeads)]
+        end = time.time()
+        print(">>> getting not satified atoms: ", end - start)
+        state.assignment.update(notSatif)
         # then negate unmatchable targets
         part2 = dict()
         part2["true"] = [a for a in state.remainingTargets if self.isSatisfiable(a, state, ruleHeads)]
@@ -195,7 +216,10 @@ class RuleBasedValidation:
 
         inValidTargets = part2["false"]
         state.invalidTargets.update(inValidTargets)
-        # register invalid target
+
+        if self.option == "violated":
+            for t in state.invalidTargets:
+                self.registerTarget(t, False, depth, "", s)
 
         state.assignment.update([t.getNegation().getStr() for t in inValidTargets])  # (?)
 
