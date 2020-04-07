@@ -5,6 +5,7 @@ from validation.core.RuleMap import RuleMap
 from validation.core.Literal import Literal
 import time
 import re
+from bisect import bisect_left
 
 class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, validOutput=None, violatedOutput=None):
@@ -13,8 +14,8 @@ class RuleBasedValidation:
         self.shapesDict = shapesDict
         self.validOutput = validOutput
         self.violatedOutput = violatedOutput
-        self.targetShapePredicates = []
-
+        targetShapes = self.extractTargetShapes()
+        self.targetShapePredicates = [s.getId() for s in targetShapes]
         self.option = "valid"
 
     def exec(self, option):
@@ -52,6 +53,10 @@ class RuleBasedValidation:
 
         return targetLiterals
 
+    def extractTargetShapes(self):
+        return [s for name, s in self.shapesDict.items() if self.shapesDict[name].getTargetQuery() is not None]
+
+
     def validate(self, depth, state, focusShape):  # Algorithm 1 modified (SHACL2SPARQL)
         # termination condition 1: all targets are validated/violated
         if len(state.remainingTargets) == 0:
@@ -69,8 +74,6 @@ class RuleBasedValidation:
             return
 
         self.currentEvalShape = self.shapesDict[self.node_order.pop(0)]
-        self.targetShapePredicates = self.currentEvalShape.id  # (?) ***
-
         self.validate(depth + 1, state, self.currentEvalShape)
 
     def registerTarget(self, t, isValid, depth, logMessage, focusShape):
@@ -84,8 +87,6 @@ class RuleBasedValidation:
     def saturate(self, state, depth, s):
         negated = self.negateUnMatchableHeads(state, depth, s)
         inferred = self.applyRules(state, depth, s)
-        print("Saturate: ", negated, inferred)
-
         if negated or inferred:
             self.saturate(state, depth, s)
 
@@ -102,7 +103,7 @@ class RuleBasedValidation:
     def applyRules(self, state, depth, s):
         retainedRules = RuleMap()                                                               # (2)
         freshLiterals = list(filter(lambda rule: rule is not None,                              # (4)
-                                    [self._applyRules(head, [bodies], state, retainedRules)
+                                    [self._applyRules(head, bodies, state, retainedRules)
                                      for head, bodies in state.ruleMap.map.items()])            # (3)
                              )
 
@@ -115,8 +116,8 @@ class RuleBasedValidation:
         candidateValidTargets = [a for a in freshLiterals if self.getStrPredicate(a) in self.targetShapePredicates]
 
         part1 = dict()
-        part1["true"] = [t for t in state.remainingTargets if t in candidateValidTargets]
-        part1["false"] = [t for t in state.remainingTargets if t not in candidateValidTargets]
+        part1["true"] = [t for t in state.remainingTargets if t.getStr() in candidateValidTargets]
+        part1["false"] = [t for t in state.remainingTargets if t.getStr() not in candidateValidTargets]
 
         state.remainingTargets = part1["false"]
 

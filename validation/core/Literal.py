@@ -6,6 +6,17 @@ class Literal:
         self.arg = arg
         self.isPos = isPos
 
+    def __repr__(self):
+        sign = "" if self.isPos else "!"
+        return sign + self.pred + "(" + self.arg + ")"
+
+    def __eq__(self, other):
+        return isinstance(other, Literal) and \
+               ((self.pred, self.arg, self.isPos) == (other.pred, other.arg, other.isPos))
+
+    def __hash__(self):
+        return hash((self.pred, self.arg, self.isPos))
+
     def getPredicate(self):
         return self.pred
 
