@@ -23,4 +23,4 @@ class RuleMap:
         return list(frozenset().union(*set().union(*self.map.values())))
 
     def keySet(self):
-        return self.map.keys()
+        return set(self.map.keys())

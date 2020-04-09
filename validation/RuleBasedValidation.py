@@ -5,7 +5,6 @@ from validation.core.RuleMap import RuleMap
 from validation.core.Literal import Literal
 import time
 import re
-from bisect import bisect_left
 
 class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, validOutput=None, violatedOutput=None):
@@ -203,17 +202,20 @@ class RuleBasedValidation:
     def negateUnMatchableHeads(self, state, depth, s):
         ruleHeads = state.ruleMap.keySet()
         initialAssignmentSize = len(state.assignment)
-        start = time.time()
+
         # first negate unmatchable body atoms (add not satisfied body atoms)
-        notSatif = [self.getNegatedAtom(a).getStr() for a in state.ruleMap.getAllBodyAtoms()
-                                 if not self.isSatisfiable(a, state, ruleHeads)]
-        end = time.time()
-        print(">>> getting not satified atoms: ", end - start)
-        state.assignment.update(notSatif)
+        state.assignment.update([self.getNegatedAtom(a).getStr() for a in state.ruleMap.getAllBodyAtoms()
+                                 if not self.isSatisfiable(a, state, ruleHeads)])
+
         # then negate unmatchable targets
         part2 = dict()
-        part2["true"] = [a for a in state.remainingTargets if self.isSatisfiable(a, state, ruleHeads)]
-        part2["false"] = [a for a in state.remainingTargets if not self.isSatisfiable(a, state, ruleHeads)]
+        part2["true"] = []
+        part2["false"] = []
+        for a in state.remainingTargets:
+            if self.isSatisfiable(a, state, ruleHeads):
+                part2["true"].append(a)
+            else:
+                part2["false"].append(a)
 
         inValidTargets = part2["false"]
         state.invalidTargets.update(inValidTargets)
@@ -232,8 +234,9 @@ class RuleBasedValidation:
         return a.getNegation() if a.getIsPos() else a
 
     def isSatisfiable(self, a, state, ruleHeads):
+        notNegated = a.getStr()[1:] if not a.getIsPos() else a.getStr()
         return (a.getPredicate() not in state.evaluatedPredicates) \
-                or (a.getStr() in list(ruleHeads)) \
+                or (notNegated in ruleHeads) \
                 or (a.getStr() in state.assignment)
 
 class EvalState:
