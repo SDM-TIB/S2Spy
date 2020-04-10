@@ -25,6 +25,9 @@ class ShapeParser:
                 if fileExtension in file:
                     filesAbsPaths.append(os.path.join(r, file))
 
+        if not filesAbsPaths:
+            raise FileNotFoundError(path + " does not contain any shapes of the format " + shapeFormat)
+
         if shapeFormat == "JSON":
             return [self.parseJson(p) for p in filesAbsPaths]
         else:  # TODO: implement parsing of TTL format
