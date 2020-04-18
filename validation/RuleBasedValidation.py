@@ -62,7 +62,7 @@ class RuleBasedValidation:
             return
 
         # termination condition 2: all shapes have been visited
-        if len(state.visitedShapes) == len(self.shapesDict):
+        if len(state.visitedShapes) == len(self.shapesDict):  # this condition is never fulfilled ***
             if self.option == "valid":
                 for t in state.remainingTargets:
                     self.registerTarget(t, True, depth, "not violated after termination", None)
@@ -139,19 +139,24 @@ class RuleBasedValidation:
         return True
 
     def _applyRules(self, head, bodies, state, retainedRules):
-        if any([self.applyRule(head, b, state, retainedRules) for b in bodies]):
+        tempRetainedBodies = []
+        anyInvalidRule = list(filter(lambda rule: rule is True,
+                                     [self.applyRule(head, b, state, tempRetainedBodies) for b in bodies]))
+        if len(anyInvalidRule) > 0:  # if any invalid body rule
             return head
+        else:
+            for b in tempRetainedBodies:
+                retainedRules.addRule(head, b)
         return None
 
-    def applyRule(self, head, body, state, retainedRules):
+    def applyRule(self, head, body, state, tempRetainedBodies):
         bodyStrMap = [elem.getStr() for elem in body]
-        if set(bodyStrMap) <= state.assignment:
+        if set(bodyStrMap) <= state.assignment:  # invalid
             return True
 
         matches = [a.getNegation().getStr() for a in body if a.getNegation().getStr() in state.assignment]  # ***
         if len(matches) == 0:  # no match
-            retainedRules.addRule(head, body)
-
+            tempRetainedBodies.append(body)  # not invalid
         return False
 
     def evalShape(self, state, s, depth):
@@ -204,8 +209,9 @@ class RuleBasedValidation:
         initialAssignmentSize = len(state.assignment)
 
         # first negate unmatchable body atoms (add not satisfied body atoms)
-        state.assignment.update([self.getNegatedAtom(a).getStr() for a in state.ruleMap.getAllBodyAtoms()
-                                 if not self.isSatisfiable(a, state, ruleHeads)])
+        state.assignment.update(list({self.getNegatedAtom(a).getStr()
+                                for a in state.ruleMap.getAllBodyAtoms()
+                                if not self.isSatisfiable(a, state, ruleHeads)}))
 
         # then negate unmatchable targets
         part2 = dict()
