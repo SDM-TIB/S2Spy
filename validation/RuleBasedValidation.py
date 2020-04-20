@@ -69,10 +69,8 @@ class RuleBasedValidation:
             return
 
         self.evalShape(state, focusShape, depth)  # validate selected shape
-        if len(self.node_order) == 0:
-            return
 
-        self.currentEvalShape = self.shapesDict[self.node_order.pop(0)]
+        self.currentEvalShape = self.shapesDict[self.node_order.pop(0)] if len(self.node_order) > 0 else None
         self.validate(depth + 1, state, self.currentEvalShape)
 
     def registerTarget(self, t, isValid, depth, logMessage, focusShape):
@@ -134,7 +132,7 @@ class RuleBasedValidation:
             for t in part2["false"]:
                 self.registerTarget(t, False, depth, "", s)
 
-        print("Remaining targets: " + str(len(state.remainingTargets)))
+        #print("Remaining targets: " + str(len(state.remainingTargets)))
 
         return True
 

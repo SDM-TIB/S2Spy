@@ -9,7 +9,7 @@ class RulePattern:
         self.head = head
         self.literals = body
 
-        print("Rule Pattern - head: ", head.getPredicate(), " ", head.getArg(), " body: ", str([b.getPredicate() + " " + b.getArg() + " " + str(b.getIsPos()) for b in body]))
+        # print("Rule Pattern - head: ", head.getPredicate(), " ", head.getArg(), " body: ", str([b.getPredicate() + " " + b.getArg() + " " + str(b.getIsPos()) for b in body]))
 
         self.variables = list(set([head.getArg()] + [a.getArg() for a in body if a is not None]))
 
