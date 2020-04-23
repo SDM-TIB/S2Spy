@@ -34,27 +34,34 @@ class Eval:
         self.createOutputDir()
         schemaDir = args.d
         workInParallel = False
-        self.network = ShapeNetwork(schemaDir, self.shapeFormat, args.endpoint, self.graphTraversal, self.task, workInParallel)
+        self.network = ShapeNetwork(schemaDir, self.shapeFormat, args.endpoint, self.graphTraversal, self.task, self.parseHeuristics(args.heuristics), workInParallel)
 
         report = self.network.validate()  # run the evaluation of the SHACL constraints over the specified endpoint
         print("Report:", report)
-
-#
-#        validation = RuleBasedValidation(
-#                        self.endpoint,
-#                        self.schema,
-#                        fileManagement.openFile("validation.log"),
-#                        fileManagement.openFile("targets_valid.log"),
-#                        fileManagement.openFile("targets_violated.log"),
-#                        fileManagement.openFile("stats.txt")
-#                    )
-#
-#        validation.exec()
 
     def createOutputDir(self):
         path = os.getcwd()
         os.makedirs(path + '/' + self.outputDir, exist_ok=True)
 
-    def getSchema(self, schemaDir):
-        shapeParser = ShapeParser()  # instantiate before calling its functions
-        return shapeParser.parseSchemaFromDir(schemaDir, self.shapeFormat)
+    def parseHeuristics(self, input):
+        heuristics = {}
+        if 'TARGET' in input:
+            heuristics['target'] = True
+        else:
+            heuristics['target'] = False
+
+        if 'IN' in input:
+            heuristics['degree'] = 'in'
+        elif 'OUT' in input:
+            heuristics['degree'] = 'out'
+        else:
+            heuristics['degree'] = False
+
+        if 'SMALL' in input:
+            heuristics['properties'] = 'small'
+        elif 'BIG' in input:
+            heuristics['properties'] = 'big'
+        else:
+            heuristics['properties'] = False
+
+        return heuristics

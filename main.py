@@ -5,7 +5,7 @@ import time
 
 if __name__ == '__main__':
     '''input example:
-    python3 main.py -d ./shapes/nonRec/2/ -g "http://dbpedia.org/sparql" ./output/ DFS'''
+    python3 main.py -d ./shapes/nonRec/2/ -g "http://dbpedia.org/sparql" ./output/ DFS --heuristics TARGET IN BIG'''
 
     start = time.time()
 
@@ -25,6 +25,10 @@ if __name__ == '__main__':
     group.add_argument("-t", action="store_true", help="report valid instances")
     group.add_argument("-v", action="store_true", help="report violating instances")
 
+    parser.add_argument("--heuristics", nargs="*", type=str, default=[],
+                        help="TARGET if shapes with target definition should be prioritized\n"
+                             "[IN / OUT / INOUT / OUTIN] if a higher in- or outdegree should be prioritized\n"
+                             "[SMALL / BIG] if small or big shapes should be prioritized")
     args = parser.parse_args()
 
     Eval(args)

@@ -84,6 +84,10 @@ class Shape:
     def getConstraints(self):
         return self.constraints
 
+    def getNumberConstraints(self):
+        """get the number of constraints belonging to this shape"""
+        return len(self.constraints)
+
     def getShapeRefs(self):
         return [c.getShapeRef() for c in self.constraints if c.getShapeRef() is not None]
 
@@ -103,7 +107,6 @@ class Shape:
         return  # TODO
 
     def computeConstraintQueries(self):
-
         minConstraints = [c for c in self.constraints if c.min != -1]
         maxConstraints = [c for c in self.constraints if c.max != -1]
         queryGenerator = QueryGenerator()
