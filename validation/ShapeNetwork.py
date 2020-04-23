@@ -36,7 +36,7 @@ class ShapeNetwork:
         # heuristic 3: number of properties
         # TODO
 
-        return possible_starting_points
+        return possible_starting_points if possible_starting_points != [] else [s.getId() for s in self.shapes]
 
     def validate(self):
         """Execute one of the validation tasks in validation.core.ValidationTask."""
