@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument("--heuristics", nargs="*", type=str, default=[],
                         help="TARGET if shapes with target definition should be prioritized\n"
                              "[IN / OUT / INOUT / OUTIN] if a higher in- or outdegree should be prioritized\n"
-                             "[SMALL / BIG] if small or big shapes should be prioritized")
+                             "[SMALL / BIG] if small or big shapes should be prioritized", required=True)
     args = parser.parse_args()
 
     Eval(args)
