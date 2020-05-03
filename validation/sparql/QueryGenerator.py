@@ -11,11 +11,11 @@ class QueryGenerator:
     def __init__(self):
         pass
 
-    def generateQuery(self, id, constraints, graph=None, subquery=None):
+    def generateQuery(self, id, constraints, graph=None, subquery=None, selective=None):
         # TODO ("Only one max constraint per query is allowed");
         rp = self.computeRulePattern(constraints, id)
 
-        builder = QueryBuilder(id, graph, subquery, rp.getVariables())
+        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), selective)
         for c in constraints:
             builder.buildClause(c)
 
@@ -59,13 +59,14 @@ class QueryGenerator:
 # mutable
     # private class
 class QueryBuilder:
-    def __init__(self, id, graph, subquery, projectedVariables):
+    def __init__(self, id, graph, subquery, projectedVariables, selective=None):
         self.id = id
         self.graph = graph
         self.subQuery = subquery
         self.projectedVariables = projectedVariables
         self.filters = []
         self.triples = []
+        self.selective = selective
 
     def addTriple(self, path, object):
         self.triples.append(
@@ -91,8 +92,10 @@ class QueryBuilder:
 
     def getSparql(self, includePrefixes):  # assuming optional graph
         grapNotPresent = ""  # ***
+        selectiveClosingBracket = "}}" if self.selective is not None else ""
         prefixes = getPrefixString() if includePrefixes else ""
         return prefixes + \
+                self.getSelective() + \
                 self.getProjectionString() + \
                 " WHERE {" + \
                 (grapNotPresent) + \
@@ -101,11 +104,18 @@ class QueryBuilder:
                 "\n" + \
                 ("{\n" + self.subQuery + "\n}\n" if self.subQuery is not None else "") + \
                 (grapNotPresent) + \
-                "\n}"
+                "\n}" + selectiveClosingBracket
+
+    def getSelective(self):
+        if self.selective is not None:
+            return "SELECT " + \
+                   ", ".join(["?" + v for v in self.projectedVariables]) + " WHERE {\n" + \
+                   "?" + VariableGenerator.getFocusNodeVar() + " a " + self.selective + " {\n"
+        return ""
 
     def getProjectionString(self):
         return "SELECT DISTINCT " + \
-                ", ".join(["?" + v for v in self.projectedVariables])
+               ", ".join(["?" + v for v in self.projectedVariables])
 
     def getTriplePatterns(self):
         tripleString = "\n".join(self.triples)

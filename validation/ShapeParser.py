@@ -16,7 +16,7 @@ class ShapeParser:
     def __init__(self):
         return
 
-    def parseShapesFromDir(self, path, shapeFormat):
+    def parseShapesFromDir(self, path, shapeFormat, useSelectiveQueries):
         fileExtension = self.getFileExtension(shapeFormat)
         filesAbsPaths = []
         # r=root, d=directories, f = files
@@ -29,7 +29,7 @@ class ShapeParser:
             raise FileNotFoundError(path + " does not contain any shapes of the format " + shapeFormat)
 
         if shapeFormat == "JSON":
-            return [self.parseJson(p) for p in filesAbsPaths]
+            return [self.parseJson(p, useSelectiveQueries) for p in filesAbsPaths]
         else:  # TODO: implement parsing of TTL format
             print("Unexpected format: " + shapeFormat)
 
@@ -39,7 +39,7 @@ class ShapeParser:
         else:
             return ".json"  # dot added for convenience
 
-    def parseJson(self, path):
+    def parseJson(self, path, useSelectiveQueries):
         targetQuery = None
 
         file = open(path, "r")
@@ -55,7 +55,7 @@ class ShapeParser:
         name = obj["name"]
         id = name + "_d1"  # str(i + 1) but there is only one set of conjunctions
         constraints = self.parseConstraints(name, obj["constraintDef"]["conjunctions"], targetDef, id)
-        return Shape(name, targetDef, targetQuery, constraints, id)
+        return Shape(name, targetDef, targetQuery, constraints, id, useSelectiveQueries)
 
     def parseConstraints(self, shapeName, array, targetDef, constraintsId):
         varGenerator = VariableGenerator()

@@ -10,9 +10,9 @@ from validation.RuleBasedValidation import RuleBasedValidation
 
 class ShapeNetwork:
 
-    def __init__(self, schemaDir, schemaFormat, endpointURL, graphTraversal, validationTask, heuristics, workInParallel=False):
+    def __init__(self, schemaDir, schemaFormat, endpointURL, graphTraversal, validationTask, heuristics, useSelectiveQueries, workInParallel=False,):
         self.sourceDescription = SourceDescription("./shapes/source-description.json")  # hardcoded for now
-        self.shapes = ShapeParser().parseShapesFromDir(schemaDir, schemaFormat)
+        self.shapes = ShapeParser().parseShapesFromDir(schemaDir, schemaFormat, useSelectiveQueries)
         self.shapesDict = {shape.getId(): shape for shape in self.shapes}  # TODO: use only the dict?
         self.endpoint = SPARQLEndpoint(endpointURL)
         self.graphTraversal = graphTraversal

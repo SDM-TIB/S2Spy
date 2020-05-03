@@ -12,7 +12,7 @@ from validation.sparql.QueryGenerator import QueryGenerator
 
 class Shape:
 
-    def __init__(self, id, targetDef, targetQuery, constraints, constraintsId):
+    def __init__(self, id, targetDef, targetQuery, constraints, constraintsId, useSelectiveQueries):
         self.id = id
         self.constraints = constraints
         self.constraintsId = constraintsId
@@ -27,6 +27,8 @@ class Shape:
         self.minQuery = ""
         self.maxQueries = ""
         self.queriesIds = []
+
+        self.useSelectiveQueries = useSelectiveQueries
 
     def getId(self):
         return self.id
@@ -119,7 +121,8 @@ class Shape:
                 minId,
                 [c for c in minConstraints if c.getShapeRef() is not None],
                 None,
-                subquery
+                subquery,
+                self.targetDef if self.useSelectiveQueries else None
         )
 
         # Build one set of triples (+ filter) for each max constraint

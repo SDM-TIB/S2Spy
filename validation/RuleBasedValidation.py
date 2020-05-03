@@ -174,12 +174,10 @@ class RuleBasedValidation:
         eval = self.endpoint.runQuery(q.getId(), q.getSparql(), "JSON")
         bindings = eval["results"]["bindings"]
         count = 0
-        start = time.time()
         for b in bindings:
             self.evalBindingSet(state, b, q.getRulePattern(), s.rulePatterns)
             count += 1
-        end = time.time()
-        print("Rule maps runtime: ", end - start, " - Bindings count:", count)
+        print("Bindings count:", count)
 
     def evalBindingSet(self, state, bs, queryRP, shapeRPs):
         self._evalBindingSet(state, bs, queryRP)

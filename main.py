@@ -6,6 +6,7 @@ import time
 if __name__ == '__main__':
     '''input example:
     python3 main.py -d ./shapes/nonRec/2/ -g "http://dbpedia.org/sparql" ./output/ DFS --heuristics TARGET IN BIG'''
+    # add the optional flag '--selective' in the command line to use configuration of more selective queries
 
     start = time.time()
 
@@ -29,6 +30,10 @@ if __name__ == '__main__':
                         help="TARGET if shapes with target definition should be prioritized\n"
                              "[IN / OUT / INOUT / OUTIN] if a higher in- or outdegree should be prioritized\n"
                              "[SMALL / BIG] if small or big shapes should be prioritized", required=True)
+
+    parser.add_argument("--selective", action='store_true', default=False,
+                        help="Use more selective queries")
+
     args = parser.parse_args()
 
     Eval(args)

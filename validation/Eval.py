@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
-from validation.ShapeParser import ShapeParser
-from validation.utils import fileManagement
 from validation.core.GraphTraversal import GraphTraversal
 from validation.core.ValidationTask import ValidationTask
 from validation.ShapeNetwork import ShapeNetwork
@@ -34,7 +31,9 @@ class Eval:
         self.createOutputDir()
         schemaDir = args.d
         workInParallel = False
-        self.network = ShapeNetwork(schemaDir, self.shapeFormat, args.endpoint, self.graphTraversal, self.task, self.parseHeuristics(args.heuristics), workInParallel)
+        useSelectiveQueries = args.selective
+        self.network = ShapeNetwork(schemaDir, self.shapeFormat, args.endpoint, self.graphTraversal, self.task,
+                                    self.parseHeuristics(args.heuristics), useSelectiveQueries, workInParallel)
 
         report = self.network.validate()  # run the evaluation of the SHACL constraints over the specified endpoint
         print("Report:", report)
