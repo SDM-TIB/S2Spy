@@ -21,7 +21,9 @@ class Eval:
         elif args.t:
             self.task = ValidationTask.INSTANCES_VALID
         elif args.v:
-            self.task = ValidationTask.INSTACES_VIOLATION
+            self.task = ValidationTask.INSTANCES_VIOLATION
+        elif args.a:
+            self.task = ValidationTask.ALL_INSTANCES
 
         if args.graphTraversal == "DFS":
             self.graphTraversal = GraphTraversal.DFS
@@ -33,7 +35,8 @@ class Eval:
         workInParallel = False
         useSelectiveQueries = args.selective
         self.network = ShapeNetwork(schemaDir, self.shapeFormat, args.endpoint, self.graphTraversal, self.task,
-                                    self.parseHeuristics(args.heuristics), useSelectiveQueries, workInParallel)
+                                    self.parseHeuristics(args.heuristics), useSelectiveQueries,
+                                    self.outputDir, workInParallel)
 
         report = self.network.validate()  # run the evaluation of the SHACL constraints over the specified endpoint
         print("Report:", report)

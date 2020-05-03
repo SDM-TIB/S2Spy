@@ -7,21 +7,20 @@ import time
 import re
 
 class RuleBasedValidation:
-    def __init__(self, endpoint, node_order, shapesDict, validOutput=None, violatedOutput=None):
+    def __init__(self, endpoint, node_order, shapesDict, validOutput, violatedOutput, option):
         self.endpoint = endpoint
         self.node_order = node_order
         self.shapesDict = shapesDict
         self.validOutput = validOutput
         self.violatedOutput = violatedOutput
+        self.option = option
         targetShapes = self.extractTargetShapes()
         self.targetShapePredicates = [s.getId() for s in targetShapes]
-        self.option = "valid"
 
-    def exec(self, option):
+    def exec(self):
         firstShapeEval = self.shapesDict[self.node_order.pop(0)]
         targets = self.extractTargetAtoms(firstShapeEval)
         evalPathsMap = {firstShapeEval.id: EvalPath()}
-        self.option = option
 
         self.validate(
             0,
@@ -63,7 +62,7 @@ class RuleBasedValidation:
 
         # termination condition 2: all shapes have been visited
         if len(state.visitedShapes) == len(self.shapesDict):  # this condition is never fulfilled ***
-            if self.option == "valid":
+            if self.option == "valid" or self.option == "all":
                 for t in state.remainingTargets:
                     self.registerTarget(t, True, depth, "not violated after termination", None)
             return
@@ -125,10 +124,10 @@ class RuleBasedValidation:
         state.validTargets.update(part2["true"])
         state.invalidTargets.update(part2["false"])
 
-        if self.option == "valid":
+        if self.option == "valid" or self.option == "all":
             for t in part2["true"]:
                 self.registerTarget(t, True, depth, "", s)
-        elif self.option == "violated":
+        elif self.option == "violated" or self.option == "all":
             for t in part2["false"]:
                 self.registerTarget(t, False, depth, "", s)
 
@@ -222,7 +221,7 @@ class RuleBasedValidation:
         inValidTargets = part2["false"]
         state.invalidTargets.update(inValidTargets)
 
-        if self.option == "violated":
+        if self.option == "violated" or self.option == "all":
             for t in state.invalidTargets:
                 self.registerTarget(t, False, depth, "", s)
 

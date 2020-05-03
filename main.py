@@ -25,6 +25,7 @@ if __name__ == '__main__':
     group.add_argument("-s", action="store_true", help="validate each shape")
     group.add_argument("-t", action="store_true", help="report valid instances")
     group.add_argument("-v", action="store_true", help="report violating instances")
+    group.add_argument("-a", action="store_true", help="report both valid and violating instances")
 
     parser.add_argument("--heuristics", nargs="*", type=str, default=[],
                         help="TARGET if shapes with target definition should be prioritized\n"

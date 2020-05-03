@@ -10,7 +10,8 @@ from validation.RuleBasedValidation import RuleBasedValidation
 
 class ShapeNetwork:
 
-    def __init__(self, schemaDir, schemaFormat, endpointURL, graphTraversal, validationTask, heuristics, useSelectiveQueries, workInParallel=False,):
+    def __init__(self, schemaDir, schemaFormat, endpointURL, graphTraversal, validationTask,
+                 heuristics, useSelectiveQueries, outputDir, workInParallel=False):
         self.sourceDescription = SourceDescription("./shapes/source-description.json")  # hardcoded for now
         self.shapes = ShapeParser().parseShapesFromDir(schemaDir, schemaFormat, useSelectiveQueries)
         self.shapesDict = {shape.getId(): shape for shape in self.shapes}  # TODO: use only the dict?
@@ -21,6 +22,7 @@ class ShapeNetwork:
         self.dependencies, self.reverse_dependencies = self.computeEdges()
         self.computeInAndOutDegree()
         self.heuristics = heuristics
+        self.outputDirName = outputDir
 
     def getStartingPoint(self):
         """Use heuristics to determine the first shape for evaluation of the constraints."""
@@ -100,7 +102,6 @@ class ShapeNetwork:
 
     def validate(self):
         """Execute one of the validation tasks in validation.core.ValidationTask."""
-        # TODO: reports
         start = self.getStartingPoint()
         node_order = self.graphTraversal.traverse_graph(self.dependencies, self.reverse_dependencies, start[0])  # TODO: deal with more than one possible starting point
         if self.validationTask == ValidationTask.GRAPH_VALIDATION:
@@ -110,22 +111,19 @@ class ShapeNetwork:
             shapeReport = self.shapesSatisfiable(node_order)
             return shapeReport
         elif self.validationTask == ValidationTask.INSTANCES_VALID \
-                or self.validationTask == ValidationTask.INSTACES_VIOLATION:
+                or self.validationTask == ValidationTask.INSTANCES_VIOLATION \
+                or self.validationTask == ValidationTask.ALL_INSTANCES:
             for s in self.shapes:
                 s.computeConstraintQueries()
-            print("node order", node_order)
-            validation = RuleBasedValidation(
-                self.endpoint,
-                node_order,
-                self.shapesDict,
-                fileManagement.openFile("targets_valid.log"),
-                fileManagement.openFile("targets_violated.log")
-            )
+
+            option = "all"           # To report all instances
             if self.validationTask == ValidationTask.INSTANCES_VALID:
-                self.getValidInstances(validation)
-            elif self.validationTask == ValidationTask.INSTACES_VIOLATION:
-                self.getViolations(validation)
-            return
+                option = "valid"     # To report only the instances that validate the constraints of the graph.
+            elif self.validationTask == ValidationTask.INSTANCES_VIOLATION:
+                option = "violated"  # To report only the instances that violate the constraints of the graph.
+
+            instancesReport = self.getInstances(node_order, option)
+            return instancesReport
         else:
             raise TypeError("Invalid validation task: " + self.validationTask)
 
@@ -163,17 +161,19 @@ class ShapeNetwork:
             report[node] = self.shapesDict[node].isSatisfied()
         return report
 
-    def getValidInstances(self, validation):
-        """Reports all instances that validate the constraints of the graph."""
-        validation.exec("valid")
-
-        #report = {}
-        #for node in nodes:
-        #    report[node] = self.shapesDict[node].getValidInstances()
-        return
-
-    def getViolations(self, validation):
-        """Reports all instances that violate the constraints of the graph."""
-        validation.exec("violated")
-        return
-
+    def getInstances(self, node_order, option):
+        """
+        Reports valid and violated constraints of the graph
+        :param node_order:
+        :param option: has three possible values: 'all', 'valid', 'violated'
+        """
+        print("Node order", node_order)
+        RuleBasedValidation(
+            self.endpoint,
+            node_order,
+            self.shapesDict,
+            fileManagement.openFile("targets_valid.log"),
+            fileManagement.openFile("targets_violated.log"),
+            option
+        ).exec()
+        return 'Go to log files in {} folder to see report'.format(self.outputDirName)
