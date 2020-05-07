@@ -14,31 +14,25 @@ class RuleBasedValidation:
         self.validOutput = validOutput
         self.violatedOutput = violatedOutput
         self.option = option
-        targetShapes = self.extractTargetShapes()
-        self.targetShapePredicates = [s.getId() for s in targetShapes]
+        self.targetShapes = self.extractTargetShapes()
+        self.targetShapePredicates = [s.getId() for s in self.targetShapes]
 
     def exec(self):
         firstShapeEval = self.shapesDict[self.node_order.pop(0)]
-        targets = self.extractTargetAtoms(firstShapeEval)
-        evalPathsMap = {firstShapeEval.id: EvalPath()}
-
+        targets = self.extractTargetAtoms()
         self.validate(
             0,
-            EvalState(
-                targets,
-                evalPathsMap
-            ),
+            EvalState(targets),
             firstShapeEval
         )
-
         fileManagement.closeFile(self.validOutput)
         fileManagement.closeFile(self.violatedOutput)
 
-    def extractTargetAtoms(self, shape):
-        if shape.getTargetQuery() is None:
-            return []
-        else:
-            return self.targetAtoms(shape, shape.getTargetQuery())
+    def extractTargetAtoms(self):
+        targets = []
+        for shape in self.targetShapes:
+            targets = targets + self.targetAtoms(shape, shape.getTargetQuery())
+        return targets
 
     def targetAtoms(self, shape, targetQuery):
         eval = self.endpoint.runQuery(
@@ -48,7 +42,6 @@ class RuleBasedValidation:
         )
         bindings = eval["results"]["bindings"]
         targetLiterals = [Literal(shape.getId(), b["x"]["value"], True) for b in bindings]
-
         return targetLiterals
 
     def extractTargetShapes(self):
@@ -241,7 +234,7 @@ class RuleBasedValidation:
                 or (a.getStr() in state.assignment)
 
 class EvalState:
-    def __init__(self, targetLiterals, evalPathsMap):
+    def __init__(self, targetLiterals):
         self.remainingTargets = targetLiterals
         self.ruleMap = RuleMap()
         self.assignment = set()
@@ -249,4 +242,3 @@ class EvalState:
         self.evaluatedPredicates = set()
         self.validTargets = set()
         self.invalidTargets = set()
-        self.evalPathsMap = evalPathsMap  # Map from shape name to a set of evaluation paths
