@@ -1,8 +1,8 @@
 {
-	"name": "GraduateStudent",
+	"name": "TeachingAssistant",
 	"targetDef": {
-		"query":"SELECT ?x WHERE {?x a ub:GraduateStudent}",
-		"class": "ub:GraduateStudent"
+		"query":"SELECT ?x WHERE {?x a ub:TeachingAssistant}",
+		"class": "ub:TeachingAssistant"
 	},
 	"constraintDef": {
 		"conjunctions": [
@@ -15,6 +15,7 @@
 				{ "path": "ub:name", "max": 1 },
 				{ "path": "ub:takesCourse", "min": 1, "shape": "GraduateCourse" },
 				{ "path": "ub:takesCourse", "max": 3, "shape": "GraduateCourse" },
+				{ "path": "ub:teachingAssistantOf", "min": 1, "shape": "Course" },
 				{ "path": "ub:teachingAssistantOf", "max": 1, "shape": "Course" },
 				{ "path": "ub:telephone", "min": 1 },
 				{ "path": "ub:undergraduateDegreeFrom", "min": 1, "shape": "University" }
