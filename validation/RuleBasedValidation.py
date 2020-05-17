@@ -215,7 +215,7 @@ class RuleBasedValidation:
         state.invalidTargets.update(inValidTargets)
 
         if self.option == "violated" or self.option == "all":
-            for t in state.invalidTargets:
+            for t in inValidTargets:
                 self.registerTarget(t, False, depth, "", s)
 
         state.assignment.update([t.getNegation().getStr() for t in inValidTargets])  # (?)
