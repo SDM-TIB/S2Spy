@@ -11,14 +11,16 @@ class QueryGenerator:
     def __init__(self):
         pass
 
-    def generateQuery(self, id, constraints, graph=None, subquery=None, selective=None, isTemplateQuery=None):
+    def generateQuery(self, id, constraints, graph=None, subquery=None, selective=None, templateQuery=None):
         # TODO ("Only one max constraint per query is allowed");
         rp = self.computeRulePattern(constraints, id)
 
-        if isTemplateQuery:
+        if templateQuery == "positive":
             return self.refQuery(constraints, selective)
+        elif templateQuery == "negated":
+            return self.refFilterNotInQuery(constraints, selective)
 
-        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), selective, isTemplateQuery)
+        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), selective)
         for c in constraints:
             builder.buildClause(c)
 
@@ -67,11 +69,35 @@ class QueryGenerator:
             rdfClass = "?" + focusVar + " a " + selectivePath + "."
         else:
             rdfClass = ""
+
         query = prefixes + \
                 "SELECT DISTINCT ?" + focusVar + " WHERE {\n" + \
                 "VALUES ?inst { $to_be_replaced$ }. \n" + \
                 "?" + focusVar + " " + path + " ?inst.\n" + \
                 rdfClass + "\n}\n"
+
+        return Query(
+                None,
+                None,
+                query
+        )
+
+    def refFilterNotInQuery(self, constraint, selectivePath):
+        includePrefixes = True
+        prefixes = getPrefixString() if includePrefixes else ""
+        path = constraint[0].path
+        focusVar = VariableGenerator.getFocusNodeVar()
+        if selectivePath is not None:
+            rdfClass = "?" + focusVar + " a " + selectivePath + "."
+        else:
+            rdfClass = ""
+
+        query = prefixes + \
+                "SELECT DISTINCT ?" + focusVar + " WHERE {\n" + \
+                "?" + focusVar + " " + path + " ?inst.\n" + \
+                rdfClass + "\n" + \
+                "FILTER (?inst NOT IN ( $to_be_replaced$ )). }\n"
+
         return Query(
                 None,
                 None,
@@ -81,7 +107,7 @@ class QueryGenerator:
 # mutable
     # private class
 class QueryBuilder:
-    def __init__(self, id, graph, subquery, projectedVariables, selective=None, isTemplateQuery=None):
+    def __init__(self, id, graph, subquery, projectedVariables, selective=None):
         self.id = id
         self.graph = graph
         self.subQuery = subquery
@@ -89,7 +115,6 @@ class QueryBuilder:
         self.filters = []
         self.triples = []
         self.selective = selective
-        self.isTemplateQuery = isTemplateQuery
 
     def addTriple(self, path, object):
         self.triples.append(

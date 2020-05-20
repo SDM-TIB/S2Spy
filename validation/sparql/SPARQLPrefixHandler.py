@@ -14,3 +14,6 @@ prefixString = "\n".join(["".join("PREFIX " + key + ":" + value) for (key, value
 
 def getPrefixString():
     return prefixString
+
+def getPrefixes():
+    return prefixes

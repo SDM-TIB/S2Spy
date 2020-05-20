@@ -30,8 +30,10 @@ class Shape:
 
         self.useSelectiveQueries = useSelectiveQueries
         self.referencingShapes = referencingShapes
-        self.referencingQueries = {}
+        self.referencingQueriesPos = {}
+        self.referencingQueriesNeg = {}  # complement of pos
         self.bindings = set()
+        self.invalidBindings = set()
 
     def getId(self):
         return self.id
@@ -116,13 +118,22 @@ class Shape:
         maxConstraints = [c for c in self.constraints if c.max != -1]
         queryGenerator = QueryGenerator()
 
-        self.referencingQueries = {ref: queryGenerator.generateQuery(
+        self.referencingQueriesPos = {ref: queryGenerator.generateQuery(
                                         "template",
                                         [c for c in self.constraints if c.path == self.referencingShapes[ref]],
                                         None,
                                         None,
                                         self.targetDef,
-                                        True
+                                        "positive"
+                                        ) for ref in self.referencingShapes.keys()}
+
+        self.referencingQueriesNeg = {ref: queryGenerator.generateQuery(
+                                        "template",
+                                        [c for c in self.constraints if c.path == self.referencingShapes[ref]],
+                                        None,
+                                        None,
+                                        self.targetDef,
+                                        "negated"
                                         ) for ref in self.referencingShapes.keys()}
 
         subquery = queryGenerator.generateLocalSubquery(None, minConstraints)

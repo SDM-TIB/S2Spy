@@ -2,6 +2,7 @@
 from validation.utils import fileManagement
 from validation.core.RuleMap import RuleMap
 from validation.core.Literal import Literal
+from validation.sparql.SPARQLPrefixHandler import getPrefixes
 import time
 import re
 
@@ -32,26 +33,50 @@ class RuleBasedValidation:
     def extractTargetAtoms(self, shape, order):
         return self.targetAtoms(shape, shape.getTargetQuery(), order)
 
-    # uses filtered target query to get possible validated targetw
+    # Run every time a new shape is going to be evaluated.
+    # Uses filtered target query to get possible validated targets
     def getNewTargetAtoms(self, shape, targetQuery, orderNumber, state):
-        targetLiterals = self.targetAtoms(shape, targetQuery, orderNumber)
+        targetLiterals = self.targetAtoms(shape, targetQuery, orderNumber, state)
         state.remainingTargets.update(targetLiterals)
 
-    def filteredTargetQuery(self, shape, targetQuery):
+    def filteredTargetQuery(self, shape, targetQuery, instanceType):
         for evShape in self.evaluatedShapes:
             prevEvalShapeName = evShape.id
             if shape.referencingShapes.get(prevEvalShapeName) is not None:
                 if self.shapesDict[prevEvalShapeName].targetQuery is not None:  # if there was a target query assigned for the referenced shape
-                    instances = " ".join(self.shapesDict[prevEvalShapeName].bindings)
-                    filteredQuery = shape.referencingQueries[prevEvalShapeName].getSparql().replace("$to_be_replaced$", instances)
-                    return filteredQuery
+                    if instanceType == "valid":
+                        print("self.shapesDict[prevEvalShapeName].bindings", self.shapesDict[prevEvalShapeName].id, self.shapesDict[prevEvalShapeName].bindings)
+                        instances = " ".join(self.shapesDict[prevEvalShapeName].bindings)
+                        return shape.referencingQueriesPos[prevEvalShapeName].getSparql().replace(
+                            "$to_be_replaced$", instances)
+                    elif instanceType == "invalid":
+                        instances = ", ".join(self.shapesDict[prevEvalShapeName].bindings)
+                        return shape.referencingQueriesNeg[prevEvalShapeName].getSparql().replace(
+                            "$to_be_replaced$", instances)
         return targetQuery
 
-    def targetAtoms(self, shape, targetQuery, order):
-        if order == 0:  # base case (corresponds to the first shape being evaluated)
+    # Automatically sets the instanciated targets as invalid after running the query which uses already instanciated
+    # instances as a filter
+    def setInvalidTargets(self, shape, targetQuery, instanceType, depth, state):
+        query = self.filteredTargetQuery(shape, targetQuery, instanceType)
+        eval = self.endpoint.runQuery(
+            shape.getId(),
+            query,
+            "JSON"
+        )
+        bindings = eval["results"]["bindings"]
+        state.invalidTargets.update([self.registerTarget(Literal(shape.getId(), b["x"]["value"], True),
+                                                         False, depth, "", shape)
+                                    for b in bindings])
+
+
+    def targetAtoms(self, shape, targetQuery, depth, state=None):
+        if depth == 0:  # base case (corresponds to the first shape being evaluated)
             query = targetQuery  # initial targetQuery set in initial shape (json file)
         else:
-            query = self.filteredTargetQuery(shape, targetQuery)
+            query = self.filteredTargetQuery(shape, targetQuery, "valid")
+            if self.option == "violated" or self.option == "all":
+                self.setInvalidTargets(shape, targetQuery, "invalid", depth, state)
 
         eval = self.endpoint.runQuery(
             shape.getId(),
@@ -90,11 +115,21 @@ class RuleBasedValidation:
     def registerTarget(self, t, isValid, depth, logMessage, focusShape):
         fshape = ", focus shape " + focusShape.id if focusShape is not None else ""
         log = t.getStr() + ", depth " + str(depth) + fshape + ", " + logMessage + "\n"
+
+        instance = "<" + t.getArg() + ">"
+        #for key, value in getPrefixes().items():
+        #    value = value[1:-1]
+        #    if value in t.getArg():
+        #        instance = instance.replace(value, key + ":")[1:-1]
+
         if isValid:
-            self.validOutput.write(log)
-            self.shapesDict[t.getPredicate()].bindings.add("<" + t.getArg() + ">")
+            self.shapesDict[t.getPredicate()].bindings.add(instance)
+            if self.option == "valid" or self.option == "all":
+                self.validOutput.write(log)
         else:
-            self.violatedOutput.write(log)
+            self.shapesDict[t.getPredicate()].invalidBindings.add(instance)
+            if self.option == "violated" or self.option == "all":
+                self.violatedOutput.write(log)
 
     def saturate(self, state, depth, s):
         negated = self.negateUnMatchableHeads(state, depth, s)
@@ -140,12 +175,10 @@ class RuleBasedValidation:
         state.validTargets.update(part2["true"])
         state.invalidTargets.update(part2["false"])
 
-        if self.option == "valid" or self.option == "all":
-            for t in part2["true"]:
-                self.registerTarget(t, True, depth, "", s)
-        elif self.option == "violated" or self.option == "all":
-            for t in part2["false"]:
-                self.registerTarget(t, False, depth, "", s)
+        for t in part2["true"]:
+            self.registerTarget(t, True, depth, "", s)
+        for t in part2["false"]:
+            self.registerTarget(t, False, depth, "", s)
 
         #print("Remaining targets: " + str(len(state.remainingTargets)))
 
