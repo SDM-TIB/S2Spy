@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from validation.utils import fileManagement
-from validation.EvalPath import EvalPath
 from validation.core.RuleMap import RuleMap
 from validation.core.Literal import Literal
 import time
@@ -16,30 +15,50 @@ class RuleBasedValidation:
         self.option = option
         self.targetShapes = self.extractTargetShapes()
         self.targetShapePredicates = [s.getId() for s in self.targetShapes]
+        self.evaluatedShapes = []
 
     def exec(self):
         firstShapeEval = self.shapesDict[self.node_order.pop(0)]
-        targets = self.extractTargetAtoms()
+        order = 0  # evaluation order
+        targets = self.extractTargetAtoms(firstShapeEval, order)
         self.validate(
-            0,
+            order,
             EvalState(targets),
             firstShapeEval
         )
         fileManagement.closeFile(self.validOutput)
         fileManagement.closeFile(self.violatedOutput)
 
-    def extractTargetAtoms(self):
-        targets = []
-        for shape in self.targetShapes:
-            targets = targets + self.targetAtoms(shape, shape.getTargetQuery())
-        return targets
+    def extractTargetAtoms(self, shape, order):
+        return self.targetAtoms(shape, shape.getTargetQuery(), order)
 
-    def targetAtoms(self, shape, targetQuery):
+    # uses filtered target query to get possible validated targetw
+    def getNewTargetAtoms(self, shape, targetQuery, orderNumber, state):
+        targetLiterals = self.targetAtoms(shape, targetQuery, orderNumber)
+        state.remainingTargets.update(targetLiterals)
+
+    def filteredTargetQuery(self, shape, targetQuery):
+        for evShape in self.evaluatedShapes:
+            prevEvalShapeName = evShape.id
+            if shape.referencingShapes.get(prevEvalShapeName) is not None:
+                if self.shapesDict[prevEvalShapeName].targetQuery is not None:  # if there was a target query assigned for the referenced shape
+                    instances = " ".join(self.shapesDict[prevEvalShapeName].bindings)
+                    filteredQuery = shape.referencingQueries[prevEvalShapeName].getSparql().replace("$to_be_replaced$", instances)
+                    return filteredQuery
+        return targetQuery
+
+    def targetAtoms(self, shape, targetQuery, order):
+        if order == 0:  # base case (corresponds to the first shape being evaluated)
+            query = targetQuery  # initial targetQuery set in initial shape (json file)
+        else:
+            query = self.filteredTargetQuery(shape, targetQuery)
+
         eval = self.endpoint.runQuery(
-                shape.getId(),
-                targetQuery,
-                "JSON"
+            shape.getId(),
+            query,
+            "JSON"
         )
+
         bindings = eval["results"]["bindings"]
         targetLiterals = [Literal(shape.getId(), b["x"]["value"], True) for b in bindings]
         return targetLiterals
@@ -50,8 +69,8 @@ class RuleBasedValidation:
 
     def validate(self, depth, state, focusShape):  # Algorithm 1 modified (SHACL2SPARQL)
         # termination condition 1: all targets are validated/violated
-        if len(state.remainingTargets) == 0:
-            return
+        #if len(state.remainingTargets) == 0:
+        #    return
 
         # termination condition 2: all shapes have been visited
         if len(state.visitedShapes) == len(self.shapesDict):  # this condition is never fulfilled ***
@@ -63,6 +82,9 @@ class RuleBasedValidation:
         self.evalShape(state, focusShape, depth)  # validate selected shape
 
         self.currentEvalShape = self.shapesDict[self.node_order.pop(0)] if len(self.node_order) > 0 else None
+        if self.currentEvalShape is not None:
+            self.evaluatedShapes.append(focusShape)
+            self.getNewTargetAtoms(self.currentEvalShape, self.currentEvalShape.targetQuery, depth + 1, state)
         self.validate(depth + 1, state, self.currentEvalShape)
 
     def registerTarget(self, t, isValid, depth, logMessage, focusShape):
@@ -70,6 +92,7 @@ class RuleBasedValidation:
         log = t.getStr() + ", depth " + str(depth) + fshape + ", " + logMessage + "\n"
         if isValid:
             self.validOutput.write(log)
+            self.shapesDict[t.getPredicate()].bindings.add("<" + t.getArg() + ">")
         else:
             self.violatedOutput.write(log)
 

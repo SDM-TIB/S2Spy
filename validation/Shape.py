@@ -12,12 +12,12 @@ from validation.sparql.QueryGenerator import QueryGenerator
 
 class Shape:
 
-    def __init__(self, id, targetDef, targetQuery, constraints, constraintsId, useSelectiveQueries):
+    def __init__(self, id, targetDef, targetQuery, constraints, constraintsId, useSelectiveQueries, referencingShapes):
         self.id = id
         self.constraints = constraints
         self.constraintsId = constraintsId
         self.predicates = self.computePredicateSet()
-        self.targetDef = targetDef if targetDef is not None else self.computeTargetDef()
+        self.targetDef = targetDef
         self.targetQuery = targetQuery  # Might be None
         self.rulePatterns = ()
         self.satisfied = None
@@ -29,6 +29,9 @@ class Shape:
         self.queriesIds = []
 
         self.useSelectiveQueries = useSelectiveQueries
+        self.referencingShapes = referencingShapes
+        self.referencingQueries = {}
+        self.bindings = set()
 
     def getId(self):
         return self.id
@@ -112,6 +115,15 @@ class Shape:
         minConstraints = [c for c in self.constraints if c.min != -1]
         maxConstraints = [c for c in self.constraints if c.max != -1]
         queryGenerator = QueryGenerator()
+
+        self.referencingQueries = {ref: queryGenerator.generateQuery(
+                                        "template",
+                                        [c for c in self.constraints if c.path == self.referencingShapes[ref]],
+                                        None,
+                                        None,
+                                        self.targetDef,
+                                        True
+                                        ) for ref in self.referencingShapes.keys()}
 
         subquery = queryGenerator.generateLocalSubquery(None, minConstraints)
 

@@ -11,11 +11,14 @@ class QueryGenerator:
     def __init__(self):
         pass
 
-    def generateQuery(self, id, constraints, graph=None, subquery=None, selective=None):
+    def generateQuery(self, id, constraints, graph=None, subquery=None, selective=None, isTemplateQuery=None):
         # TODO ("Only one max constraint per query is allowed");
         rp = self.computeRulePattern(constraints, id)
 
-        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), selective)
+        if isTemplateQuery:
+            return self.refQuery(constraints, selective)
+
+        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), selective, isTemplateQuery)
         for c in constraints:
             builder.buildClause(c)
 
@@ -55,11 +58,30 @@ class QueryGenerator:
 
         return builder.getSparql(False)
 
+    def refQuery(self, constraint, selectivePath):
+        includePrefixes = True
+        prefixes = getPrefixString() if includePrefixes else ""
+        path = constraint[0].path
+        focusVar = VariableGenerator.getFocusNodeVar()
+        if selectivePath is not None:
+            rdfClass = "?" + focusVar + " a " + selectivePath + "."
+        else:
+            rdfClass = ""
+        query = prefixes + \
+                "SELECT DISTINCT ?" + focusVar + " WHERE {\n" + \
+                "VALUES ?inst { $to_be_replaced$ }. \n" + \
+                "?" + focusVar + " " + path + " ?inst.\n" + \
+                rdfClass + "\n}\n"
+        return Query(
+                None,
+                None,
+                query
+        )
 
 # mutable
     # private class
 class QueryBuilder:
-    def __init__(self, id, graph, subquery, projectedVariables, selective=None):
+    def __init__(self, id, graph, subquery, projectedVariables, selective=None, isTemplateQuery=None):
         self.id = id
         self.graph = graph
         self.subQuery = subquery
@@ -67,6 +89,7 @@ class QueryBuilder:
         self.filters = []
         self.triples = []
         self.selective = selective
+        self.isTemplateQuery = isTemplateQuery
 
     def addTriple(self, path, object):
         self.triples.append(
@@ -94,6 +117,7 @@ class QueryBuilder:
         grapNotPresent = ""  # ***
         selectiveClosingBracket = "}}" if self.selective is not None else ""
         prefixes = getPrefixString() if includePrefixes else ""
+
         return prefixes + \
                 self.getSelective() + \
                 self.getProjectionString() + \

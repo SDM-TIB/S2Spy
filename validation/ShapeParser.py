@@ -55,7 +55,11 @@ class ShapeParser:
         name = obj["name"]
         id = name + "_d1"  # str(i + 1) but there is only one set of conjunctions
         constraints = self.parseConstraints(name, obj["constraintDef"]["conjunctions"], targetDef, id)
-        return Shape(name, targetDef, targetQuery, constraints, id, useSelectiveQueries)
+        referencingShapes = self.shapeReferences(obj["constraintDef"]["conjunctions"][0])
+        return Shape(name, targetDef, targetQuery, constraints, id, useSelectiveQueries, referencingShapes)
+
+    def shapeReferences(self, constraints):
+        return {c.get("shape"): c.get("path") for c in constraints if c.get("shape") is not None}
 
     def parseConstraints(self, shapeName, array, targetDef, constraintsId):
         varGenerator = VariableGenerator()
