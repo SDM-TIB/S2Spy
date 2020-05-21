@@ -4,6 +4,7 @@ from validation.core.RuleMap import RuleMap
 from validation.core.Literal import Literal
 from validation.sparql.SPARQLPrefixHandler import getPrefixes
 import time
+import math
 import re
 
 class RuleBasedValidation:
@@ -52,6 +53,11 @@ class RuleBasedValidation:
                     return validInstances, invalidInstances, prevEvalShapeName
         return [], [], None
 
+    def getSplitList(self, shortestInstancesList, maxListLength, N):
+        listLength = math.ceil(len(shortestInstancesList) / N)
+        shortestInstancesList = list(shortestInstancesList)
+        return [shortestInstancesList[i:i + listLength] for i in range(0, len(shortestInstancesList), listLength)]
+
     def filteredTargetQuery(self, shape, targetQuery, instanceType):
         valList, invList, prevEvalShapeName = self.getInstancesList(shape)
 
@@ -69,16 +75,44 @@ class RuleBasedValidation:
                 return targetQuery
             if len(shortestInstancesList) == 0:
                 return None
-            instances = " ".join(shortestInstancesList)
-            queryTemplate = shape.referencingQueriesPos[prevEvalShapeName].getSparql()
-            return queryTemplate.replace("$to_be_replaced$", instances)
+
+            maxListLength = 130
+            chunks = len(shortestInstancesList) / maxListLength
+            N = math.ceil(chunks)
+            queries = []
+            splitLists = self.getSplitList(shortestInstancesList, maxListLength, N)
+            if chunks > 1:
+                for i in range(0, N):
+                    subList = splitLists[i]
+                    instances = " ".join(subList)
+                    queryTemplate = shape.referencingQueriesPos[prevEvalShapeName].getSparql()
+                    queries.append(queryTemplate.replace("$to_be_replaced$", instances))
+                return queries
+            else:
+                instances = " ".join(shortestInstancesList)
+                queryTemplate = shape.referencingQueriesPos[prevEvalShapeName].getSparql()
+                return queryTemplate.replace("$to_be_replaced$", instances)
 
         elif instanceType == "invalid":
             if len(shortestInstancesList) == 0:
                 return None
-            instances = ", ".join(shortestInstancesList)
-            queryTemplate = shape.referencingQueriesNeg[prevEvalShapeName].getSparql()
-            return queryTemplate.replace("$to_be_replaced$", instances)
+
+            maxListLength = 120
+            chunks = len(shortestInstancesList) / maxListLength
+            N = math.ceil(chunks)
+            queries = []
+            splitLists = self.getSplitList(shortestInstancesList, maxListLength, N)
+            if chunks > 1:
+                for i in range(0, N):
+                    subList = splitLists[i]
+                    instances = ", ".join(subList)
+                    queryTemplate = shape.referencingQueriesNeg[prevEvalShapeName].getSparql()
+                    queries.append(queryTemplate.replace("$to_be_replaced$", instances))
+                return queries
+            else:
+                instances = ", ".join(shortestInstancesList)
+                queryTemplate = shape.referencingQueriesNeg[prevEvalShapeName].getSparql()
+                return queryTemplate.replace("$to_be_replaced$", instances)
 
     # Automatically sets the instanciated targets as invalid after running the query which uses
     # instances from previous shape evaluation as a filter
@@ -86,15 +120,32 @@ class RuleBasedValidation:
         query = self.filteredTargetQuery(shape, targetQuery, instanceType)
         if query is None:
             return
-        eval = self.endpoint.runQuery(
-            shape.getId(),
-            query,
-            "JSON"
-        )
-        bindings = eval["results"]["bindings"]
-        state.invalidTargets.update([self.registerTarget(Literal(shape.getId(), b["x"]["value"], True),
-                                                         False, depth, "", shape)
-                                    for b in bindings])
+        elif isinstance(query, str):
+            eval = self.endpoint.runQuery(
+                shape.getId(),
+                query,
+                "JSON"
+            )
+            bindings = eval["results"]["bindings"]
+            state.invalidTargets.update([self.registerTarget(Literal(shape.getId(), b["x"]["value"], True),
+                                                             False, depth, "", shape)
+                                        for b in bindings])
+        else:  # list of queries
+            bindings = set()
+            for q in query:
+                eval = self.endpoint.runQuery(
+                    shape.getId(),
+                    q,
+                    "JSON"
+                )
+
+                currentBindings = eval["results"]["bindings"]
+                atoms = [Literal(shape.getId(), b["x"]["value"], True) for b in currentBindings]
+                bindings.intersection(atoms)
+
+            state.invalidTargets.update([self.registerTarget(b,
+                                                             False, depth, "", shape)
+                                         for b in bindings])
 
 
     def targetAtoms(self, shape, targetQuery, depth, state=None):
@@ -105,8 +156,22 @@ class RuleBasedValidation:
                 self.invalidTargetAtoms(shape, targetQuery, "invalid", depth, state)
 
             query = self.filteredTargetQuery(shape, targetQuery, "valid")
+            print("***** Split query:", isinstance(query, list))
             if query is None:
                 return
+            elif isinstance(query, list):
+                bindings = set()
+                for q in query:
+                    eval = self.endpoint.runQuery(
+                        shape.getId(),
+                        q,
+                        "JSON"
+                    )
+                    currentBindings = eval["results"]["bindings"]
+                    atoms = [Literal(shape.getId(), b["x"]["value"], True) for b in currentBindings]
+                    bindings.update(atoms)
+                targetLiterals = bindings
+                return targetLiterals
 
         eval = self.endpoint.runQuery(
             shape.getId(),
