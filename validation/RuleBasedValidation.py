@@ -39,26 +39,51 @@ class RuleBasedValidation:
         targetLiterals = self.targetAtoms(shape, targetQuery, orderNumber, state)
         state.remainingTargets.update(targetLiterals)
 
-    def filteredTargetQuery(self, shape, targetQuery, instanceType):
+    def getInstancesList(self, shape):
         for evShape in self.evaluatedShapes:
             prevEvalShapeName = evShape.id
             if shape.referencingShapes.get(prevEvalShapeName) is not None:
-                if self.shapesDict[prevEvalShapeName].targetQuery is not None:  # if there was a target query assigned for the referenced shape
-                    if instanceType == "valid":
-                        print("Bindings", self.shapesDict[prevEvalShapeName].id, len(self.shapesDict[prevEvalShapeName].bindings))
-                        instances = " ".join(self.shapesDict[prevEvalShapeName].bindings)
-                        return shape.referencingQueriesPos[prevEvalShapeName].getSparql().replace(
-                            "$to_be_replaced$", instances)
-                    elif instanceType == "invalid":
-                        instances = ", ".join(self.shapesDict[prevEvalShapeName].bindings)
-                        return shape.referencingQueriesNeg[prevEvalShapeName].getSparql().replace(
-                            "$to_be_replaced$", instances)
-        return targetQuery
+                # if there was a target query assigned for the referenced shape
+                if self.shapesDict[prevEvalShapeName].targetQuery is not None:
+                    validInstances = self.shapesDict[prevEvalShapeName].bindings
+                    invalidInstances = self.shapesDict[prevEvalShapeName].invalidBindings
+                    return validInstances, invalidInstances, prevEvalShapeName
+        return [], [], None
 
-    # Automatically sets the instanciated targets as invalid after running the query which uses already instanciated
-    # instances as a filter
-    def setInvalidTargets(self, shape, targetQuery, instanceType, depth, state):
+    def filteredTargetQuery(self, shape, targetQuery, instanceType):
+        valList, invList, prevEvalShapeName = self.getInstancesList(shape)
+
+        print("INSTANCES *** case: ", instanceType, len(valList), len(invList), prevEvalShapeName, shape.id)
+        if valList == invList:
+            return targetQuery
+
+        if len(valList) > len(invList):
+            shortestInstancesList = invList
+        else:
+            shortestInstancesList = valList
+
+        if instanceType == "valid":
+            if len(invList) == 0:
+                return targetQuery
+            if len(shortestInstancesList) == 0:
+                return None
+            instances = " ".join(shortestInstancesList)
+            queryTemplate = shape.referencingQueriesPos[prevEvalShapeName].getSparql()
+            return queryTemplate.replace("$to_be_replaced$", instances)
+
+        elif instanceType == "invalid":
+            if len(shortestInstancesList) == 0:
+                return None
+            instances = ", ".join(shortestInstancesList)
+            queryTemplate = shape.referencingQueriesNeg[prevEvalShapeName].getSparql()
+            return queryTemplate.replace("$to_be_replaced$", instances)
+
+    # Automatically sets the instanciated targets as invalid after running the query which uses
+    # instances from previous shape evaluation as a filter
+    def invalidTargetAtoms(self, shape, targetQuery, instanceType, depth, state):
         query = self.filteredTargetQuery(shape, targetQuery, instanceType)
+        if query is None:
+            return
         eval = self.endpoint.runQuery(
             shape.getId(),
             query,
@@ -74,9 +99,12 @@ class RuleBasedValidation:
         if depth == 0:  # base case (corresponds to the first shape being evaluated)
             query = targetQuery  # initial targetQuery set in initial shape (json file)
         else:
-            query = self.filteredTargetQuery(shape, targetQuery, "valid")
             if self.option == "violated" or self.option == "all":
-                self.setInvalidTargets(shape, targetQuery, "invalid", depth, state)
+                self.invalidTargetAtoms(shape, targetQuery, "invalid", depth, state)
+
+            query = self.filteredTargetQuery(shape, targetQuery, "valid")
+            if query is None:
+                return
 
         eval = self.endpoint.runQuery(
             shape.getId(),
