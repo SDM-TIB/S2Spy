@@ -37,6 +37,8 @@ class RuleBasedValidation:
     # Uses filtered target query to get possible validated targets
     def getNewTargetAtoms(self, shape, targetQuery, orderNumber, state):
         targetLiterals = self.targetAtoms(shape, targetQuery, orderNumber, state)
+        if targetLiterals == None:
+            targetLiterals = []
         state.remainingTargets.update(targetLiterals)
 
     def getInstancesList(self, shape):
