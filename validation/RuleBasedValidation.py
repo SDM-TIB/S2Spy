@@ -45,7 +45,7 @@ class RuleBasedValidation:
             if shape.referencingShapes.get(prevEvalShapeName) is not None:
                 if self.shapesDict[prevEvalShapeName].targetQuery is not None:  # if there was a target query assigned for the referenced shape
                     if instanceType == "valid":
-                        print("self.shapesDict[prevEvalShapeName].bindings", self.shapesDict[prevEvalShapeName].id, self.shapesDict[prevEvalShapeName].bindings)
+                        print("Bindings", self.shapesDict[prevEvalShapeName].id, len(self.shapesDict[prevEvalShapeName].bindings))
                         instances = " ".join(self.shapesDict[prevEvalShapeName].bindings)
                         return shape.referencingQueriesPos[prevEvalShapeName].getSparql().replace(
                             "$to_be_replaced$", instances)
@@ -98,7 +98,7 @@ class RuleBasedValidation:
         #    return
 
         # termination condition 2: all shapes have been visited
-        if len(state.visitedShapes) == len(self.shapesDict):  # this condition is never fulfilled ***
+        if len(state.visitedShapes) == len(self.shapesDict):
             if self.option == "valid" or self.option == "all":
                 for t in state.remainingTargets:
                     self.registerTarget(t, True, depth, "not violated after termination", None)
@@ -117,7 +117,7 @@ class RuleBasedValidation:
         log = t.getStr() + ", depth " + str(depth) + fshape + ", " + logMessage + "\n"
 
         instance = "<" + t.getArg() + ">"
-        #for key, value in getPrefixes().items():
+        #for key, value in getPrefixes().items():  # for using prefix notation in the instances of the query
         #    value = value[1:-1]
         #    if value in t.getArg():
         #        instance = instance.replace(value, key + ":")[1:-1]
@@ -270,9 +270,8 @@ class RuleBasedValidation:
         inValidTargets = part2["false"]
         state.invalidTargets.update(inValidTargets)
 
-        if self.option == "violated" or self.option == "all":
-            for t in inValidTargets:
-                self.registerTarget(t, False, depth, "", s)
+        for t in inValidTargets:
+            self.registerTarget(t, False, depth, "", s)
 
         state.assignment.update([t.getNegation().getStr() for t in inValidTargets])  # (?)
 
