@@ -34,6 +34,7 @@ class Shape:
         self.referencingQueriesNeg = {}  # complement of pos
         self.bindings = set()
         self.invalidBindings = set()
+        self.hasValidInstances = True
 
     def getId(self):
         return self.id

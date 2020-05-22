@@ -53,7 +53,7 @@ class RuleBasedValidation:
                     return validInstances, invalidInstances, prevEvalShapeName
         return [], [], None
 
-    def getSplitList(self, shortestInstancesList, maxListLength, N):
+    def getSplitList(self, shortestInstancesList, N):
         listLength = math.ceil(len(shortestInstancesList) / N)
         shortestInstancesList = list(shortestInstancesList)
         return [shortestInstancesList[i:i + listLength] for i in range(0, len(shortestInstancesList), listLength)]
@@ -74,13 +74,14 @@ class RuleBasedValidation:
             if len(invList) == 0:
                 return targetQuery
             if len(shortestInstancesList) == 0:
+                shape.hasValidInstances = False
                 return None
 
             maxListLength = 130
             chunks = len(shortestInstancesList) / maxListLength
             N = math.ceil(chunks)
             queries = []
-            splitLists = self.getSplitList(shortestInstancesList, maxListLength, N)
+            splitLists = self.getSplitList(shortestInstancesList, N)
             if chunks > 1:
                 for i in range(0, N):
                     subList = splitLists[i]
@@ -101,10 +102,11 @@ class RuleBasedValidation:
             chunks = len(shortestInstancesList) / maxListLength
             N = math.ceil(chunks)
             queries = []
-            splitLists = self.getSplitList(shortestInstancesList, maxListLength, N)
+            splitLists = self.getSplitList(shortestInstancesList, N)
             if chunks > 1:
                 for i in range(0, N):
                     subList = splitLists[i]
+                    print(">>>" + shape.getId() + " sublist length:", len(subList))
                     instances = ", ".join(subList)
                     queryTemplate = shape.referencingQueriesNeg[prevEvalShapeName].getSparql()
                     queries.append(queryTemplate.replace("$to_be_replaced$", instances))
@@ -121,6 +123,7 @@ class RuleBasedValidation:
         if query is None:
             return
         elif isinstance(query, str):
+            start = time.time()
             eval = self.endpoint.runQuery(
                 shape.getId(),
                 query,
@@ -130,9 +133,14 @@ class RuleBasedValidation:
             state.invalidTargets.update([self.registerTarget(Literal(shape.getId(), b["x"]["value"], True),
                                                              False, depth, "", shape)
                                         for b in bindings])
+            end = time.time()
+            print("############################################################")
+            print(">>>", shape.getId(), "evaluation time single FILTER: ", end - start)
+            print("############################################################")
         else:  # list of queries
             bindings = set()
             for q in query:
+                start = time.time()
                 eval = self.endpoint.runQuery(
                     shape.getId(),
                     q,
@@ -142,7 +150,10 @@ class RuleBasedValidation:
                 currentBindings = eval["results"]["bindings"]
                 atoms = [Literal(shape.getId(), b["x"]["value"], True) for b in currentBindings]
                 bindings.intersection(atoms)
-
+                end = time.time()
+                print("############################################################")
+                print(">>>", shape.getId(), "evaluation time mult FILTER: ", end - start)
+                print("############################################################")
             state.invalidTargets.update([self.registerTarget(b,
                                                              False, depth, "", shape)
                                          for b in bindings])
@@ -162,6 +173,7 @@ class RuleBasedValidation:
             elif isinstance(query, list):
                 bindings = set()
                 for q in query:
+                    start = time.time()
                     eval = self.endpoint.runQuery(
                         shape.getId(),
                         q,
@@ -170,9 +182,14 @@ class RuleBasedValidation:
                     currentBindings = eval["results"]["bindings"]
                     atoms = [Literal(shape.getId(), b["x"]["value"], True) for b in currentBindings]
                     bindings.update(atoms)
+                    end = time.time()
+                    print("############################################################")
+                    print(">>> valid evaluation time mult VALUES keyword:", shape.getId(), end - start)
+                    print("############################################################")
                 targetLiterals = bindings
                 return targetLiterals
 
+        start = time.time()
         eval = self.endpoint.runQuery(
             shape.getId(),
             query,
@@ -181,6 +198,10 @@ class RuleBasedValidation:
 
         bindings = eval["results"]["bindings"]
         targetLiterals = [Literal(shape.getId(), b["x"]["value"], True) for b in bindings]
+        end = time.time()
+        print("############################################################")
+        print(">>> valid evaluation time single VALUES keyword:", shape.getId(), end - start)
+        print("############################################################")
         return targetLiterals
 
     def extractTargetShapes(self):
@@ -301,11 +322,11 @@ class RuleBasedValidation:
         return False
 
     def evalShape(self, state, s, depth):
-        self.evalConstraints(state, s)
-        state.evaluatedPredicates.update(s.queriesIds)
         state.visitedShapes.add(s)
-
-        self.saturate(state, depth, s)
+        if s.hasValidInstances:
+            self.evalConstraints(state, s)
+            state.evaluatedPredicates.update(s.queriesIds)
+            self.saturate(state, depth, s)
 
     def evalConstraints(self, state, s):
         self.evalQuery(state, s.minQuery, s)
