@@ -248,8 +248,18 @@ class RuleBasedValidation:
                 self.violatedOutput.write(log)
 
     def saturate(self, state, depth, s):
+        startN = time.time()
         negated = self.negateUnMatchableHeads(state, depth, s)
+        endN = time.time()
+        print("############################################################")
+        print(">>> Time negated", s.getId(), "depth", depth, ": ", endN - startN)
+        print("############################################################")
+        startI = time.time()
         inferred = self.applyRules(state, depth, s)
+        endI = time.time()
+        print("############################################################")
+        print(">>> Time inferred", s.getId(), "depth", depth, ": ", endI - startI)
+        print("############################################################")
         if negated or inferred:
             self.saturate(state, depth, s)
 
@@ -324,9 +334,19 @@ class RuleBasedValidation:
     def evalShape(self, state, s, depth):
         state.visitedShapes.add(s)
         if s.hasValidInstances:
+            startQuery = time.time()
             self.evalConstraints(state, s)
+            endQuery = time.time()
+            print("############################################################")
+            print(">>> Time eval all subqueries", s.getId(), endQuery - startQuery)
+            print("############################################################")
             state.evaluatedPredicates.update(s.queriesIds)
+            startS = time.time()
             self.saturate(state, depth, s)
+            endS = time.time()
+            print("############################################################")
+            print(">>> Total time saturation", endS - startS)
+            print("############################################################")
 
     def evalConstraints(self, state, s):
         self.evalQuery(state, s.minQuery, s)
