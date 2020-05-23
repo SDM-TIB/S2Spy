@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from validation.utils import fileManagement
+from validation.utils.RuleBasedValidStats import RuleBasedValidStats
 from validation.core.RuleMap import RuleMap
 from validation.core.Literal import Literal
 from validation.sparql.SPARQLPrefixHandler import getPrefixes
@@ -8,7 +9,7 @@ import math
 import re
 
 class RuleBasedValidation:
-    def __init__(self, endpoint, node_order, shapesDict, validOutput, violatedOutput, option):
+    def __init__(self, endpoint, node_order, shapesDict, validOutput, violatedOutput, option, statsOutputFile, logOutput):
         self.endpoint = endpoint
         self.node_order = node_order
         self.shapesDict = shapesDict
@@ -18,18 +19,35 @@ class RuleBasedValidation:
         self.targetShapes = self.extractTargetShapes()
         self.targetShapePredicates = [s.getId() for s in self.targetShapes]
         self.evaluatedShapes = []
+        self.statsOutput = statsOutputFile
+        self.stats = RuleBasedValidStats()
+        self.logOutput = logOutput
 
     def exec(self):
         firstShapeEval = self.shapesDict[self.node_order.pop(0)]
         order = 0  # evaluation order
+        self.logOutput.write("Retrieving (intitial) targets ...")
         targets = self.extractTargetAtoms(firstShapeEval, order)
+        self.logOutput.write("\nTargets retrieved.")
+        self.logOutput.write("\nNumber of targets:\n" + str(len(targets)))
+        self.stats.recordInitialTargets(str(len(targets)))
+        start = time.time()
         self.validate(
             order,
             EvalState(targets),
             firstShapeEval
         )
+        finish = time.time()
+        elapsed = finish - start
+        self.stats.recordTotalTime(elapsed)
+        print("Total execution time: ", str(elapsed))
+        self.logOutput.write("\nMaximal number or rules in memory: " + str(self.stats.maxRuleNumber))
+        self.stats.writeAll(self.statsOutput)
+
         fileManagement.closeFile(self.validOutput)
         fileManagement.closeFile(self.violatedOutput)
+        fileManagement.closeFile(self.statsOutput)
+        fileManagement.closeFile(self.logOutput)
 
     def extractTargetAtoms(self, shape, order):
         return self.targetAtoms(shape, shape.getTargetQuery(), order)
@@ -123,6 +141,7 @@ class RuleBasedValidation:
         if query is None:
             return
         elif isinstance(query, str):
+            self.logOutput.write("\n\nEvaluating query:\n" + query)
             start = time.time()
             eval = self.endpoint.runQuery(
                 shape.getId(),
@@ -140,6 +159,7 @@ class RuleBasedValidation:
         else:  # list of queries
             bindings = set()
             for q in query:
+                self.logOutput.write("\n\nEvaluating query:\n" + q)
                 start = time.time()
                 eval = self.endpoint.runQuery(
                     shape.getId(),
@@ -167,12 +187,12 @@ class RuleBasedValidation:
                 self.invalidTargetAtoms(shape, targetQuery, "invalid", depth, state)
 
             query = self.filteredTargetQuery(shape, targetQuery, "valid")
-            print("***** Split query:", isinstance(query, list))
             if query is None:
                 return
             elif isinstance(query, list):
                 bindings = set()
                 for q in query:
+                    self.logOutput.write("\nEvaluating query:\n" + q)
                     start = time.time()
                     eval = self.endpoint.runQuery(
                         shape.getId(),
@@ -188,6 +208,8 @@ class RuleBasedValidation:
                     print("############################################################")
                 targetLiterals = bindings
                 return targetLiterals
+            elif isinstance(query, str):
+                self.logOutput.write("\nEvaluating query:\n" + query)
 
         start = time.time()
         eval = self.endpoint.runQuery(
@@ -219,6 +241,9 @@ class RuleBasedValidation:
                 for t in state.remainingTargets:
                     self.registerTarget(t, True, depth, "not violated after termination", None)
             return
+
+        self.logOutput.write("\n\n*************************************************")
+        self.logOutput.write("\nStarting validation at depth: " + str(depth))
 
         self.evalShape(state, focusShape, depth)  # validate selected shape
 
@@ -307,7 +332,7 @@ class RuleBasedValidation:
             self.registerTarget(t, False, depth, "", s)
 
         #print("Remaining targets: " + str(len(state.remainingTargets)))
-
+        self.logOutput.write("\nRemaining targets: " + str(len(state.remainingTargets)))
         return True
 
     def _applyRules(self, head, bodies, state, retainedRules):
@@ -332,7 +357,9 @@ class RuleBasedValidation:
         return False
 
     def evalShape(self, state, s, depth):
+        self.logOutput.write("\nEvaluating queries for shape " + s.getId())
         state.visitedShapes.add(s)
+        self.saveRuleNumber(state)
         if s.hasValidInstances:
             startQuery = time.time()
             self.evalConstraints(state, s)
@@ -341,12 +368,24 @@ class RuleBasedValidation:
             print(">>> Time eval all subqueries", s.getId(), endQuery - startQuery)
             print("############################################################")
             state.evaluatedPredicates.update(s.queriesIds)
+            self.logOutput.write("\nStarting saturation ...")
             startS = time.time()
             self.saturate(state, depth, s)
             endS = time.time()
+            self.stats.recordSaturationTime(endS - startS)
             print("############################################################")
             print(">>> Total time saturation", endS - startS)
             print("############################################################")
+            self.logOutput.write("\nSaturation time: " + str(endS - startS) + " seconds")
+
+            self.logOutput.write("\n\nValid targets: " + str(len(state.validTargets)))
+            self.logOutput.write("\nInvalid targets: " + str(len(state.invalidTargets)))
+            self.logOutput.write("\nRemaining targets: " + str(len(state.remainingTargets)))
+
+    def saveRuleNumber(self, state):
+        ruleNumber = state.ruleMap.getRuleNumber()
+        self.logOutput.write("\nNumber of rules: " + str(ruleNumber))
+        self.stats.recordNumberOfRules(ruleNumber)
 
     def evalConstraints(self, state, s):
         self.evalQuery(state, s.minQuery, s)
@@ -355,13 +394,25 @@ class RuleBasedValidation:
             self.evalQuery(state, q, s)
 
     def evalQuery(self, state, q, s):
+        self.logOutput.write("\n\nEvaluating query:\n" + q.getSparql())
+        startQ = time.time()
         eval = self.endpoint.runQuery(q.getId(), q.getSparql(), "JSON")
+        endQ = time.time()
         bindings = eval["results"]["bindings"]
+        self.stats.recordQueryExecTime(endQ - startQ)
+        self.logOutput.write("\nNumber of solution mappings: " + str(len(bindings)))
+        self.stats.recordNumberOfSolutionMappings(len(bindings))
+        self.stats.recordQuery()
+        self.logOutput.write("\nGrounding rules ... ")
+        startG = time.time()
         count = 0
         for b in bindings:
             self.evalBindingSet(state, b, q.getRulePattern(), s.rulePatterns)
             count += 1
-        print("Bindings count:", count)
+        endG = time.time()
+        #print("Bindings count:", count)
+        self.stats.recordGroundingTime(endG - startG)
+        self.logOutput.write(str(endG - startG) + " seconds")
 
     def evalBindingSet(self, state, bs, queryRP, shapeRPs):
         self._evalBindingSet(state, bs, queryRP)

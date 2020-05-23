@@ -24,3 +24,6 @@ class RuleMap:
 
     def keySet(self):
         return set(self.map.keys())
+
+    def getRuleNumber(self):
+        return self.ruleNumber

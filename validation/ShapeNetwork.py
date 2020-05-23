@@ -174,6 +174,8 @@ class ShapeNetwork:
             self.shapesDict,
             fileManagement.openFile("targets_valid.log"),
             fileManagement.openFile("targets_violated.log"),
-            option
+            option,
+            fileManagement.openFile("stats.txt"),
+            fileManagement.openFile("validation.log")
         ).exec()
         return 'Go to log files in {} folder to see report'.format(self.outputDirName)
