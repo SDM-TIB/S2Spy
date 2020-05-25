@@ -30,8 +30,8 @@ class Shape:
 
         self.useSelectiveQueries = useSelectiveQueries
         self.referencingShapes = referencingShapes
-        self.referencingQueriesPos = {}
-        self.referencingQueriesNeg = {}  # complement of pos
+        self.referencingQueries_VALUES = {}
+        self.referencingQueries_FILTER_NOT_IN = {}  # complement of VALUES
         self.bindings = set()
         self.invalidBindings = set()
         self.hasValidInstances = True
@@ -119,7 +119,7 @@ class Shape:
         maxConstraints = [c for c in self.constraints if c.max != -1]
         queryGenerator = QueryGenerator()
 
-        self.referencingQueriesPos = {ref: queryGenerator.generateQuery(
+        self.referencingQueries_VALUES = {ref: queryGenerator.generateQuery(
                                         "template",
                                         [c for c in self.constraints if c.path == self.referencingShapes[ref]],
                                         None,
@@ -128,7 +128,7 @@ class Shape:
                                         "positive"
                                         ) for ref in self.referencingShapes.keys()}
 
-        self.referencingQueriesNeg = {ref: queryGenerator.generateQuery(
+        self.referencingQueries_FILTER_NOT_IN = {ref: queryGenerator.generateQuery(
                                         "template",
                                         [c for c in self.constraints if c.path == self.referencingShapes[ref]],
                                         None,

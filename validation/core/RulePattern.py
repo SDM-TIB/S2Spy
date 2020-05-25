@@ -16,20 +16,15 @@ class RulePattern:
     def getHead(self):
         return self.head
 
-    def instantiateAtom(self, a, bs):
+    def instantiateAtom(self, a, bs):  # @@@@@
         # given a binding with many possible projected variables, returns the atom that matches the variable
-        arg = ""
         for k in bs.keys():
             if k == a.getArg():
-                arg = bs[k]["value"]  # instance, e.g., http://dbpedia.org/resource/Titanic_(1953_film)
-        if arg == "":
-            print("error instantiating atom", a, bs)  # *** I should never enter this conditional
-
-        return Literal(
-                a.getPredicate(),
-                arg,
-                a.getIsPos()
-        )
+                return Literal(
+                        a.getPredicate(),
+                        bs[k]["value"],  # arg instance, e.g., http://dbpedia.org/resource/Titanic_(1953_film),
+                        a.getIsPos()
+                )
 
     def instantiateBody(self, bs):
         instances = []

@@ -153,6 +153,7 @@ class QueryBuilder:
                 "\n" + \
                 ("{\n" + self.subQuery + "\n}\n" if self.subQuery is not None else "") + \
                 (grapNotPresent) + \
+                "$to_be_replaced$" + \
                 "\n}" + selectiveClosingBracket
 
     def getSelective(self):
