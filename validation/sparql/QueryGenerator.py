@@ -142,18 +142,18 @@ class QueryBuilder:
         grapNotPresent = ""  # ***
         selectiveClosingBracket = "}}" if self.selective is not None else ""
         prefixes = getPrefixString() if includePrefixes else ""
-
+        tempString = "$to_be_replaced$" if includePrefixes else ""
         return prefixes + \
                 self.getSelective() + \
                 self.getProjectionString() + \
                 " WHERE {" + \
                 (grapNotPresent) + \
                 "\n" + \
+                tempString + \
                 self.getTriplePatterns() + \
                 "\n" + \
                 ("{\n" + self.subQuery + "\n}\n" if self.subQuery is not None else "") + \
                 (grapNotPresent) + \
-                "$to_be_replaced$" + \
                 "\n}" + selectiveClosingBracket
 
     def getSelective(self):

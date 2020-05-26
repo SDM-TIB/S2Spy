@@ -68,7 +68,37 @@ class RuleBasedValidation:
         shortestInstancesList = list(shortestInstancesList)
         return [shortestInstancesList[i:i + listLength] for i in range(0, len(shortestInstancesList), listLength)]
 
-    def filteredTargetQuery(self, shape, targetQuery, bindingsType, valList, invList, prevEvalShapeName, maxListLength):
+    def filteredQuery(self, bindingsType, queryTemplate, instancesList, maxListLength):
+        chunks = len(instancesList) / maxListLength
+        N = math.ceil(chunks)
+        queries = []
+
+        if bindingsType == "valid":
+            if chunks > 1:
+                splittedLists = self.getSplitList(instancesList, N)
+                for i in range(0, N):
+                    subList = splittedLists[i]
+                    instances = " ".join(subList)
+                    queries.append(queryTemplate.replace("$to_be_replaced$", instances))
+                return queries
+            else:
+                instances = " ".join(instancesList)
+                return queryTemplate.replace("$to_be_replaced$", instances)
+
+        elif bindingsType == "invalid":
+            if chunks > 1:
+                for i in range(0, N):
+                    splittedLists = self.getSplitList(instancesList, N)
+                    subList = splittedLists[i]
+                    print(">>>>> number of sublists: " + str(N) + ", sublist length:", len(subList))
+                    instances = ",".join(subList)
+                    queries.append(queryTemplate.replace("$to_be_replaced$", instances))
+                return queries
+            else:
+                instances = ",".join(instancesList)
+                return queryTemplate.replace("$to_be_replaced$", instances)
+
+    def filteredTargetQuery(self, shape, targetQuery, bindingsType, valList, invList, prevEvalShapeName):
         print("INSTANCES *** case: ", bindingsType, len(valList), len(invList), prevEvalShapeName, shape.id)
         if valList == invList:
             return targetQuery
@@ -77,10 +107,6 @@ class RuleBasedValidation:
             shortestInstancesList = valList
         else:
             shortestInstancesList = invList
-
-        chunks = len(shortestInstancesList) / maxListLength
-        N = math.ceil(chunks)
-        queries = []
 
         if bindingsType == "valid":
             if len(invList) == 0:
@@ -94,16 +120,7 @@ class RuleBasedValidation:
             else:
                 queryTemplate = shape.referencingQueries_FILTER_NOT_IN[prevEvalShapeName].getSparql()
 
-            if chunks > 1:
-                splittedLists = self.getSplitList(shortestInstancesList, N)
-                for i in range(0, N):
-                    subList = splittedLists[i]
-                    instances = " ".join(subList)
-                    queries.append(queryTemplate.replace("$to_be_replaced$", instances))
-                return queries
-            else:
-                instances = " ".join(shortestInstancesList)
-                return queryTemplate.replace("$to_be_replaced$", instances)
+            return self.filteredQuery(bindingsType, queryTemplate, shortestInstancesList, maxListLength=120)
 
         elif bindingsType == "invalid":
             if len(valList) == 0:
@@ -117,21 +134,10 @@ class RuleBasedValidation:
             else:
                 queryTemplate = shape.referencingQueries_FILTER_NOT_IN[prevEvalShapeName].getSparql()
 
-            if chunks > 1:
-                for i in range(0, N):
-                    splittedLists = self.getSplitList(shortestInstancesList, N)
-                    subList = splittedLists[i]
-                    print(">>>>> " + shape.getId() + " sublist length:", len(subList))
-                    instances = ",".join(subList)
-                    queries.append(queryTemplate.replace("$to_be_replaced$", instances))
-                return queries
-            else:
-                instances = ",".join(shortestInstancesList)
-                return queryTemplate.replace("$to_be_replaced$", instances)
+            return self.filteredQuery(bindingsType, queryTemplate, shortestInstancesList, maxListLength=11)
 
     def validTargetAtoms(self, shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapename):
-        query = self.filteredTargetQuery(shape, targetQuery, bType, prevValList, prevInvList,
-                                         prevEvalShapename, maxListLength=120)
+        query = self.filteredTargetQuery(shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapename)
         if query is None:
             print("(NO NEEDED QUERY FOR THE CASE).")
             return []  # no target atoms / literals retrieved
@@ -148,8 +154,7 @@ class RuleBasedValidation:
     # Automatically sets the instanciated targets as invalid after running the query which uses
     # instances from previous shape evaluation as a filter
     def invalidTargetAtoms(self, shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapeName, depth, state):
-        query = self.filteredTargetQuery(shape, targetQuery, bType, prevValList, prevInvList,
-                                         prevEvalShapeName, maxListLength=110)
+        query = self.filteredTargetQuery(shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapeName)
         if query is None:
             print("(NO NEEDED QUERY FOR THE CURRENT CASE).")
         elif isinstance(query, str):
@@ -243,7 +248,7 @@ class RuleBasedValidation:
         fshape = ", focus shape " + focusShape.id if focusShape is not None else ""
         log = t.getStr() + ", depth " + str(depth) + fshape + ", " + logMessage + "\n"
 
-        instance = " <" + t.getArg() + ">"
+        instance = "<" + t.getArg() + ">"
         #for key, value in getPrefixes().items():  # for using prefix notation in the instances of the query
         #    value = value[1:-1]
         #    if value in t.getArg():
@@ -382,16 +387,13 @@ class RuleBasedValidation:
 
     def filteredMinQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances):
         if self.prevEvalShapeName is not None and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0:
-            vars = ""
-            varsCount = 0
+            VALUES_clauses = ""
             for c in shape.constraints:
                 if c.shapeRef == self.prevEvalShapeName:
-                    vars += " ?" + c.variables[0]
-                    varsCount +=1
-            instances = " ".join(["(" + i * varsCount + ")" for i in prevValidInstances])
-
-            return templateQuery.replace("$to_be_replaced$",
-                                          "VALUES (" + vars + ") { " + instances + " }\n")
+                    var = " ?" + c.variables[0]
+                    instances = " ".join(prevValidInstances)
+                    VALUES_clauses += "VALUES" + var + " {" + instances + "}\n"
+            return templateQuery.replace("$to_be_replaced$", VALUES_clauses)
 
         return templateQuery.replace("$to_be_replaced$", "\n")
 
