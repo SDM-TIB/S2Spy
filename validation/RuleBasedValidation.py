@@ -72,12 +72,11 @@ class RuleBasedValidation:
     def getFormattedInstances(self, instances, separator, maxListLength):
         chunks = len(instances) / maxListLength
         N = math.ceil(chunks)
-
         if chunks > 1:
             splittedLists = self.getSplittedList(instances, N)
             return [separator.join(subList) for subList in splittedLists]
         else:
-            return instances
+            return [separator.join(instances)]
 
     def filteredQuery(self, queryTemplate, instancesList, separator, maxListLength):
         formattedInstancesLists = self.getFormattedInstances(instancesList, separator, maxListLength)
@@ -368,12 +367,16 @@ class RuleBasedValidation:
     def filteredMinQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances):
         if self.prevEvalShapeName is not None and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0:
             VALUES_clauses = ""
+            instancesLists = self.getFormattedInstances(prevValidInstances, "", 90)
             for c in shape.constraints:
                 if c.shapeRef == self.prevEvalShapeName:
                     var = " ?" + c.variables[0]
-                    instances = " ".join(prevValidInstances)
-                    VALUES_clauses += "VALUES" + var + " {" + instances + "}\n"
-            return templateQuery.replace("$to_be_replaced$", VALUES_clauses)
+                    VALUES_clauses += "VALUES" + var + " {$instances$}\n"
+            queries = []
+            for sublist in instancesLists:
+                VALUES_clauses = VALUES_clauses.replace("$instances$", sublist)
+                queries.append(templateQuery.replace("$to_be_replaced$", VALUES_clauses))
+            return queries
 
         return templateQuery.replace("$to_be_replaced$", "\n")
 
@@ -381,14 +384,18 @@ class RuleBasedValidation:
         if self.prevEvalShapeName is not None and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0:
             VALUES_clauses = ""
             refPaths = "\n"
+            instancesLists = self.getFormattedInstances(prevValidInstances, "", 90)
             for c in shape.constraints:
                 if c.shapeRef == self.prevEvalShapeName:
                     var = " ?" + c.variables[0]
-                    instances = " ".join(prevValidInstances)
-                    VALUES_clauses += "VALUES" + var + " {" + instances + "}\n"
                     focusVar = c.varGenerator.getFocusNodeVar()
+                    VALUES_clauses += "VALUES" + var + " {$instances$}\n"
                     refPaths += "?" + focusVar + " " + c.path + var + ".\n"
-            return templateQuery.replace("$to_be_replaced$", VALUES_clauses + refPaths)
+            queries = []
+            for sublist in instancesLists:
+                VALUES_clauses = VALUES_clauses.replace("$instances$", sublist)
+                queries.append(templateQuery.replace("$to_be_replaced$", VALUES_clauses + refPaths))
+            return queries
 
         return templateQuery.replace("$to_be_replaced$", "\n")
 
@@ -397,13 +404,23 @@ class RuleBasedValidation:
         invInst = self.shapesDict[self.prevEvalShapeName].invalidBindings if self.prevEvalShapeName is not None else []
 
         print("------------------------------------------------------------")
-        self.evalQuery(state, s.minQuery, self.filteredMinQuery(s, s.minQuery.getSparql(), valInst, invInst), s)
+        minQuery = self.filteredMinQuery(s, s.minQuery.getSparql(), valInst, invInst)
+        if isinstance(minQuery, list):
+            for query in minQuery:
+                self.evalQuery(state, s.minQuery, query, s)
+        else:
+            self.evalQuery(state, s.minQuery, minQuery, s)
         print(">>> Finished time eval MIN constraint", s.getId(), "<<<")
         print("------------------------------------------------------------")
 
         for q in s.maxQueries:
             print("------------------------------------------------------------")
-            self.evalQuery(state, q, self.filteredMaxQuery(s, q.getSparql(), valInst, invInst), s)
+            maxQuery = self.filteredMaxQuery(s, q.getSparql(), valInst, invInst)
+            if isinstance(maxQuery, list):
+                for queryStr in maxQuery:
+                    self.evalQuery(state, q, queryStr, s)
+            else:
+                self.evalQuery(state, q, maxQuery, s)
             print(">>> Finished time eval MAX constraint", s.getId(), "<<<")
             print("------------------------------------------------------------")
 
