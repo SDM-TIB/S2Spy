@@ -89,13 +89,11 @@ class RuleBasedValidation:
         if valList == invList:
             return targetQuery
 
-        if len(valList) < len(invList):
-            shortestInstancesList = valList
-        else:
-            shortestInstancesList = invList
+        shortestInstancesList = valList if len(valList) < len(invList) else invList
+        maxSplitNumber = 500  # maximum possible number to allow using filtering queries instead of initial target query
 
         if bindingsType == "valid":
-            if len(invList) == 0:
+            if len(invList) == 0 or len(shortestInstancesList) > maxSplitNumber:
                 return targetQuery
             elif len(valList) == 0:
                 shape.hasValidInstances = False
@@ -108,10 +106,10 @@ class RuleBasedValidation:
                 queryTemplate = shape.referencingQueries_FILTER_NOT_IN[prevEvalShapeName].getSparql()
                 separator = ","
 
-            return self.filteredQuery(bindingsType, queryTemplate, shortestInstancesList, separator, maxListLength=120)
+            return self.filteredQuery(queryTemplate, shortestInstancesList, separator, maxListLength=120)
 
         elif bindingsType == "invalid":
-            if len(valList) == 0:
+            if len(valList) == 0 or len(shortestInstancesList) > maxSplitNumber:
                 return targetQuery  # retrieve all possible instances and register them as invalid without verifying
                                     # whether the others constraints of the shape are satisfied or not
             elif len(invList) == 0:
@@ -124,7 +122,7 @@ class RuleBasedValidation:
                 queryTemplate = shape.referencingQueries_FILTER_NOT_IN[prevEvalShapeName].getSparql()
                 separator = ","
 
-            return self.filteredQuery(bindingsType, queryTemplate, shortestInstancesList, separator, maxListLength=11)
+            return self.filteredQuery(queryTemplate, shortestInstancesList, separator, maxListLength=110)
 
     def validTargetAtoms(self, shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapename):
         query = self.filteredTargetQuery(shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapename)
