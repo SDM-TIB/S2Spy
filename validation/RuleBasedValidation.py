@@ -369,15 +369,14 @@ class RuleBasedValidation:
                 and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0 \
                 and len(prevValidInstances) < 500:
             VALUES_clauses = ""
-            instancesLists = self.getFormattedInstances(prevValidInstances, "", 90)
+            instancesLists = self.getFormattedInstances(prevValidInstances, "", 100)
             for c in shape.constraints:
                 if c.shapeRef == self.prevEvalShapeName:
                     var = " ?" + c.variables[0]
                     VALUES_clauses += "VALUES" + var + " {$instances$}\n"
             queries = []
             for sublist in instancesLists:
-                VALUES_clauses = VALUES_clauses.replace("$instances$", sublist)
-                queries.append(templateQuery.replace("$to_be_replaced$", VALUES_clauses))
+                queries.append(templateQuery.replace("$to_be_replaced$", VALUES_clauses.replace("$instances$", sublist)))
             return queries
 
         return templateQuery.replace("$to_be_replaced$", "\n")
@@ -388,7 +387,7 @@ class RuleBasedValidation:
                 and len(prevValidInstances) < 500:
             VALUES_clauses = ""
             refPaths = "\n"
-            instancesLists = self.getFormattedInstances(prevValidInstances, "", 90)
+            instancesLists = self.getFormattedInstances(prevValidInstances, "", 100)
             for c in shape.constraints:
                 if c.shapeRef == self.prevEvalShapeName:
                     var = " ?" + c.variables[0]
@@ -397,8 +396,8 @@ class RuleBasedValidation:
                     refPaths += "?" + focusVar + " " + c.path + var + ".\n"
             queries = []
             for sublist in instancesLists:
-                VALUES_clauses = VALUES_clauses.replace("$instances$", sublist)
-                queries.append(templateQuery.replace("$to_be_replaced$", VALUES_clauses + refPaths))
+                queries.append(templateQuery.replace("$to_be_replaced$",
+                                                     VALUES_clauses.replace("$instances$", sublist) + refPaths))
             return queries
 
         return templateQuery.replace("$to_be_replaced$", "\n")
