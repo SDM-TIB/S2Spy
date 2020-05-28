@@ -11,16 +11,17 @@ class QueryGenerator:
     def __init__(self):
         pass
 
-    def generateQuery(self, id, constraints, graph=None, subquery=None, selective=None, templateQuery=None):
-        # TODO ("Only one max constraint per query is allowed");
+    def generateQuery(self, id, constraints, target, isSelective, graph=None, subquery=None):
+        # Only one max constraint per query is allowed, then 'constraints' arg contain only 1 element for the max case
+
         rp = self.computeRulePattern(constraints, id)
 
-        if templateQuery == "positive":
-            return self.refQuery(constraints, selective)
-        elif templateQuery == "negated":
-            return self.refFilterNotInQuery(constraints, selective)
+        if id == "template_VALUES":
+            return self.targetQuery_VALUES(constraints, target)
+        elif id == "template_FILTER_NOT_IN":
+            return self.targetQuery_FILTER_NOT_IN(constraints, target)
 
-        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), selective)
+        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), isSelective, target, constraints)
         for c in constraints:
             builder.buildClause(c)
 
@@ -49,6 +50,7 @@ class QueryGenerator:
             return None  # Optional empty
 
         builder = QueryBuilder(
+
                 "tmp",
                 graphName,
                 None,
@@ -60,15 +62,13 @@ class QueryGenerator:
 
         return builder.getSparql(False)
 
-    def refQuery(self, constraint, selectivePath):
+    def targetQuery_VALUES(self, constraint, targetPath):
         includePrefixes = True
         prefixes = getPrefixString() if includePrefixes else ""
         path = constraint[0].path
         focusVar = VariableGenerator.getFocusNodeVar()
-        if selectivePath is not None:
-            rdfClass = "?" + focusVar + " a " + selectivePath + "."
-        else:
-            rdfClass = ""
+
+        rdfClass = "?" + focusVar + " a " + targetPath + "." if targetPath is not None else ""
 
         query = prefixes + \
                 "SELECT DISTINCT ?" + focusVar + " WHERE {\n" + \
@@ -82,7 +82,7 @@ class QueryGenerator:
                 query
         )
 
-    def refFilterNotInQuery(self, constraint, selectivePath):
+    def targetQuery_FILTER_NOT_IN(self, constraint, selectivePath):
         includePrefixes = True
         prefixes = getPrefixString() if includePrefixes else ""
         path = constraint[0].path
@@ -107,14 +107,17 @@ class QueryGenerator:
 # mutable
     # private class
 class QueryBuilder:
-    def __init__(self, id, graph, subquery, projectedVariables, selective=None):
+    def __init__(self, id, graph, subquery, projectedVariables, isSelective=None, targetPath=None, constraints=None):
         self.id = id
         self.graph = graph
         self.subQuery = subquery
         self.projectedVariables = projectedVariables
         self.filters = []
         self.triples = []
-        self.selective = selective
+
+        self.isSelective = isSelective
+        self.targetPath = targetPath
+        self.constraints = constraints
 
     def addTriple(self, path, object):
         self.triples.append(
@@ -140,9 +143,15 @@ class QueryBuilder:
 
     def getSparql(self, includePrefixes):  # assuming optional graph
         grapNotPresent = ""  # ***
-        selectiveClosingBracket = "}}" if self.selective is not None else ""
+        selectiveClosingBracket = "}}" if self.isSelective is not None else ""
         prefixes = getPrefixString() if includePrefixes else ""
-        tempString = "$to_be_replaced$" if includePrefixes else ""
+
+        tempString = ""
+        if includePrefixes:
+            if "_pos" in self.id or "_max_" in self.id:
+                # add VALUES clause to external query
+                tempString = "$to_be_replaced$"
+
         return prefixes + \
                 self.getSelective() + \
                 self.getProjectionString() + \
@@ -157,10 +166,10 @@ class QueryBuilder:
                 "\n}" + selectiveClosingBracket
 
     def getSelective(self):
-        if self.selective is not None:
+        if self.isSelective is not None:
             return "SELECT " + \
                    ", ".join(["?" + v for v in self.projectedVariables]) + " WHERE {\n" + \
-                   "?" + VariableGenerator.getFocusNodeVar() + " a " + self.selective + " {\n"
+                   "?" + VariableGenerator.getFocusNodeVar() + " a " + self.targetPath + " {\n"
         return ""
 
     def getProjectionString(self):

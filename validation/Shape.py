@@ -120,21 +120,21 @@ class Shape:
         queryGenerator = QueryGenerator()
 
         self.referencingQueries_VALUES = {ref: queryGenerator.generateQuery(
-                                        "template",
+                                        "template_VALUES",
                                         [c for c in self.constraints if c.path == self.referencingShapes[ref]],
-                                        None,
-                                        None,
                                         self.targetDef,
-                                        "positive"
+                                        True,
+                                        None,
+                                        None
                                         ) for ref in self.referencingShapes.keys()}
 
         self.referencingQueries_FILTER_NOT_IN = {ref: queryGenerator.generateQuery(
-                                        "template",
+                                        "template_FILTER_NOT_IN",
                                         [c for c in self.constraints if c.path == self.referencingShapes[ref]],
-                                        None,
-                                        None,
                                         self.targetDef,
-                                        "negated"
+                                        True,
+                                        None,
+                                        None
                                         ) for ref in self.referencingShapes.keys()}
 
         subquery = queryGenerator.generateLocalSubquery(None, minConstraints)
@@ -144,9 +144,10 @@ class Shape:
         self.minQuery = queryGenerator.generateQuery(
                 minId,
                 [c for c in minConstraints if c.getShapeRef() is not None],
+                self.targetDef,
+                self.useSelectiveQueries,
                 None,
-                subquery,
-                self.targetDef if self.useSelectiveQueries else None
+                subquery
         )
 
         # Build one set of triples (+ filter) for each max constraint
@@ -155,6 +156,8 @@ class Shape:
         self.maxQueries = [queryGenerator.generateQuery(
                                         maxIds[next(i)],
                                         [c],
+                                        self.targetDef,
+                                        self.useSelectiveQueries,
                                         None,
                                         subquery) for c in maxConstraints]
 
