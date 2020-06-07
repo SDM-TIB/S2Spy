@@ -367,9 +367,9 @@ class RuleBasedValidation:
     def filteredMinQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances):
         if self.prevEvalShapeName is not None \
                 and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0 \
-                and len(prevValidInstances) < 500:
+                and len(prevValidInstances) < 250:
             VALUES_clauses = ""
-            instancesLists = self.getFormattedInstances(prevValidInstances, "", 100)
+            instancesLists = self.getFormattedInstances(prevValidInstances, "", 80)
             for c in shape.constraints:
                 if c.shapeRef == self.prevEvalShapeName:
                     var = " ?" + c.variables[0]
@@ -384,10 +384,10 @@ class RuleBasedValidation:
     def filteredMaxQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances):
         if self.prevEvalShapeName is not None \
                 and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0 \
-                and len(prevValidInstances) < 500:
+                and len(prevValidInstances) < 250:
             VALUES_clauses = ""
             refPaths = "\n"
-            instancesLists = self.getFormattedInstances(prevValidInstances, "", 100)
+            instancesLists = self.getFormattedInstances(prevValidInstances, "", 80)
             for c in shape.constraints:
                 if c.shapeRef == self.prevEvalShapeName:
                     var = " ?" + c.variables[0]

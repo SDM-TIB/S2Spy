@@ -143,7 +143,7 @@ class QueryBuilder:
 
     def getSparql(self, includePrefixes):  # assuming optional graph
         grapNotPresent = ""  # ***
-        selectiveClosingBracket = "}}" if self.isSelective is not None else ""
+        selectiveClosingBracket = "}}" if self.isSelective else ""
         prefixes = getPrefixString() if includePrefixes else ""
 
         tempString = ""
@@ -166,7 +166,7 @@ class QueryBuilder:
                 "\n}" + selectiveClosingBracket
 
     def getSelective(self):
-        if self.isSelective is not None:
+        if self.isSelective:
             return "SELECT " + \
                    ", ".join(["?" + v for v in self.projectedVariables]) + " WHERE {\n" + \
                    "?" + VariableGenerator.getFocusNodeVar() + " a " + self.targetPath + " {\n"
