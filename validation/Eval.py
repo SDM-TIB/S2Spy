@@ -34,8 +34,9 @@ class Eval:
         schemaDir = args.d
         workInParallel = False
         useSelectiveQueries = args.selective
+        maxSplitSize = args.m
         self.network = ShapeNetwork(schemaDir, self.shapeFormat, args.endpoint, self.graphTraversal, self.task,
-                                    self.parseHeuristics(args.heuristics), useSelectiveQueries,
+                                    self.parseHeuristics(args.heuristics), useSelectiveQueries, maxSplitSize,
                                     self.outputDir, workInParallel)
 
         report = self.network.validate()  # run the evaluation of the SHACL constraints over the specified endpoint

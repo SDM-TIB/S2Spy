@@ -11,9 +11,9 @@ from validation.RuleBasedValidation import RuleBasedValidation
 class ShapeNetwork:
 
     def __init__(self, schemaDir, schemaFormat, endpointURL, graphTraversal, validationTask,
-                 heuristics, useSelectiveQueries, outputDir, workInParallel=False):
+                 heuristics, useSelectiveQueries, maxSplitSize, outputDir, workInParallel=False):
         self.sourceDescription = SourceDescription("./shapes/source-description.json")  # hardcoded for now
-        self.shapes = ShapeParser().parseShapesFromDir(schemaDir, schemaFormat, useSelectiveQueries)
+        self.shapes = ShapeParser().parseShapesFromDir(schemaDir, schemaFormat, useSelectiveQueries, maxSplitSize)
         self.shapesDict = {shape.getId(): shape for shape in self.shapes}  # TODO: use only the dict?
         self.endpoint = SPARQLEndpoint(endpointURL)
         self.graphTraversal = graphTraversal

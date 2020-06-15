@@ -33,7 +33,10 @@ if __name__ == '__main__':
                              "[SMALL / BIG] if small or big shapes should be prioritized", required=True)
 
     parser.add_argument("--selective", action='store_true', default=False,
-                        help="Use more selective queries")
+                        help="Use more selective queries", required=False)
+
+    parser.add_argument("-m", metavar="maxSize", type=int, default=256,
+                        help='max number of instances allowed to be in a query', required=False)
 
     args = parser.parse_args()
 

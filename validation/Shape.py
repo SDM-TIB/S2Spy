@@ -12,7 +12,8 @@ from validation.sparql.QueryGenerator import QueryGenerator
 
 class Shape:
 
-    def __init__(self, id, targetDef, targetQuery, constraints, constraintsId, useSelectiveQueries, referencingShapes):
+    def __init__(self, id, targetDef, targetQuery, constraints, constraintsId, useSelectiveQueries, maxSplitSize,
+                 referencingShapes):
         self.id = id
         self.constraints = constraints
         self.constraintsId = constraintsId
@@ -29,6 +30,7 @@ class Shape:
         self.queriesIds = []
 
         self.useSelectiveQueries = useSelectiveQueries
+        self.maxSplitSize = maxSplitSize
         self.referencingShapes = referencingShapes
         self.referencingQueries_VALUES = {}
         self.referencingQueries_FILTER_NOT_IN = {}  # complement of VALUES

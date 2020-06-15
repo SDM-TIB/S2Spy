@@ -364,10 +364,10 @@ class RuleBasedValidation:
         self.logOutput.write("\nNumber of rules: " + str(ruleNumber))
         self.stats.recordNumberOfRules(ruleNumber)
 
-    def filteredMinQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances):
+    def filteredMinQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances, maxInstancesPerQuery):
         if self.prevEvalShapeName is not None \
                 and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0 \
-                and len(prevValidInstances) < 250:
+                and len(prevValidInstances) <= maxInstancesPerQuery:
             VALUES_clauses = ""
             instancesLists = self.getFormattedInstances(prevValidInstances, "", 80)
             for c in shape.constraints:
@@ -381,10 +381,10 @@ class RuleBasedValidation:
 
         return templateQuery.replace("$to_be_replaced$", "\n")
 
-    def filteredMaxQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances):
+    def filteredMaxQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances, maxInstancesPerQuery):
         if self.prevEvalShapeName is not None \
                 and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0 \
-                and len(prevValidInstances) < 250:
+                and len(prevValidInstances) <= maxInstancesPerQuery:
             VALUES_clauses = ""
             refPaths = "\n"
             instancesLists = self.getFormattedInstances(prevValidInstances, "", 80)
@@ -407,7 +407,8 @@ class RuleBasedValidation:
         invInst = self.shapesDict[self.prevEvalShapeName].invalidBindings if self.prevEvalShapeName is not None else []
 
         print("------------------------------------------------------------")
-        minQuery = self.filteredMinQuery(s, s.minQuery.getSparql(), valInst, invInst)
+        maxInstancesPerQuery = s.maxSplitSize
+        minQuery = self.filteredMinQuery(s, s.minQuery.getSparql(), valInst, invInst, maxInstancesPerQuery)
         if isinstance(minQuery, list):
             for query in minQuery:
                 self.evalQuery(state, s.minQuery, query, s)
@@ -418,7 +419,7 @@ class RuleBasedValidation:
 
         for q in s.maxQueries:
             print("------------------------------------------------------------")
-            maxQuery = self.filteredMaxQuery(s, q.getSparql(), valInst, invInst)
+            maxQuery = self.filteredMaxQuery(s, q.getSparql(), valInst, invInst, maxInstancesPerQuery)
             if isinstance(maxQuery, list):
                 for queryStr in maxQuery:
                     self.evalQuery(state, q, queryStr, s)
