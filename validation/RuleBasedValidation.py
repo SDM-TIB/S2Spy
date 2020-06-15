@@ -63,7 +63,7 @@ class RuleBasedValidation:
                     return prevValidInstances, prevInvalidInstances, prevEvalShapeName
         return [], [], None
 
-    def getSplittedList(self, shortestInstancesList, N):
+    def getSplitList(self, shortestInstancesList, N):
         listLength = math.ceil(len(shortestInstancesList) / N)
         shortestInstancesList = list(shortestInstancesList)
         return [shortestInstancesList[i:i + listLength] for i in range(0, len(shortestInstancesList), listLength)]
@@ -73,8 +73,8 @@ class RuleBasedValidation:
         chunks = len(instances) / maxListLength
         N = math.ceil(chunks)
         if chunks > 1:
-            splittedLists = self.getSplittedList(instances, N)
-            return [separator.join(subList) for subList in splittedLists]
+            splitLists = self.getSplitList(instances, N)
+            return [separator.join(subList) for subList in splitLists]
         else:
             return [separator.join(instances)]
 
@@ -88,7 +88,8 @@ class RuleBasedValidation:
             return [targetQuery]
 
         shortestInstancesList = valList if len(valList) < len(invList) else invList
-        maxSplitNumber = 500  # maximum possible number to allow using filtering queries instead of initial target query
+        maxSplitNumber = shape.maxSplitSize  # heuristic of maximum possible number of instances considered to allow using filtering queries instead of initial target query
+        maxInstancesPerQuery = 115 # number from which the list is going to start being split because of the max number of characters allowed in a query
 
         if bindingsType == "valid":
             if len(invList) == 0 or len(shortestInstancesList) > maxSplitNumber:
@@ -104,7 +105,7 @@ class RuleBasedValidation:
                 queryTemplate = shape.referencingQueries_FILTER_NOT_IN[prevEvalShapeName].getSparql()
                 separator = ","
 
-            return self.filteredQuery(queryTemplate, shortestInstancesList, separator, maxListLength=120)
+            return self.filteredQuery(queryTemplate, shortestInstancesList, separator, maxInstancesPerQuery)
 
         elif bindingsType == "invalid":
             if len(valList) == 0 or len(shortestInstancesList) > maxSplitNumber:
@@ -120,11 +121,11 @@ class RuleBasedValidation:
                 queryTemplate = shape.referencingQueries_FILTER_NOT_IN[prevEvalShapeName].getSparql()
                 separator = ","
 
-            return self.filteredQuery(queryTemplate, shortestInstancesList, separator, maxListLength=110)
+            return self.filteredQuery(queryTemplate, shortestInstancesList, separator, maxInstancesPerQuery)
 
     def validTargetAtoms(self, shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapename):
         query = self.filteredTargetQuery(shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapename)
-        # when the lists are not splitted query returns an array with one single query
+        # when the lists are not split, the variable 'query' returns an array with one single query
 
         if query is None:
             print("(NO NEEDED QUERY FOR THE CURRENT CASE).")
@@ -144,11 +145,19 @@ class RuleBasedValidation:
             print("(NO NEEDED QUERY FOR THE CURRENT CASE).")
         else:
             invalidBindings = set()
+            qn = 0
             for q in query:
                 bindings = self.evalTargetQuery(shape, q)
-                invalidBindings.intersection([Literal(shape.getId(), b["x"]["value"], True) for b in bindings])
-            state.invalidTargets.update([self.registerTarget(b, False, depth, "", shape)
-                                         for b in invalidBindings])
+                print("^^^^^ bindings:", len(bindings))
+                if qn == 0:
+                    invalidBindings = [Literal(shape.getId(), b["x"]["value"], True) for b in bindings]
+                    qn += 1
+                else:
+                    invalidBindings.intersection([Literal(shape.getId(), b["x"]["value"], True) for b in bindings])
+            print("invalidating...", len(invalidBindings))
+            state.invalidTargets.update(invalidBindings)
+            for b in invalidBindings:
+                self.registerTarget(b, False, depth, "", shape)
 
     # Extracts target atom from first evaluated shape
     def extractInitialTargetAtoms(self, shape, order):
@@ -364,12 +373,13 @@ class RuleBasedValidation:
         self.logOutput.write("\nNumber of rules: " + str(ruleNumber))
         self.stats.recordNumberOfRules(ruleNumber)
 
-    def filteredMinQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances, maxInstancesPerQuery):
+    def filteredMinQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances,
+                         maxSplitNumber, maxInstancesPerQuery):
         if self.prevEvalShapeName is not None \
                 and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0 \
-                and len(prevValidInstances) <= maxInstancesPerQuery:
+                and len(prevValidInstances) <= maxSplitNumber:
             VALUES_clauses = ""
-            instancesLists = self.getFormattedInstances(prevValidInstances, "", 80)
+            instancesLists = self.getFormattedInstances(prevValidInstances, "", maxInstancesPerQuery)
             for c in shape.constraints:
                 if c.shapeRef == self.prevEvalShapeName:
                     var = " ?" + c.variables[0]
@@ -381,13 +391,14 @@ class RuleBasedValidation:
 
         return templateQuery.replace("$to_be_replaced$", "\n")
 
-    def filteredMaxQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances, maxInstancesPerQuery):
+    def filteredMaxQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances,
+                         maxSplitNumber, maxInstancesPerQuery):
         if self.prevEvalShapeName is not None \
                 and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0 \
-                and len(prevValidInstances) <= maxInstancesPerQuery:
+                and len(prevValidInstances) <= maxSplitNumber:
             VALUES_clauses = ""
             refPaths = "\n"
-            instancesLists = self.getFormattedInstances(prevValidInstances, "", 80)
+            instancesLists = self.getFormattedInstances(prevValidInstances, "", maxInstancesPerQuery)
             for c in shape.constraints:
                 if c.shapeRef == self.prevEvalShapeName:
                     var = " ?" + c.variables[0]
@@ -407,8 +418,9 @@ class RuleBasedValidation:
         invInst = self.shapesDict[self.prevEvalShapeName].invalidBindings if self.prevEvalShapeName is not None else []
 
         print("------------------------------------------------------------")
-        maxInstancesPerQuery = s.maxSplitSize
-        minQuery = self.filteredMinQuery(s, s.minQuery.getSparql(), valInst, invInst, maxInstancesPerQuery)
+        maxSplitNumber = s.maxSplitSize
+        maxInstancesPerQuery = 80
+        minQuery = self.filteredMinQuery(s, s.minQuery.getSparql(), valInst, invInst, maxSplitNumber, maxInstancesPerQuery)
         if isinstance(minQuery, list):
             for query in minQuery:
                 self.evalQuery(state, s.minQuery, query, s)
@@ -419,7 +431,7 @@ class RuleBasedValidation:
 
         for q in s.maxQueries:
             print("------------------------------------------------------------")
-            maxQuery = self.filteredMaxQuery(s, q.getSparql(), valInst, invInst, maxInstancesPerQuery)
+            maxQuery = self.filteredMaxQuery(s, q.getSparql(), valInst, invInst, maxSplitNumber, maxInstancesPerQuery)
             if isinstance(maxQuery, list):
                 for queryStr in maxQuery:
                     self.evalQuery(state, q, queryStr, s)
