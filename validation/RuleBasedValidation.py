@@ -150,7 +150,8 @@ class RuleBasedValidation:
                 bindings = self.evalTargetQuery(shape, q)
                 print("^^^^^ bindings:", len(bindings))
                 if qn == 0:
-                    invalidBindings = [Literal(shape.getId(), b["x"]["value"], True) for b in bindings]
+                    # update empty set
+                    invalidBindings.union([Literal(shape.getId(), b["x"]["value"], True) for b in bindings])
                     qn += 1
                 else:
                     invalidBindings.intersection([Literal(shape.getId(), b["x"]["value"], True) for b in bindings])
@@ -261,9 +262,9 @@ class RuleBasedValidation:
         startI = time.time()
         inferred = self.applyRules(state, depth, s)
         endI = time.time()
-        print("############################################################")
+        #print("############################################################")
         print(">>> Time inferred", s.getId(), "depth", depth, ": ", endI - startI)
-        print("############################################################")
+        #print("############################################################")
         if negated or inferred:
             self.saturate(state, depth, s)
 
