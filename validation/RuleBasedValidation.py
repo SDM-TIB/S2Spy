@@ -134,7 +134,7 @@ class RuleBasedValidation:
             targetLiterals = set()
             for q in query:
                 bindings = self.evalTargetQuery(shape, q)
-                targetLiterals.union([Literal(shape.getId(), b["x"]["value"], True) for b in bindings])
+                targetLiterals.update([Literal(shape.getId(), b["x"]["value"], True) for b in bindings])
             return targetLiterals
 
     # Automatically sets the instanciated targets as invalid after running the query which uses
@@ -151,7 +151,7 @@ class RuleBasedValidation:
                 print("^^^^^ bindings:", len(bindings))
                 if qn == 0:
                     # update empty set
-                    invalidBindings.union([Literal(shape.getId(), b["x"]["value"], True) for b in bindings])
+                    invalidBindings.update([Literal(shape.getId(), b["x"]["value"], True) for b in bindings])
                     qn += 1
                 else:
                     invalidBindings.intersection([Literal(shape.getId(), b["x"]["value"], True) for b in bindings])
@@ -171,6 +171,8 @@ class RuleBasedValidation:
         state.remainingTargets.update(targetLiterals)
 
     def evalTargetQuery(self, shape, query):
+        if query is None:
+            return []  # when a network has only some targets, a shape without a target class returns no new bindings
         self.logOutput.write("\nEvaluating query:\n" + query)
         start = time.time()
         eval = self.endpoint.runQuery(
