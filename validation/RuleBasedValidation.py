@@ -445,23 +445,24 @@ class RuleBasedValidation:
         self.stats.recordNumberOfSolutionMappings(len(bindings))
         self.stats.recordQuery()
         startG = time.time()*1000.0
-        for b in bindings:
-            self.evalBindingSet(state, b, q.getRulePattern(), s.rulePatterns)
+        shapeRP = s.getRulePatterns()[0]  # @@ there is only one RP per shape
+        print(">>> Length rule patterns: ", len(s.getRulePatterns()))
+        for b in bindings:  # @@ this is slowing down the execution time
+            self.evalBindingSet(state, b, q.getRulePattern(), shapeRP)
         endG = time.time()*1000.0
         self.stats.recordGroundingTime(endG - startG)
         self.logOutput.write("\nGrounding rules ... \nelapsed: " + str(endG - startG) + " ms\n")
 
-    def evalBindingSet(self, state, bs, queryRP, shapeRPs):
-        bindingVars = bs.keys()
-        self._evalBindingSet(state, bs, queryRP, bindingVars)
-        for p in shapeRPs:  # for each pattern in the set of rule patterns
-            self._evalBindingSet(state, bs, p, bindingVars)
+    def evalBindingSet(self, state, binding, queryRP, shapeRP):
+        bindingVars = binding.keys()
+        self._evalBindingSet(state, binding, queryRP, bindingVars)
+        self._evalBindingSet(state, binding, shapeRP, bindingVars)
 
-    def _evalBindingSet(self, state, bs, pattern, bindingVars):
-        if all(elem in bindingVars for elem in pattern.getVariables()):
+    def _evalBindingSet(self, state, binding, pattern, bindingVars):
+        if set(bindingVars).issuperset(pattern.getVariables()):
             state.ruleMap.addRule(
-                pattern.instantiateAtom(pattern.getHead(), bs),
-                pattern.instantiateBody(bs)
+                pattern.instantiateAtom(pattern.getHead(), binding),
+                pattern.instantiateBody(binding)
             )
 
     def negateUnMatchableHeads(self, state, depth, s):

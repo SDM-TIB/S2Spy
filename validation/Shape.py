@@ -116,6 +116,9 @@ class Shape:
     def getViolations(self):
         return  # TODO
 
+    def getRulePatterns(self):
+        return self.rulePatterns
+
     def computeConstraintQueries(self):
         minConstraints = [c for c in self.constraints if c.min != -1]
         maxConstraints = [c for c in self.constraints if c.max != -1]

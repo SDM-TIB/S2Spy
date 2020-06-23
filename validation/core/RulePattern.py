@@ -16,21 +16,16 @@ class RulePattern:
     def getHead(self):
         return self.head
 
-    def instantiateAtom(self, a, bs):  # @@@@@
+    def instantiateAtom(self, a, bs):
         # given a binding with many possible projected variables, returns the atom that matches the variable
-        for k in bs.keys():
-            if k == a.getArg():
-                return Literal(
-                        a.getPredicate(),
-                        bs[k]["value"],  # arg instance, e.g., http://dbpedia.org/resource/Titanic_(1953_film),
-                        a.getIsPos()
-                )
+        return Literal(
+                a.getPredicate(),
+                bs[a.getArg()]["value"],  # arg instance, e.g., http://dbpedia.org/resource/Titanic_(1953_film),
+                a.getIsPos()
+        )
 
     def instantiateBody(self, bs):
-        instances = []
-        for i, a in enumerate(self.literals):
-            instances.append(self.instantiateAtom(a, bs))
-        return instances
+        return [self.instantiateAtom(a, bs) for a in self.literals]
 
     def getVariables(self):
         return self.variables
