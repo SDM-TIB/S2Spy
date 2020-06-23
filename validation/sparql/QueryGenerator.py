@@ -115,6 +115,7 @@ class QueryBuilder:
         self.filters = []
         self.triples = []
 
+        self.considerSelectivity = isSelective and targetPath is not None
         self.isSelective = isSelective
         self.targetPath = targetPath
         self.constraints = constraints
@@ -143,7 +144,7 @@ class QueryBuilder:
 
     def getSparql(self, includePrefixes):  # assuming optional graph
         grapNotPresent = ""  # ***
-        selectiveClosingBracket = "}}" if self.isSelective else ""
+        selectiveClosingBracket = "}}" if self.considerSelectivity else ""
         prefixes = getPrefixString() if includePrefixes else ""
 
         tempString = ""
@@ -166,7 +167,7 @@ class QueryBuilder:
                 "\n}" + selectiveClosingBracket
 
     def getSelective(self):
-        if self.isSelective:
+        if self.considerSelectivity:
             return "SELECT " + \
                    ", ".join(["?" + v for v in self.projectedVariables]) + " WHERE {\n" + \
                    "?" + VariableGenerator.getFocusNodeVar() + " a " + self.targetPath + " {\n"
