@@ -14,12 +14,12 @@ class QueryGenerator:
     def generateQuery(self, id, constraints, target, isSelective, graph=None, subquery=None):
         # Only one max constraint per query is allowed, then 'constraints' arg contain only 1 element for the max case
 
-        rp = self.computeRulePattern(constraints, id)
-
         if id == "template_VALUES":
             return self.targetQuery_VALUES(constraints, target)
         elif id == "template_FILTER_NOT_IN":
             return self.targetQuery_FILTER_NOT_IN(constraints, target)
+
+        rp = self.computeRulePattern(constraints, id)
 
         builder = QueryBuilder(id, graph, subquery, rp.getVariables(), isSelective, target, constraints)
         for c in constraints:

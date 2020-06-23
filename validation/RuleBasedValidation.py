@@ -220,7 +220,8 @@ class RuleBasedValidation:
 
                 self.prevEvalShapeName = self.getEvalPointedShapeName(self.nextEvalShape)
                 if self.prevEvalShapeName is None:
-                    self.extractTargetAtoms(self.nextEvalShape)
+                    targets = self.extractTargetAtoms(self.nextEvalShape)
+                    state.remainingTargets.update(targets)
                 else:
                     self.extractTargetAtomsWithFiltering(self.nextEvalShape, depth + 1, state, self.prevEvalShapeName)
         else:
