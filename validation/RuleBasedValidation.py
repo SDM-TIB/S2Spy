@@ -33,14 +33,14 @@ class RuleBasedValidation:
         self.logOutput.write("\nTargets retrieved.")
         self.logOutput.write("\nNumber of targets:\n" + str(len(targets)))
         self.stats.recordInitialTargets(str(len(targets)))
-        start = time.time()
+        start = time.time()*1000.0
         self.validate(
             depth,
             EvalState(targets),
             firstShapeEval
         )
-        finish = time.time()
-        elapsed = finish - start
+        finish = time.time()*1000.0
+        elapsed = round(finish - start)
         self.stats.recordTotalTime(elapsed)
         print("Total execution time: ", str(elapsed))
         self.logOutput.write("\nMaximal (initial) number or rules in memory: " + str(self.stats.maxRuleNumber))
@@ -174,16 +174,14 @@ class RuleBasedValidation:
         if query is None:
             return []  # when a network has only some targets, a shape without a target class returns no new bindings
         self.logOutput.write("\nEvaluating query:\n" + query)
-        start = time.time()
+        start = time.time()*1000.0
         eval = self.endpoint.runQuery(
             shape.getId(),
             query,
             "JSON"
         )
-        end = time.time()
-        print("############################################################")
-        print(">>> Time eval target query", shape.getId(), end - start)
-        print("############################################################")
+        end = time.time()*1000.0
+        self.logOutput.write("\nelapsed: " + str(end - start) + " ms\n")
         return eval["results"]["bindings"]
 
     # Returns bindings obtained from the evaluation of the endpoint
@@ -255,18 +253,16 @@ class RuleBasedValidation:
                 self.violatedOutput.write(log)
 
     def saturate(self, state, depth, s):
-        startN = time.time()
+        startN = time.time()*1000.0
         negated = self.negateUnMatchableHeads(state, depth, s)
-        endN = time.time()
+        endN = time.time()*1000.0
         print("############################################################")
         print(">>> Time negated", s.getId(), "depth", depth, ": ", endN - startN)
         print("############################################################")
-        startI = time.time()
+        startI = time.time()*1000.0
         inferred = self.applyRules(state, depth, s)
-        endI = time.time()
-        #print("############################################################")
+        endI = time.time()*1000.0
         print(">>> Time inferred", s.getId(), "depth", depth, ": ", endI - startI)
-        #print("############################################################")
         if negated or inferred:
             self.saturate(state, depth, s)
 
@@ -342,30 +338,27 @@ class RuleBasedValidation:
         self.evalShape(state, focusShape, depth)  # validate current selected shape
 
     def evalShape(self, state, s, depth):
+        '''
+        Saturate only if the current shape is connected in the network as a parent to a shape that
+        was already evaluated and has any valid instances
+        '''
         self.logOutput.write("\nEvaluating queries for shape " + s.getId())
 
-        if s.hasValidInstances:             # if the current shape is connected in the network as a parent to a shape
-            startQ = time.time()            # that was already evaluated and has any valid instances, then saturate
+        if s.hasValidInstances:
             self.evalConstraints(state, s)  # 'eval Disjunct'
-            endQ = time.time()
-            print("############################################################")
-            print(">>> Time eval all subqueries", s.getId(), endQ - startQ)
-            print("############################################################")
-
             state.evaluatedPredicates.update(s.queriesIds)
+            self.saveRuleNumber(state)
 
             self.logOutput.write("\nStarting saturation ...")
-            startS = time.time()
+            startS = time.time()*1000.0
             self.saturate(state, depth, s)
-            endS = time.time()
+            endS = time.time()*1000.0
             self.stats.recordSaturationTime(endS - startS)
-            print("############################################################")
-            print(">>> Total time saturation", endS - startS)
-            print("############################################################")
-            self.logOutput.write("\nSaturation time: " + str(endS - startS) + " seconds")
+            self.logOutput.write("\nSaturation ...\nelapsed: " + str(endS - startS) + " ms")
+        else:
+            self.logOutput.write("\nNo saturation for shape ..." + s.getId())
 
         state.addVisitedShape(s)
-        self.saveRuleNumber(state)
 
         self.logOutput.write("\n\nValid targets: " + str(len(state.validTargets)))
         self.logOutput.write("\nInvalid targets: " + str(len(state.invalidTargets)))
@@ -420,50 +413,43 @@ class RuleBasedValidation:
         valInst = self.shapesDict[self.prevEvalShapeName].bindings if self.prevEvalShapeName is not None else []
         invInst = self.shapesDict[self.prevEvalShapeName].invalidBindings if self.prevEvalShapeName is not None else []
 
-        print("------------------------------------------------------------")
         maxSplitNumber = s.maxSplitSize
         maxInstancesPerQuery = 80
+
         minQuery = self.filteredMinQuery(s, s.minQuery.getSparql(), valInst, invInst, maxSplitNumber, maxInstancesPerQuery)
         if isinstance(minQuery, list):
             for query in minQuery:
                 self.evalQuery(state, s.minQuery, query, s)
         else:
             self.evalQuery(state, s.minQuery, minQuery, s)
-        print(">>> Finished time eval MIN constraint", s.getId(), "<<<")
-        print("------------------------------------------------------------")
 
         for q in s.maxQueries:
-            print("------------------------------------------------------------")
             maxQuery = self.filteredMaxQuery(s, q.getSparql(), valInst, invInst, maxSplitNumber, maxInstancesPerQuery)
             if isinstance(maxQuery, list):
                 for queryStr in maxQuery:
                     self.evalQuery(state, q, queryStr, s)
             else:
                 self.evalQuery(state, q, maxQuery, s)
-            print(">>> Finished time eval MAX constraint", s.getId(), "<<<")
-            print("------------------------------------------------------------")
 
     def evalQuery(self, state, q, query, s):
         self.logOutput.write("\n\nEvaluating query:\n" + query)
-        startQ = time.time()
+        startQ = time.time()*1000.0
         eval = self.endpoint.runQuery(q.getId(), query, "JSON")
-        endQ = time.time()
-        print(">>> Time retrieving from endpoint:", endQ - startQ)
+        endQ = time.time()*1000.0
+        self.logOutput.write("\nelapsed: " + str(endQ - startQ) + " ms\n")
         self.stats.recordQueryExecTime(endQ - startQ)
 
         bindings = eval["results"]["bindings"]  # list of obtained 'bindingsSet' from the endpoint
 
-        self.logOutput.write("\nNumber of solution mappings: " + str(len(bindings)))
+        self.logOutput.write("\nNumber of solution mappings: " + str(len(bindings)) + "\n")
         self.stats.recordNumberOfSolutionMappings(len(bindings))
         self.stats.recordQuery()
-        self.logOutput.write("\nGrounding rules ... ")
-        startG = time.time()
+        startG = time.time()*1000.0
         for b in bindings:
             self.evalBindingSet(state, b, q.getRulePattern(), s.rulePatterns)
-        endG = time.time()
-        print(">>> Time grounding:", endG - startG)
+        endG = time.time()*1000.0
         self.stats.recordGroundingTime(endG - startG)
-        self.logOutput.write(str(endG - startG) + " seconds")
+        self.logOutput.write("\nGrounding rules ... \nelapsed: " + str(endG - startG) + " ms\n")
 
     def evalBindingSet(self, state, bs, queryRP, shapeRPs):
         bindingVars = bs.keys()

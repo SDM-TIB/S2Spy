@@ -15,7 +15,7 @@ class SPARQLEndpoint:
             self.endpoint.setReturnFormat(XML)
 
         def runQuery(self, queryId, queryString, format=None):
-            print("URL:", self.endpointURL)
+            #print("URL:", self.endpointURL)
             print("query id: ", queryId)
             #print(" - query str: ", queryString)
             self.endpoint.setQuery(queryString)
