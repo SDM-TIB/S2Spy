@@ -90,7 +90,7 @@ class RuleBasedValidation:
 
     def filteredTargetQuery(self, shape, targetQuery, bType, valList, invList, prevEvalShapeName):
         self.logOutput.write("\n" + bType + " instances case for shape: " + shape.id)
-        self.logOutput.write("Connected shape: " + prevEvalShapeName + " info - val:" + str(len(valList)) + "inv: " + str(len(invList)))
+        self.logOutput.write(" - child's (" + prevEvalShapeName + ") instances: " + str(len(valList)) + " val " + str(len(invList)) + " inv")
         shortestList = valList if len(valList) < len(invList) else invList
         maxSplitNumber = shape.maxSplitSize  # heuristic of maximum possible number of instances considered to allow using filtering queries instead of initial target query
         maxInstancesPerQuery = 115  # number from which the list is going to start being split because of the max number of characters allowed in a query
@@ -274,10 +274,13 @@ class RuleBasedValidation:
     #    => this rule cannot be applied (rule head not inferred) so the entire entire rule is dropped.
     def applyRules(self, state, depth, s):
         retainedRules = RuleMap()                                                               # (2)
-        freshLiterals = list(filter(lambda rule: rule is not None,                              # (4)
+        start1 = time.time()
+        freshLiterals = set(filter(lambda rule: rule is not None,                              # (4)
                                     [self._applyRules(head, bodies, state, retainedRules)
                                      for head, bodies in state.ruleMap.map.items()])            # (3)
                              )
+        end1 = time.time()
+        print("1", end1 - start1)
 
         state.ruleMap = retainedRules
         state.assignment.update(freshLiterals)
@@ -285,34 +288,44 @@ class RuleBasedValidation:
         if len(freshLiterals) == 0:
             return False
 
-        candidateValidTargets = [a for a in freshLiterals if self.getStrPredicate(a) in self.targetShapePredicates]
+        start2 = time.time()
+        candidateValidTargets = {a for a in freshLiterals if self.getStrPredicate(a) in self.targetShapePredicates}
+        end2 = time.time()
+        print("2", end2 - start2)
 
-        part1 = dict()
-        part1["true"] = [t for t in state.remainingTargets if t.getStr() in candidateValidTargets]
-        part1["false"] = [t for t in state.remainingTargets if t.getStr() not in candidateValidTargets]
+        start3 = time.time()
+        candidate, remaining = [], []
+        for t in state.remainingTargets:
+            out = candidate if t.getStr() in candidateValidTargets else remaining
+            out.append(t)
 
-        state.remainingTargets = part1["false"]
-
+        state.remainingTargets = remaining
+        end3 = time.time()
+        print("3", end3 - start3)
+        start4 = time.time()
         part2 = dict()
-        part2["true"] = [t for t in part1["true"] if t.getIsPos()]
-        part2["false"] = [t for t in part1["true"] if not t.getIsPos()]
+        part2["true"] = [t for t in candidate if t.getIsPos()]
+        part2["false"] = [t for t in candidate if not t.getIsPos()]
 
         state.validTargets.update(part2["true"])
         state.invalidTargets.update(part2["false"])
-
+        end4 = time.time()
+        print("4", end4 - start4)
+        start5 = time.time()
         for t in part2["true"]:
             self.registerTarget(t, True, depth, "", s)
         for t in part2["false"]:
             self.registerTarget(t, False, depth, "", s)
-
+        end5 = time.time()
+        print("5", end5 - start5)
         #print("Remaining targets: " + str(len(state.remainingTargets)))
         self.logOutput.write("\nRemaining targets: " + str(len(state.remainingTargets)))
         return True
 
     def _applyRules(self, head, bodies, state, retainedRules):
         tempRetainedBodies = []
-        anyInvalidRule = list(filter(lambda rule: rule is True,
-                                     [self.applyRule(head, b, state, tempRetainedBodies) for b in bodies]))
+        anyInvalidRule = set(filter(lambda rule: rule is True,
+                                    [self.applyRule(b, state, tempRetainedBodies) for b in bodies]))
         if len(anyInvalidRule) > 0:  # if any invalid body rule
             return head
         else:
@@ -320,7 +333,7 @@ class RuleBasedValidation:
                 retainedRules.addRule(head, b)
         return None
 
-    def applyRule(self, head, body, state, tempRetainedBodies):
+    def applyRule(self, body, state, tempRetainedBodies):
         bodyStrMap = [elem.getStr() for elem in body]
         if set(bodyStrMap) <= state.assignment:  # invalid
             return True
@@ -444,26 +457,26 @@ class RuleBasedValidation:
         self.logOutput.write("\nNumber of solution mappings: " + str(len(bindings)) + "\n")
         self.stats.recordNumberOfSolutionMappings(len(bindings))
         self.stats.recordQuery()
-        startG = time.time()*1000.0
-        shapeRP = s.getRulePatterns()[0]  # @@ there is only one RP per shape
+
         print(">>> Length rule patterns: ", len(s.getRulePatterns()))
-        for b in bindings:  # @@ this is slowing down the execution time
-            self.evalBindingSet(state, b, q.getRulePattern(), shapeRP)
+        queryRP = q.getRulePattern()
+        shapeRP = s.getRulePatterns()[0]  # @@ there is only one RP per shape
+        bvars = bindings[0].keys() if len(bindings) > 0 else []
+
+        startG = time.time()*1000.0
+        qRules = [state.ruleMap.addRule(
+            queryRP.instantiateAtom(queryRP.getHead(), binding),
+            queryRP.instantiateBody(binding)
+        ) for binding in bindings if set(binding.keys()).issuperset(queryRP.getVariables())]
+
+        sRules = [state.ruleMap.addRule(
+            shapeRP.instantiateAtom(shapeRP.getHead(), binding),
+            shapeRP.instantiateBody(binding)
+        ) for binding in bindings if set(binding.keys()).issuperset(shapeRP.getVariables())]
+
         endG = time.time()*1000.0
         self.stats.recordGroundingTime(endG - startG)
         self.logOutput.write("\nGrounding rules ... \nelapsed: " + str(endG - startG) + " ms\n")
-
-    def evalBindingSet(self, state, binding, queryRP, shapeRP):
-        bindingVars = binding.keys()
-        self._evalBindingSet(state, binding, queryRP, bindingVars)
-        self._evalBindingSet(state, binding, shapeRP, bindingVars)
-
-    def _evalBindingSet(self, state, binding, pattern, bindingVars):
-        if set(bindingVars).issuperset(pattern.getVariables()):
-            state.ruleMap.addRule(
-                pattern.instantiateAtom(pattern.getHead(), binding),
-                pattern.instantiateBody(binding)
-            )
 
     def negateUnMatchableHeads(self, state, depth, s):
         '''
