@@ -16,7 +16,7 @@ class SPARQLEndpoint:
 
         def runQuery(self, queryId, queryString, format=None):
             #print("URL:", self.endpointURL)
-            print("query id: ", queryId)
+            #print("query id: ", queryId)
             #print(" - query str: ", queryString)
             self.endpoint.setQuery(queryString)
             if format == 'JSON':

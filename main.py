@@ -43,4 +43,4 @@ if __name__ == '__main__':
     Eval(args)
 
     end = time.time()
-    print("Total program runtime: ", end - start)
+    print("Total program runtime:", end - start, "seconds")

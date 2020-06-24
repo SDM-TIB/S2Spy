@@ -42,7 +42,7 @@ class RuleBasedValidation:
         finish = time.time()*1000.0
         elapsed = round(finish - start)
         self.stats.recordTotalTime(elapsed)
-        print("Total execution time: ", str(elapsed))
+        print("Total execution time: ", str(elapsed), " ms")
         self.logOutput.write("\nMaximal (initial) number or rules in memory: " + str(self.stats.maxRuleNumber))
         self.stats.writeAll(self.statsOutput)
 
@@ -249,16 +249,14 @@ class RuleBasedValidation:
                 self.violatedOutput.write(log)
 
     def saturate(self, state, depth, s):
-        startN = time.time()*1000.0
+        #startN = time.time()*1000.0
         negated = self.negateUnMatchableHeads(state, depth, s)
-        endN = time.time()*1000.0
-        print("############################################################")
-        print(">>> Time negated", s.getId(), "depth", depth, ": ", endN - startN)
-        print("############################################################")
-        startI = time.time()*1000.0
+        #endN = time.time()*1000.0
+
+        #startI = time.time()*1000.0
         inferred = self.applyRules(state, depth, s)
-        endI = time.time()*1000.0
-        print(">>> Time inferred", s.getId(), "depth", depth, ": ", endI - startI)
+        #endI = time.time()*1000.0
+
         if negated or inferred:
             self.saturate(state, depth, s)
 
@@ -428,19 +426,22 @@ class RuleBasedValidation:
         bvars = bindings[0].keys() if len(bindings) > 0 else []
 
         startG = time.time()*1000.0
-        qRules = [state.ruleMap.addRule(
-            queryRP.instantiateAtom(queryRP.getHead(), binding),
-            queryRP.instantiateBody(binding)
-        ) for binding in bindings if set(bvars).issuperset(queryRP.getVariables())]
-
-        sRules = [state.ruleMap.addRule(
-            shapeRP.instantiateAtom(shapeRP.getHead(), binding),
-            shapeRP.instantiateBody(binding)
-        ) for binding in bindings if set(bvars).issuperset(shapeRP.getVariables())]
-
+        rules = [self.addRules(state, b, bvars, queryRP, shapeRP) for b in bindings]
         endG = time.time()*1000.0
         self.stats.recordGroundingTime(endG - startG)
         self.logOutput.write("\nGrounding rules ... \nelapsed: " + str(endG - startG) + " ms\n")
+
+    def addRules(self, state, b, bindingVars, queryRP, shapeRP):
+        if set(bindingVars).issuperset(queryRP.getVariables()):
+            state.ruleMap.addRule(
+                queryRP.instantiateAtom(queryRP.getHead(), b),
+                queryRP.instantiateBody(b)
+            )
+        if set(bindingVars).issuperset(shapeRP.getVariables()):
+            state.ruleMap.addRule(
+                shapeRP.instantiateAtom(shapeRP.getHead(), b),
+                shapeRP.instantiateBody(b)
+            )
 
     def negateUnMatchableHeads(self, state, depth, s):
         '''
