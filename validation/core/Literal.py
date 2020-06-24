@@ -14,8 +14,11 @@ class Literal:
         return isinstance(other, Literal) and \
                ((self.pred, self.arg, self.isPos) == (other.pred, other.arg, other.isPos))
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __hash__(self):
-        return hash((self.pred, self.arg, self.isPos))
+        return hash(self.__repr__())
 
     def getPredicate(self):
         return self.pred

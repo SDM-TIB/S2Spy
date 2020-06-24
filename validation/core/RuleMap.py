@@ -6,8 +6,6 @@ class RuleMap:
         self.ruleNumber = 0
 
     def addRule(self, head, body):
-        if not isinstance(head, str):
-            head = head.getStr()
         bodies = self.map.get(head)
         if bodies is None:
             s = set()
