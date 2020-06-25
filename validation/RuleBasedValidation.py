@@ -3,10 +3,8 @@ from validation.utils import fileManagement
 from validation.utils.RuleBasedValidStats import RuleBasedValidStats
 from validation.core.RuleMap import RuleMap
 from validation.core.Literal import Literal
-from validation.sparql.SPARQLPrefixHandler import getPrefixes
 import time
 import math
-import re
 
 class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, validOutput, violatedOutput, option, statsOutputFile, logOutput):
@@ -89,11 +87,18 @@ class RuleBasedValidation:
         return [queryTemplate.replace("$to_be_replaced$", sublist) for sublist in formattedInstancesLists]
 
     def filteredTargetQuery(self, shape, targetQuery, bType, valList, invList, prevEvalShapeName):
-        self.logOutput.write("\n" + bType + " instances case for shape: " + shape.id)
-        self.logOutput.write(" - child's (" + prevEvalShapeName + ") instances: " + str(len(valList)) + " val " + str(len(invList)) + " inv")
+        '''
+        Local variables:
+            maxSplitNumber: heuristic of maximum possible number of instances considered for using filtering queries
+                            instead of the initial target query (currently hard-coded to 256)
+            maxInstancesPerQuery: number from which the list is going to start being split because of the max
+                            number of characters allowed in a query
+        '''
+        self.logOutput.write("\n" + bType + " instances shape: " + shape.id + " - child's (" + prevEvalShapeName + ")")
+        self.logOutput.write(" instances: " + str(len(valList)) + " val " + str(len(invList)) + " inv")
         shortestList = valList if len(valList) < len(invList) else invList
-        maxSplitNumber = shape.maxSplitSize  # heuristic of maximum possible number of instances considered to allow using filtering queries instead of initial target query
-        maxInstancesPerQuery = 115  # number from which the list is going to start being split because of the max number of characters allowed in a query
+        maxSplitNumber = 256
+        maxInstancesPerQuery = 115
 
         if valList == invList or len(shortestList) > maxSplitNumber or len(valList) == 0 or len(invList) == 0:
             return [targetQuery]
@@ -159,7 +164,8 @@ class RuleBasedValidation:
         targetLiterals = self.validTargetAtoms(shape, targetQuery, "valid", prevValList, prevInvList, prevEvalShapeName)
         state.remainingTargets.update(targetLiterals)
 
-        if self.evalOption == "violated" or self.evalOption == "all":
+        useFilterQueries = True
+        if self.evalOption == "violated" or self.evalOption == "all" and useFilterQueries:
             invTargetLiterals = self.invalidTargetAtoms(shape, targetQuery, "invalid", prevValList, prevInvList,
                                                         prevEvalShapeName)
             state.invalidTargets.update(invTargetLiterals)
@@ -170,14 +176,16 @@ class RuleBasedValidation:
         if query is None:
             return []  # when a network has only some targets, a shape without a target class returns no new bindings
         self.logOutput.write("\nEvaluating query:\n" + query)
-        start = time.time()*1000.0
+        startQ = time.time()*1000.0
         eval = self.endpoint.runQuery(
             shape.getId(),
             query,
             "JSON"
         )
-        end = time.time()*1000.0
-        self.logOutput.write("\nelapsed: " + str(end - start) + " ms\n")
+        endQ = time.time()*1000.0
+        self.logOutput.write("\nelapsed: " + str(endQ - startQ) + " ms\n")
+        self.stats.recordQueryExecTime(endQ - startQ)
+        self.stats.recordQuery()
         return eval["results"]["bindings"]
 
     def targetAtomsNaive(self, shape, targetQuery):
@@ -420,7 +428,7 @@ class RuleBasedValidation:
         self.stats.recordNumberOfSolutionMappings(len(bindings))
         self.stats.recordQuery()
 
-        print(">>> Length rule patterns: ", len(s.getRulePatterns()))
+        #print(">>> Length rule patterns: ", len(s.getRulePatterns()))
         queryRP = q.getRulePattern()
         shapeRP = s.getRulePatterns()[0]  # @@ there is only one RP per shape
         bvars = bindings[0].keys() if len(bindings) > 0 else []

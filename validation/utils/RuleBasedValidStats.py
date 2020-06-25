@@ -19,7 +19,7 @@ class RuleBasedValidStats:
         self.totalTime = 0
 
     def writeAll(self, statsOutput):
-        statsOutput.write("targets:\n" + str(self.initialTargets))
+        statsOutput.write("(initial) targets:\n" + str(self.initialTargets))
         statsOutput.write("\nmax number of solution mappings for a query:\n" + str(self.maxSolutionMappings))
         statsOutput.write("\ntotal number of solution mappings:\n" + str(self.totalSolutionMappings))
         statsOutput.write("\nmax number of rules in memory:\n" + str(self.maxRuleNumber))
@@ -30,7 +30,7 @@ class RuleBasedValidStats:
         statsOutput.write("\ntotal grounding time:\n" + str(self.totalGroundingTime))
         statsOutput.write("\nmax saturation time:\n" + str(self.maxSaturationTime))
         statsOutput.write("\ntotal saturation time:\n" + str(self.totalSaturationTime))
-        statsOutput.write("\ntotal time:\n" + str(self.totalTime))
+        statsOutput.write("\ntotal time:\n" + str(self.totalTime) + "\n")
 
     def recordInitialTargets(self, k):
         self.initialTargets = k
