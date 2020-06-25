@@ -9,21 +9,7 @@ import math
 class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, validOutput, violatedOutput, option, statsOutputFile, logOutput):
         self.endpoint = endpoint
-        #self.node_order = node_order
-        self.node_order = ['University',
-                           'Department',
-                           'UndergraduateStudent',
-                           'Publication',
-                           'ResearchGroup',
-                           'Course',
-                           'GraduateCourse',
-                           'ResearchAssistant',
-                           'GraduateStudent',
-                           'FullProfessor',
-                           'AssociateProfessor',
-                           'TeachingAssistant',
-                           'AssistantProfessor',
-                           'Lecturer']
+        self.node_order = node_order
         self.shapesDict = shapesDict
         self.validOutput = validOutput
         self.violatedOutput = violatedOutput
