@@ -115,7 +115,8 @@ class RuleBasedValidation:
     def validTargetAtoms(self, shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapename):
         if len(prevValList) == 0:
             # no query to be evaluated since no new possible target literals can be found
-            shape.hasValidInstances = False
+            if len(prevInvList) > 0:
+                shape.hasValidInstances = False
             return []  # no target literals retrieved
         else:
             query = self.filteredTargetQuery(shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapename)
@@ -227,7 +228,9 @@ class RuleBasedValidation:
                 self.logOutput.write("\nRetrieving (next) targets ...")
 
                 self.prevEvalShapeName = self.getEvalPointedShapeName(self.nextEvalShape)
-                if self.prevEvalShapeName is None:
+                prevShape = self.shapesDict[self.prevEvalShapeName]
+                instancesNotClassifiedYet = len(prevShape.bindings) == 0 and len(prevShape.invalidBindings) == 0
+                if self.prevEvalShapeName is None or instancesNotClassifiedYet:
                     targets = self.extractTargetAtoms(self.nextEvalShape)
                     state.remainingTargets.update(targets)
                 else:
