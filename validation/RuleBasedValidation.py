@@ -9,7 +9,21 @@ import math
 class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, validOutput, violatedOutput, option, statsOutputFile, logOutput):
         self.endpoint = endpoint
-        self.node_order = node_order
+        #self.node_order = node_order
+        self.node_order = ['University',
+                           'Department',
+                           'UndergraduateStudent',
+                           'Publication',
+                           'ResearchGroup',
+                           'Course',
+                           'GraduateCourse',
+                           'ResearchAssistant',
+                           'GraduateStudent',
+                           'FullProfessor',
+                           'AssociateProfessor',
+                           'TeachingAssistant',
+                           'AssistantProfessor',
+                           'Lecturer']
         self.shapesDict = shapesDict
         self.validOutput = validOutput
         self.violatedOutput = violatedOutput
@@ -228,13 +242,17 @@ class RuleBasedValidation:
                 self.logOutput.write("\nRetrieving (next) targets ...")
 
                 self.prevEvalShapeName = self.getEvalPointedShapeName(self.nextEvalShape)
-                prevShape = self.shapesDict[self.prevEvalShapeName]
-                instancesNotClassifiedYet = len(prevShape.bindings) == 0 and len(prevShape.invalidBindings) == 0
-                if self.prevEvalShapeName is None or instancesNotClassifiedYet:
+                if self.prevEvalShapeName is None:
                     targets = self.extractTargetAtoms(self.nextEvalShape)
                     state.remainingTargets.update(targets)
                 else:
-                    self.extractTargetAtomsWithFiltering(self.nextEvalShape, depth + 1, state, self.prevEvalShapeName)
+                    prevShape = self.shapesDict[self.prevEvalShapeName]
+                    instancesNotClassifiedYet = len(prevShape.bindings) == 0 and len(prevShape.invalidBindings) == 0
+                    if instancesNotClassifiedYet:
+                        targets = self.extractTargetAtoms(self.nextEvalShape)
+                        state.remainingTargets.update(targets)
+                    else:
+                        self.extractTargetAtomsWithFiltering(self.nextEvalShape, depth + 1, state, self.prevEvalShapeName)
         else:
             self.nextEvalShape = None
 
