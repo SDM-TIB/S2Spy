@@ -50,30 +50,53 @@ class RuleBasedValidation:
         fileManagement.closeFile(self.logOutput)
 
     def getEvalPointedShapeName(self, shape):
+        '''
+        Returns the name of a shape that was already evaluated, is connected as a child in the network to the
+        shape that is currently being validated, and contains relevant information for query filtering purposes:
+            - the number of valid or invalid instances is less than a threshold (now threshold is set as 256),
+            - the list of invalid targets from the child's shape in the network is not empty,
+            - there was a target query assigned for the child's shape ("previous evaluated shape").
+        :param shape: current shape being validated
+        :return:
+        '''
+        bestRef = None
+        bestVal = 256
+        bestInval = 256
         for evShape in self.evaluatedShapes:
             prevEvalShapeName = evShape.id
             if shape.referencingShapes.get(prevEvalShapeName) is not None:
-                return prevEvalShapeName
-        return None
+                prevShape = self.shapesDict[prevEvalShapeName]
+                val = len(prevShape.bindings)
+                inv = len(prevShape.invalidBindings)
+                print("current", shape.id, "prev", prevEvalShapeName, val, inv)
+                if (val < bestVal and val > 0) or (inv < bestInval and inv > 0):
+                    if inv > 0 and prevShape.targetQuery is not None:
+                        bestRef = prevEvalShapeName
+        print("BEST:", bestRef)
+        return bestRef
 
-    def getInstancesList(self, shape):
-        prevEvalShapeName = self.getEvalPointedShapeName(shape)
-        if prevEvalShapeName is not None:
-            # if there was a target query assigned for the referenced shape
-            if self.shapesDict[prevEvalShapeName].targetQuery is not None:
-                self.prevEvalShapeName = prevEvalShapeName
-                prevValidInstances = self.shapesDict[prevEvalShapeName].bindings
-                prevInvalidInstances = self.shapesDict[prevEvalShapeName].invalidBindings
-                return prevValidInstances, prevInvalidInstances
-        return [], []
+    def getInstancesList(self, prevEvalShapeName):
+        prevValidInstances = self.shapesDict[prevEvalShapeName].bindings
+        prevInvalidInstances = self.shapesDict[prevEvalShapeName].invalidBindings
+        return prevValidInstances, prevInvalidInstances
 
     def getSplitList(self, shortestInstancesList, N):
         listLength = math.ceil(len(shortestInstancesList) / N)
         shortestInstancesList = list(shortestInstancesList)
         return [shortestInstancesList[i:i + listLength] for i in range(0, len(shortestInstancesList), listLength)]
 
-    # Retrieves already formatted list or lists or valid/invalid instances of previous shape
     def getFormattedInstances(self, instances, separator, maxListLength):
+        '''
+        Depending on the number of instances that are going to be used for filtering the query,
+        the function returns one or more lists with valid/invalid instances of previous shape
+        in the corresponding format: using commas for instances contained in the VALUES clause or
+        using spaces as separator for the instances in the FILTER NOT IN clause.
+
+        :param instances: list of instances
+        :param separator: string that contains either a comma or a space character.
+        :param maxListLength: integer that sets the max number of instances in a query
+        :return: list(s) containing all instances with the requested format
+        '''
         chunks = len(instances) / maxListLength
         N = math.ceil(chunks)
         if chunks > 1:
@@ -160,7 +183,7 @@ class RuleBasedValidation:
     # May use filter queries based on previously valid/invalid targets
     def extractTargetAtomsWithFiltering(self, shape, depth, state, prevEvalShapeName):
         targetQuery = shape.getTargetQuery()
-        prevValList, prevInvList = self.getInstancesList(shape)
+        prevValList, prevInvList = self.getInstancesList(prevEvalShapeName)
 
         targetLiterals = self.validTargetAtoms(shape, targetQuery, "valid", prevValList, prevInvList, prevEvalShapeName)
         state.remainingTargets.update(targetLiterals)
@@ -441,7 +464,10 @@ class RuleBasedValidation:
         bvars = bindings[0].keys() if len(bindings) > 0 else []
 
         startG = time.time()*1000.0
-        rules = [self.addRules(state, b, bvars, queryRP, shapeRP) for b in bindings]
+        #rules = [self.addRules(state, b, bvars, queryRP, shapeRP) for b in bindings]
+        bindingsIter = iter(bindings)
+        for b in bindingsIter:
+            self.addRules(state, b, bvars, queryRP, shapeRP)
         endG = time.time()*1000.0
         self.stats.recordGroundingTime(endG - startG)
         self.logOutput.write("\nGrounding rules ... \nelapsed: " + str(endG - startG) + " ms\n")
