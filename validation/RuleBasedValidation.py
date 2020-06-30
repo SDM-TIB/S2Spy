@@ -7,20 +7,23 @@ import time
 import math
 
 class RuleBasedValidation:
-    def __init__(self, endpoint, node_order, shapesDict, validOutput, violatedOutput, option, statsOutputFile, logOutput):
+    def __init__(self, endpoint, node_order, shapesDict, option,
+                       logOutput, validTargetsOutput, invalidTargetsOutput, statsOutput):
         self.endpoint = endpoint
         self.node_order = node_order
         self.shapesDict = shapesDict
-        self.validOutput = validOutput
-        self.violatedOutput = violatedOutput
         self.evalOption = option
+
         self.targetShapes = self.extractTargetShapes()
         self.targetShapePredicates = [s.getId() for s in self.targetShapes]
-        self.evaluatedShapes = []  # used for the filtering queries
-        self.stats = RuleBasedValidStats()
-        self.statsOutput = statsOutputFile
-        self.logOutput = logOutput
 
+        self.logOutput = logOutput
+        self.validOutput = validTargetsOutput
+        self.violatedOutput = invalidTargetsOutput
+        self.statsOutput = statsOutput
+        self.stats = RuleBasedValidStats()
+
+        self.evaluatedShapes = []  # used for the filtering queries
         self.prevEvalShapeName = None
 
     def exec(self):
@@ -51,39 +54,39 @@ class RuleBasedValidation:
 
     def getEvalPointedShapeName(self, shape):
         '''
-        Returns the name of a shape that was already evaluated, is connected as a child in the network to the
+        Can return the name of a shape that was already evaluated, is connected as a child in the network to the
         shape that is currently being validated, and contains relevant information for query filtering purposes:
             - the number of valid or invalid instances is less than a threshold (now threshold is set as 256),
             - the list of invalid targets from the child's shape in the network is not empty,
-            - there was a target query assigned for the child's shape ("previous evaluated shape").
+            - there was a target query assigned for this "child" shape (called "previous evaluated shape").
         :param shape: current shape being validated
-        :return:
+        :return: string containing the previous evaluated shape name or None if no shape fulfills the conditions
         '''
         bestRef = None
         bestVal = 256
         bestInval = 256
-        for evShape in self.evaluatedShapes:
-            prevEvalShapeName = evShape.id
-            if shape.referencingShapes.get(prevEvalShapeName) is not None:
-                prevShape = self.shapesDict[prevEvalShapeName]
+        for prevShape in self.evaluatedShapes:
+            prevShapeName = prevShape.id
+            if shape.referencingShapes.get(prevShapeName) is not None:
                 val = len(prevShape.bindings)
                 inv = len(prevShape.invalidBindings)
-                print("current", shape.id, "prev", prevEvalShapeName, val, inv)
+                print("current", shape.id, "prev", prevShapeName, val, inv)
                 if (val < bestVal and val > 0) or (inv < bestInval and inv > 0):
                     if inv > 0 and prevShape.targetQuery is not None:
-                        bestRef = prevEvalShapeName
+                        bestRef = prevShapeName
         print("BEST:", bestRef)
         return bestRef
 
     def getInstancesList(self, prevEvalShapeName):
-        prevValidInstances = self.shapesDict[prevEvalShapeName].bindings
-        prevInvalidInstances = self.shapesDict[prevEvalShapeName].invalidBindings
-        return prevValidInstances, prevInvalidInstances
+        '''
+        Returns the valid and invalid instances of the previous evaluated shape (if there is one).
+        :param prevEvalShapeName: string containing the name of the shape of interest
+        :return:
+        '''
+        if prevEvalShapeName is None:
+            return [], []
 
-    def getSplitList(self, shortestInstancesList, N):
-        listLength = math.ceil(len(shortestInstancesList) / N)
-        shortestInstancesList = list(shortestInstancesList)
-        return [shortestInstancesList[i:i + listLength] for i in range(0, len(shortestInstancesList), listLength)]
+        return self.shapesDict[prevEvalShapeName].bindings, self.shapesDict[prevEvalShapeName].invalidBindings
 
     def getFormattedInstances(self, instances, separator, maxListLength):
         '''
@@ -92,7 +95,7 @@ class RuleBasedValidation:
         in the corresponding format: using commas for instances contained in the VALUES clause or
         using spaces as separator for the instances in the FILTER NOT IN clause.
 
-        :param instances: list of instances
+        :param instances: shortest instances list (either the one with valid or invalid targets)
         :param separator: string that contains either a comma or a space character.
         :param maxListLength: integer that sets the max number of instances in a query
         :return: list(s) containing all instances with the requested format
@@ -100,16 +103,16 @@ class RuleBasedValidation:
         chunks = len(instances) / maxListLength
         N = math.ceil(chunks)
         if chunks > 1:
-            splitLists = self.getSplitList(instances, N)
+            # Get split list
+            listLen = math.ceil(len(instances) / N)
+            shortestInstancesList = list(instances)
+            splitLists = [shortestInstancesList[i:i + listLen] for i in range(0, len(shortestInstancesList), listLen)]
+
             return [separator.join(subList) for subList in splitLists]
         else:
             return [separator.join(instances)]
 
-    def filteredQuery(self, queryTemplate, instancesList, separator, maxListLength):
-        formattedInstancesLists = self.getFormattedInstances(instancesList, separator, maxListLength)
-        return [queryTemplate.replace("$to_be_replaced$", sublist) for sublist in formattedInstancesLists]
-
-    def filteredTargetQuery(self, shape, targetQuery, bType, valList, invList, prevEvalShapeName):
+    def filteringTargetQuery(self, shape, bType, valList, invList):
         '''
         Local variables:
             maxSplitNumber: heuristic of maximum possible number of instances considered for using filtering queries
@@ -117,8 +120,9 @@ class RuleBasedValidation:
             maxInstancesPerQuery: number from which the list is going to start being split because of the max
                             number of characters allowed in a query
         '''
-        self.logOutput.write("\n" + bType + " instances shape: " + shape.id + " - child's (" + prevEvalShapeName + ")")
+        self.logOutput.write("\n" + bType + " instances shape: " + shape.id + " - child's (" + self.prevEvalShapeName + ")")
         self.logOutput.write(" instances: " + str(len(valList)) + " val " + str(len(invList)) + " inv")
+        targetQuery = shape.getTargetQuery()
         shortestList = valList if len(valList) < len(invList) else invList
         maxSplitNumber = 256
         maxInstancesPerQuery = 115
@@ -127,22 +131,31 @@ class RuleBasedValidation:
             return [targetQuery]
 
         if (shortestList == valList and bType == "valid") or (shortestList == invList and bType == "invalid"):
-            queryTemplate = shape.referencingQueries_VALUES[prevEvalShapeName].getSparql()
+            queryTemplate = shape.referencingQueries_VALUES[self.prevEvalShapeName].getSparql()
             separator = " "
         else:
-            queryTemplate = shape.referencingQueries_FILTER_NOT_IN[prevEvalShapeName].getSparql()
+            queryTemplate = shape.referencingQueries_FILTER_NOT_IN[self.prevEvalShapeName].getSparql()
             separator = ","
 
-        return self.filteredQuery(queryTemplate, shortestList, separator, maxInstancesPerQuery)
+        formattedInstancesSplit = self.getFormattedInstances(shortestList, separator, maxInstancesPerQuery)
+        return [queryTemplate.replace("$to_be_replaced$", sublist) for sublist in formattedInstancesSplit]
 
-    def validTargetAtoms(self, shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapename):
+    def validTargetAtoms(self, shape, bType, prevValList, prevInvList):
+        '''
+
+        :param shape: current shape being evaluated
+        :param bType: string containing instances type (either "valid" or "invalid")
+        :param prevValList:
+        :param prevInvList:
+        :return:
+        '''
         if len(prevValList) == 0:
             # no query to be evaluated since no new possible target literals can be found
             if len(prevInvList) > 0:
                 shape.hasValidInstances = False
             return []  # no target literals retrieved
         else:
-            query = self.filteredTargetQuery(shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapename)
+            query = self.filteringTargetQuery(shape, bType, prevValList, prevInvList)
             # when the lists are not split, the variable 'query' returns an array with one single query
 
             targetLiterals = set()
@@ -151,13 +164,19 @@ class RuleBasedValidation:
                 targetLiterals.update([Literal(shape.getId(), b["x"]["value"], True) for b in bindings])
             return targetLiterals
 
-    # Automatically sets the instanciated targets as invalid after running the query which uses
-    # instances from previous shape evaluation as a filter
-    def invalidTargetAtoms(self, shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapeName):
+    def invalidTargetAtoms(self, shape, bType, prevValList, prevInvList):
+        '''
+
+        :param shape: current shape being evaluated
+        :param bType: string containing instances type (either "valid" or "invalid")
+        :param prevValList:
+        :param prevInvList:
+        :return:
+        '''
         if len(prevInvList) == 0:
             return []
         else:
-            query = self.filteredTargetQuery(shape, targetQuery, bType, prevValList, prevInvList, prevEvalShapeName)
+            query = self.filteringTargetQuery(shape, bType, prevValList, prevInvList)
 
             invalidBindings = set()
             qn = 0
@@ -177,21 +196,31 @@ class RuleBasedValidation:
     def extractTargetAtoms(self, shape):
         return self.targetAtomsNaive(shape, shape.getTargetQuery())
 
-    # Returns bindings obtained from the evaluation of the endpoint
+    def extractTargetAtomsWithFiltering(self, shape, depth, state):
+        '''
+        This procedure is run every time a new shape is going to be validated if it is connected to a shape
+        that was already validated ("prevEvalShapeName") in order for the current shape to use queries
+        filtered by those valid/invalid targets that correspond to the previous evaluated shape.
 
-    # Runs every time a new shape is going to be evaluated.
-    # May use filter queries based on previously valid/invalid targets
-    def extractTargetAtomsWithFiltering(self, shape, depth, state, prevEvalShapeName):
-        targetQuery = shape.getTargetQuery()
-        prevValList, prevInvList = self.getInstancesList(prevEvalShapeName)
+        The valid bindings obtained from the evaluation of the endpoint (targetLiterals) are added to the
+        remaining targets (it's validation is still pending).
 
-        targetLiterals = self.validTargetAtoms(shape, targetQuery, "valid", prevValList, prevInvList, prevEvalShapeName)
+        The bindings (invTargetLiterals) retrieved after running the query which uses the invalid instances from
+        previous shape evaluation as a filter, are directly set as invalid targets.
+
+        :param shape: current shape being evaluated
+        :param depth:
+        :param state:
+        :return:
+        '''
+        prevValList, prevInvList = self.getInstancesList(self.prevEvalShapeName)
+
+        targetLiterals = self.validTargetAtoms(shape, "valid", prevValList, prevInvList)
         state.remainingTargets.update(targetLiterals)
 
         useFilterQueries = True
         if self.evalOption == "violated" or self.evalOption == "all" and useFilterQueries:
-            invTargetLiterals = self.invalidTargetAtoms(shape, targetQuery, "invalid", prevValList, prevInvList,
-                                                        prevEvalShapeName)
+            invTargetLiterals = self.invalidTargetAtoms(shape, "invalid", prevValList, prevInvList)
             state.invalidTargets.update(invTargetLiterals)
             for b in invTargetLiterals:
                 self.registerTarget(b, False, depth, "", shape)
@@ -225,6 +254,12 @@ class RuleBasedValidation:
     def extractTargetShapes(self):
         return [s for name, s in self.shapesDict.items() if self.shapesDict[name].getTargetQuery() is not None]
 
+    def checkPrevShapeValidationIsPending(self, prevEvalShapeName):
+        if prevEvalShapeName is not None:
+            prevShape = self.shapesDict[prevEvalShapeName]
+            return len(prevShape.bindings) == 0 and len(prevShape.invalidBindings) == 0
+        return False
+
     def validate(self, depth, state, focusShape):  # Algorithm 1 modified (SHACL2SPARQL)
         # termination condition 1: all targets are validated/violated  # does not apply anymore since we do not
         #if len(state.remainingTargets) == 0:                          # get all possible initial targets (considering
@@ -251,17 +286,12 @@ class RuleBasedValidation:
                 self.logOutput.write("\nRetrieving (next) targets ...")
 
                 self.prevEvalShapeName = self.getEvalPointedShapeName(self.nextEvalShape)
-                if self.prevEvalShapeName is None:
+                instancesClassifIsPending = self.checkPrevShapeValidationIsPending(self.prevEvalShapeName)
+                if self.prevEvalShapeName is None or instancesClassifIsPending:
                     targets = self.extractTargetAtoms(self.nextEvalShape)
                     state.remainingTargets.update(targets)
                 else:
-                    prevShape = self.shapesDict[self.prevEvalShapeName]
-                    instancesNotClassifiedYet = len(prevShape.bindings) == 0 and len(prevShape.invalidBindings) == 0
-                    if instancesNotClassifiedYet:
-                        targets = self.extractTargetAtoms(self.nextEvalShape)
-                        state.remainingTargets.update(targets)
-                    else:
-                        self.extractTargetAtomsWithFiltering(self.nextEvalShape, depth + 1, state, self.prevEvalShapeName)
+                    self.extractTargetAtomsWithFiltering(self.nextEvalShape, depth + 1, state)
         else:
             self.nextEvalShape = None
 
@@ -382,67 +412,44 @@ class RuleBasedValidation:
         self.logOutput.write("\nNumber of rules: " + str(ruleNumber))
         self.stats.recordNumberOfRules(ruleNumber)
 
-    def filteredMinQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances,
-                         maxSplitNumber, maxInstancesPerQuery):
+    def filteringConstraintQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances,
+                         maxSplitNumber, maxInstancesPerQuery, qType):
         if self.prevEvalShapeName is not None \
                 and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0 \
                 and len(prevValidInstances) <= maxSplitNumber:
             VALUES_clauses = ""
-            instancesLists = self.getFormattedInstances(prevValidInstances, "", maxInstancesPerQuery)
+            refPaths = "\n" if qType == "max" else ''
+            formattedInstancesSplit = self.getFormattedInstances(prevValidInstances, "", maxInstancesPerQuery)
             for c in shape.constraints:
                 if c.shapeRef == self.prevEvalShapeName:
                     var = " ?" + c.variables[0]
                     VALUES_clauses += "VALUES" + var + " {$instances$}\n"
-            queries = []
-            for sublist in instancesLists:
-                queries.append(templateQuery.replace("$to_be_replaced$", VALUES_clauses.replace("$instances$", sublist)))
-            return queries
+                    if qType == "max":
+                        focusVar = c.varGenerator.getFocusNodeVar()
+                        refPaths += "?" + focusVar + " " + c.path + var + ".\n"
 
-        return templateQuery.replace("$to_be_replaced$", "\n")
-
-    def filteredMaxQuery(self, shape, templateQuery, prevValidInstances, prevInvalidInstances,
-                         maxSplitNumber, maxInstancesPerQuery):
-        if self.prevEvalShapeName is not None \
-                and len(prevValidInstances) > 0 and len(prevInvalidInstances) > 0 \
-                and len(prevValidInstances) <= maxSplitNumber:
-            VALUES_clauses = ""
-            refPaths = "\n"
-            instancesLists = self.getFormattedInstances(prevValidInstances, "", maxInstancesPerQuery)
-            for c in shape.constraints:
-                if c.shapeRef == self.prevEvalShapeName:
-                    var = " ?" + c.variables[0]
-                    focusVar = c.varGenerator.getFocusNodeVar()
-                    VALUES_clauses += "VALUES" + var + " {$instances$}\n"
-                    refPaths += "?" + focusVar + " " + c.path + var + ".\n"
-            queries = []
-            for sublist in instancesLists:
-                queries.append(templateQuery.replace("$to_be_replaced$",
-                                                     VALUES_clauses.replace("$instances$", sublist) + refPaths))
-            return queries
-
-        return templateQuery.replace("$to_be_replaced$", "\n")
+            return [templateQuery.replace("$to_be_replaced$",
+                                           VALUES_clauses.replace("$instances$", sublist) + refPaths)
+                    for sublist in formattedInstancesSplit]
+        else:
+            return [templateQuery.replace("$to_be_replaced$", "\n")]
 
     def evalConstraints(self, state, s):
-        valInst = self.shapesDict[self.prevEvalShapeName].bindings if self.prevEvalShapeName is not None else []
-        invInst = self.shapesDict[self.prevEvalShapeName].invalidBindings if self.prevEvalShapeName is not None else []
+        prevValList, prevInvList = self.getInstancesList(self.prevEvalShapeName)
 
         maxSplitNumber = s.maxSplitSize
-        maxInstancesPerQuery = 80
+        maxInstancesPerQuery = 4
 
-        minQuery = self.filteredMinQuery(s, s.minQuery.getSparql(), valInst, invInst, maxSplitNumber, maxInstancesPerQuery)
-        if isinstance(minQuery, list):
-            for query in minQuery:
-                self.evalQuery(state, s.minQuery, query, s)
-        else:
-            self.evalQuery(state, s.minQuery, minQuery, s)
+        minQuery = self.filteringConstraintQuery(s, s.minQuery.getSparql(), prevValList, prevInvList,
+                                             maxSplitNumber, maxInstancesPerQuery, "min")
+        for queryStr in minQuery:
+            self.evalQuery(state, s.minQuery, queryStr, s)
 
         for q in s.maxQueries:
-            maxQuery = self.filteredMaxQuery(s, q.getSparql(), valInst, invInst, maxSplitNumber, maxInstancesPerQuery)
-            if isinstance(maxQuery, list):
-                for queryStr in maxQuery:
-                    self.evalQuery(state, q, queryStr, s)
-            else:
-                self.evalQuery(state, q, maxQuery, s)
+            maxQuery = self.filteringConstraintQuery(s, q.getSparql(), prevValList, prevInvList,
+                                                 maxSplitNumber, maxInstancesPerQuery, "max")
+            for queryStr in maxQuery:
+                self.evalQuery(state, q, queryStr, s)
 
     def evalQuery(self, state, q, query, s):
         self.logOutput.write("\n\nEvaluating query:\n" + query)

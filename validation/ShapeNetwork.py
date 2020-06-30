@@ -172,10 +172,10 @@ class ShapeNetwork:
             self.endpoint,
             node_order,
             self.shapesDict,
+            option,
+            fileManagement.openFile(self.outputDirName, "validation.log"),
             fileManagement.openFile(self.outputDirName, "targets_valid.log"),
             fileManagement.openFile(self.outputDirName, "targets_violated.log"),
-            option,
-            fileManagement.openFile(self.outputDirName, "stats.txt"),
-            fileManagement.openFile(self.outputDirName, "validation.log")
+            fileManagement.openFile(self.outputDirName, "stats.txt")
         ).exec()
         return 'Go to log files in {} folder to see report'.format(self.outputDirName)
