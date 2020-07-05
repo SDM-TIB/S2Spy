@@ -282,7 +282,7 @@ class RuleBasedValidation:
         self.logOutput.write("\n\n********************************")
         self.logOutput.write("\nStarting validation at depth: " + str(depth))
 
-        self.validateFocusShape(state, focusShape, depth)
+        self.evalShape(state, focusShape, depth)  # validate current selected shape
 
         # select next shape to be evaluated from the already defined list with the evaluation order
         if len(self.node_order) > 0:  # if there are more shapes to be evaluated
@@ -380,9 +380,7 @@ class RuleBasedValidation:
                 retainedRules.addRule(head, body)  # not invalid
             return None
 
-    def validateFocusShape(self, state, focusShape, depth):
-        self.evalShape(state, focusShape, depth)  # validate current selected shape
-
+    # validateFocusShape
     def evalShape(self, state, s, depth):
         '''
         Saturate only if the current shape is connected in the network as a parent to a shape that was already
@@ -391,6 +389,9 @@ class RuleBasedValidation:
         if the child node (previously evaluated shape) contains only invalid instances, all retrieved instances of the
         shape being currently evaluated were registered as invalid so there is no need to validate min/max constraints.
 
+        :param state:
+        :param s: focus shape
+        :param depth:
         '''
         self.logOutput.write("\nEvaluating queries for shape " + s.getId())
 
@@ -470,27 +471,61 @@ class RuleBasedValidation:
         self.logOutput.write("\nNumber of solution mappings: " + str(len(bindings)) + "\n")
         self.stats.recordNumberOfSolutionMappings(len(bindings))
         self.stats.recordQuery()
+        queryRP = q.getRulePattern()
+        qH = queryRP.getHead()
+        qB = queryRP.getBody()
+        qV = queryRP.getVariables()
+        shapeRP = s.getRulePatterns()[0]
+        sH = shapeRP.getHead()
+        sB = shapeRP.getBody()
+        sV = shapeRP.getVariables()
+        bvars = set(bindings[0].keys()) if len(bindings) > 0 else set()
 
         startG = time.time() * 1000.0
-        for b in bindings:
-            self.evalBindingSet(state, b, q.getRulePattern(), s.getRulePatterns())
+
+        #for b in bindings:
+            #self.evalBindingSet(state, b, queryRP.getVariables(), queryRP.getHead(), queryRP.getBody(), queryRP,
+            #                    shapeRP.getVariables(), shapeRP.getHead(), shapeRP.getBody(), shapeRP)
+
+        qRules = [state.ruleMap.addRule(
+            Literal(
+                qH.getPredicate(),
+                binding[qH.getArg()]["value"],
+                qH.getIsPos()),
+            frozenset({Literal(a.getPredicate(),
+                               binding[a.getArg()]["value"],
+                               a.getIsPos())
+                       for a in qB})
+        ) for binding in bindings if bvars.issuperset(qV)]
+
+        sRules = [state.ruleMap.addRule(
+            Literal(
+                sH.getPredicate(),
+                binding[sH.getArg()]["value"],
+                sH.getIsPos()),
+            frozenset({Literal(a.getPredicate(),
+                               binding[a.getArg()]["value"],
+                               a.getIsPos())
+                       for a in sB})
+        ) for binding in bindings if bvars.issuperset(sV)]
+
         endG = time.time() * 1000.0
 
         self.stats.recordGroundingTime(endG - startG)
         self.logOutput.write("\nGrounding rules ... \nelapsed: " + str(endG - startG) + " ms\n")
 
-    def evalBindingSet(self, state, bs, queryRP, shapeRPs):
+    '''def evalBindingSet(self, state, bs, qV, qH, qB, qRP, sV, sH, sB, sRP):
         bindingVars = set(bs.keys())
-        self._evalBindingSet(state, bs, queryRP, bindingVars)
-        for p in shapeRPs:  # for each pattern in the set of rule patterns
-            self._evalBindingSet(state, bs, p, bindingVars)
+        self._evalBindingSet(state, bs, bindingVars, qV, qH, qB, qRP)
+        #for p in shapeRPs:  # for each pattern in the set of rule patterns (but a shape contains only one pattern
+        self._evalBindingSet(state, bs, bindingVars, sV, sH, sB, sRP)
 
-    def _evalBindingSet(self, state, bs, pattern, bindingVars):
-        if bindingVars.issuperset(pattern.getVariables()):
+    def _evalBindingSet(self, state, bs, bindingVars, vars, head, body, rp):
+        if bindingVars.issuperset(vars):
             state.ruleMap.addRule(
-                pattern.instantiateAtom(pattern.getHead(), bs),
-                pattern.instantiateBody(bs)
-            )
+                rp.instantiateAtom(head, bs),
+                frozenset({rp.instantiateAtom(a, bs) for a in body})
+            )'''
 
     def negateUnMatchableHeads(self, state, depth, s):
         '''
@@ -513,9 +548,11 @@ class RuleBasedValidation:
 
         # first negate unmatchable body atoms (add not satisfied body atoms)
         allBodyAtoms = state.ruleMap.getAllBodyAtoms()
-        state.assignment.update({self.getNegatedAtom(a)
+        state.assignment.update({a.getNegation() if a.getIsPos() else a
                                  for a in allBodyAtoms
-                                 if not self.isSatisfiable(a, state, ruleHeads)}
+                                 if not ((a.getPredicate() not in state.evaluatedPredicates)
+                                          or (a.getAtom() in ruleHeads)
+                                          or (a in state.assignment))}
                                 )
 
         # then negate unmatchable targets
@@ -532,8 +569,8 @@ class RuleBasedValidation:
 
         return initialAssignmentSize != len(state.assignment)  # False when no new assignments are found
 
-    def getNegatedAtom(self, a):
-        return a.getNegation() if a.getIsPos() else a
+    #def getNegatedAtom(self, a):
+    #    return a.getNegation() if a.getIsPos() else a
 
     def isSatisfiable(self, a, state, ruleHeads):
         return (a.getPredicate() not in state.evaluatedPredicates) \

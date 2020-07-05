@@ -16,6 +16,9 @@ class RulePattern:
     def getHead(self):
         return self.head
 
+    def getBody(self):
+        return self.literals
+
     def instantiateAtom(self, a, bs):
         # given a binding with many possible projected variables, returns the atom that matches the variable
         return Literal(
@@ -25,7 +28,7 @@ class RulePattern:
         )
 
     def instantiateBody(self, bs):
-        return [self.instantiateAtom(a, bs) for a in self.literals]
+        return frozenset({self.instantiateAtom(a, bs) for a in self.literals})
 
     def getVariables(self):
         return self.variables
