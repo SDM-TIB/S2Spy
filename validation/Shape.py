@@ -17,7 +17,7 @@ class Shape:
         self.id = id
         self.constraints = constraints
         self.constraintsId = constraintsId
-        self.predicates = self.computePredicateSet()
+        #self.predicates = self.computePredicateSet()
         self.targetDef = targetDef
         self.targetQuery = targetQuery  # Might be None
         self.rulePatterns = ()
@@ -27,7 +27,7 @@ class Shape:
 
         self.minQuery = ""
         self.maxQueries = ""
-        self.queriesIds = []
+        self.predicates = []
 
         self.useSelectiveQueries = useSelectiveQueries
         self.maxSplitSize = maxSplitSize
@@ -48,16 +48,12 @@ class Shape:
         self.inDegree = inDegree
         self.outDegree = outDegree
 
-    def computePredicateSet(self):
-        predicates = set()
-        for c in self.constraints:
-            pred = c.path
-            if not pred.startswith("^"):
-                predicates.add(pred)
-        return predicates
+    def computePredicateSet(self, minQueryId, maxQueriesIds):
+        '''
+        Returns the ids of the queries for a shape
+        '''
 
-    def computeQueriesIds(self, minQueryId, maxQueriesIds):
-        self.queriesIds = [self.id] + [self.id + "_d1"] + [minQueryId] + [q for q in maxQueriesIds]
+        return [self.id] + [self.id + "_d1"] + [minQueryId] + [q for q in maxQueriesIds]
 
     def computeTargetDef(self):
         targets = SourceDescription.instance.get_classes(self.predicates)
@@ -166,7 +162,7 @@ class Shape:
                                         None,
                                         subquery) for c in maxConstraints]
 
-        self.computeQueriesIds(minId, maxIds)
+        self.predicates = self.computePredicateSet(minId, maxIds)
 
         self.rulePatterns = self.computeRulePatterns()
 

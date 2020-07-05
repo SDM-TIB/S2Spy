@@ -1,7 +1,6 @@
 class RuleMap:
     def __init__(self):
         self.map = {}
-        self.ruleNumber = 0
 
     def addRule(self, head, body):
         if self.map.get(head) is None:
@@ -9,15 +8,11 @@ class RuleMap:
             s.add(frozenset(body))
             self.map[head] = s
         else:
-            self.map[head].add(frozenset(body))
-
-        self.ruleNumber += 1
+            self.map[head].add(frozenset(body))  # does not return a boolean value, therefore summing 1 to ruleNumber
+                                                 # each time is not going to be accurate
 
     def getAllBodyAtoms(self):
         return list(frozenset().union(*set().union(*self.map.values())))
 
     def keySet(self):
         return set(self.map.keys())
-
-    def getRuleNumber(self):
-        return self.ruleNumber

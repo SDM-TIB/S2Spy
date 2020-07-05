@@ -10,7 +10,14 @@ class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, option,
                        logOutput, validTargetsOutput, invalidTargetsOutput, statsOutput):
         self.endpoint = endpoint
-        self.node_order = node_order
+        s2sOrder = ['ResearchGroup',
+                    'Department',
+                    'University',
+                    'Course',
+                    'FullProfessor',
+                    'UndergraduateStudent',
+                    'Publication']
+        self.node_order = s2sOrder
         self.shapesDict = shapesDict
         self.evalOption = option
 
@@ -389,15 +396,14 @@ class RuleBasedValidation:
 
         if s.hasValidInstances:
             self.evalConstraints(state, s)  # 'eval Disjunct'
-            state.evaluatedPredicates.update(s.queriesIds)
-            self.saveRuleNumber(state)
-
+            state.evaluatedPredicates.update(s.getPredicates())
+            #self.saveRuleNumber(state)
             self.logOutput.write("\nStarting saturation ...")
             startS = time.time()*1000.0
             self.saturate(state, depth, s)
             endS = time.time()*1000.0
             self.stats.recordSaturationTime(endS - startS)
-            self.logOutput.write("\nSaturation ...\nelapsed: " + str(endS - startS) + " ms")
+            self.logOutput.write("\nsaturation ...\nelapsed: " + str(endS - startS) + " ms")
         else:
             self.logOutput.write("\nNo saturation for shape ..." + s.getId())
 
@@ -438,7 +444,7 @@ class RuleBasedValidation:
         prevValList, prevInvList = self.getInstancesList(self.prevEvalShapeName)
 
         maxSplitNumber = s.maxSplitSize
-        maxInstancesPerQuery = 4
+        maxInstancesPerQuery = 80
 
         minQuery = self.filteringConstraintQuery(s, s.minQuery.getSparql(), prevValList, prevInvList,
                                              maxSplitNumber, maxInstancesPerQuery, "min")
@@ -465,30 +471,25 @@ class RuleBasedValidation:
         self.stats.recordNumberOfSolutionMappings(len(bindings))
         self.stats.recordQuery()
 
-        #print(">>> Length rule patterns: ", len(s.getRulePatterns()))
-        queryRP = q.getRulePattern()
-        shapeRP = s.getRulePatterns()[0]  # @@ there is only one RP per shape
-        bvars = bindings[0].keys() if len(bindings) > 0 else []
+        startG = time.time() * 1000.0
+        for b in bindings:
+            self.evalBindingSet(state, b, q.getRulePattern(), s.getRulePatterns())
+        endG = time.time() * 1000.0
 
-        startG = time.time()*1000.0
-        #rules = [self.addRules(state, b, bvars, queryRP, shapeRP) for b in bindings]
-        bindingsIter = iter(bindings)
-        for b in bindingsIter:
-            self.addRules(state, b, bvars, queryRP, shapeRP)
-        endG = time.time()*1000.0
         self.stats.recordGroundingTime(endG - startG)
         self.logOutput.write("\nGrounding rules ... \nelapsed: " + str(endG - startG) + " ms\n")
 
-    def addRules(self, state, b, bindingVars, queryRP, shapeRP):
-        if set(bindingVars).issuperset(queryRP.getVariables()):
+    def evalBindingSet(self, state, bs, queryRP, shapeRPs):
+        bindingVars = set(bs.keys())
+        self._evalBindingSet(state, bs, queryRP, bindingVars)
+        for p in shapeRPs:  # for each pattern in the set of rule patterns
+            self._evalBindingSet(state, bs, p, bindingVars)
+
+    def _evalBindingSet(self, state, bs, pattern, bindingVars):
+        if bindingVars.issuperset(pattern.getVariables()):
             state.ruleMap.addRule(
-                queryRP.instantiateAtom(queryRP.getHead(), b),
-                queryRP.instantiateBody(b)
-            )
-        if set(bindingVars).issuperset(shapeRP.getVariables()):
-            state.ruleMap.addRule(
-                shapeRP.instantiateAtom(shapeRP.getHead(), b),
-                shapeRP.instantiateBody(b)
+                pattern.instantiateAtom(pattern.getHead(), bs),
+                pattern.instantiateBody(bs)
             )
 
     def negateUnMatchableHeads(self, state, depth, s):

@@ -11,7 +11,7 @@ class RulePattern:
 
         # print("Rule Pattern - head: ", head.getPredicate(), " ", head.getArg(), " body: ", str([b.getPredicate() + " " + b.getArg() + " " + str(b.getIsPos()) for b in body]))
 
-        self.variables = list(set([head.getArg()] + [a.getArg() for a in body if a is not None]))
+        self.variables = set([head.getArg()] + [a.getArg() for a in body if a is not None])
 
     def getHead(self):
         return self.head
