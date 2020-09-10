@@ -116,7 +116,7 @@ class QueryBuilder:
                 "\n" + \
                 ("{\n" + self.subQuery + "\n}\n" if self.subQuery is not None else "") + \
                 (grapNotPresent) + \
-                "\n}" + selectiveClosingBracket
+                "\n}" + selectiveClosingBracket + " ORDER BY ?" + VariableGenerator.getFocusNodeVar()
 
     def getSelective(self):
         if self.considerSelectivity:
