@@ -13,12 +13,6 @@ class QueryGenerator:
 
     def generateQuery(self, id, constraints, target, isSelective, graph=None, subquery=None):
         # Only one max constraint per query is allowed, then 'constraints' arg contain only 1 element for the max case
-
-        if id == "template_VALUES":
-            return self.targetQuery_VALUES(constraints, target)
-        elif id == "template_FILTER_NOT_IN":
-            return self.targetQuery_FILTER_NOT_IN(constraints, target)
-
         rp = self.computeRulePattern(constraints, id)
 
         builder = QueryBuilder(id, graph, subquery, rp.getVariables(), isSelective, target, constraints)
@@ -61,48 +55,6 @@ class QueryGenerator:
             builder.buildClause(c)
 
         return builder.getSparql(False)
-
-    def targetQuery_VALUES(self, constraint, targetPath):
-        includePrefixes = True
-        prefixes = getPrefixString() if includePrefixes else ""
-        path = constraint[0].path
-        focusVar = VariableGenerator.getFocusNodeVar()
-
-        rdfClass = "?" + focusVar + " a " + targetPath + "." if targetPath is not None else ""
-
-        query = prefixes + \
-                "SELECT DISTINCT ?" + focusVar + " WHERE {\n" + \
-                "VALUES ?inst { $to_be_replaced$ }. \n" + \
-                "?" + focusVar + " " + path + " ?inst.\n" + \
-                rdfClass + "\n}\n"
-
-        return Query(
-                None,
-                None,
-                query
-        )
-
-    def targetQuery_FILTER_NOT_IN(self, constraint, selectivePath):
-        includePrefixes = True
-        prefixes = getPrefixString() if includePrefixes else ""
-        path = constraint[0].path
-        focusVar = VariableGenerator.getFocusNodeVar()
-        if selectivePath is not None:
-            rdfClass = "?" + focusVar + " a " + selectivePath + "."
-        else:
-            rdfClass = ""
-
-        query = prefixes + \
-                "SELECT DISTINCT ?" + focusVar + " WHERE {\n" + \
-                "?" + focusVar + " " + path + " ?inst.\n" + \
-                rdfClass + "\n" + \
-                "FILTER (?inst NOT IN ( $to_be_replaced$ )). }\n"
-
-        return Query(
-                None,
-                None,
-                query
-        )
 
 # mutable
     # private class

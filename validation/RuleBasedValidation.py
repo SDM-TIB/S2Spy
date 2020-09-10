@@ -4,22 +4,13 @@ from validation.utils.RuleBasedValidStats import RuleBasedValidStats
 from validation.core.RuleMap import RuleMap
 from validation.core.Literal import Literal
 import time
-import math
 
 class RuleBasedValidation:
-    def __init__(self, endpoint, node_order, shapesDict, option,
-                       logOutput, validTargetsOutput, invalidTargetsOutput, statsOutput):
+    def __init__(self, endpoint, node_order, shapesDict, logOutput,
+                 validTargetsOutput, invalidTargetsOutput, statsOutput):
         self.endpoint = endpoint
-        s2sOrder = ['ResearchGroup',
-                    'Department',
-                    'University',
-                    'Course',
-                    'FullProfessor',
-                    'UndergraduateStudent',
-                    'Publication']
-        self.node_order = s2sOrder
+        self.node_order = node_order
         self.shapesDict = shapesDict
-        self.evalOption = option
 
         self.targetShapes = self.extractTargetShapes()
         self.targetShapePredicates = [s.getId() for s in self.targetShapes]
@@ -59,31 +50,6 @@ class RuleBasedValidation:
         fileManagement.closeFile(self.statsOutput)
         fileManagement.closeFile(self.logOutput)
 
-    def getEvalPointedShapeName(self, shape):
-        '''
-        Can return the name of a shape that was already evaluated, is connected as a child in the network to the
-        shape that is currently being validated, and contains relevant information for query filtering purposes:
-            - the number of valid or invalid instances is less than a threshold (now threshold is set as 256),
-            - the list of invalid targets from the child's shape in the network is not empty,
-            - there was a target query assigned for this "child" shape (called "previous evaluated shape").
-        :param shape: current shape being validated
-        :return: string containing the previous evaluated shape name or None if no shape fulfills the conditions
-        '''
-        bestRef = None
-        bestVal = 256
-        bestInval = 256
-        for prevShape in self.evaluatedShapes:
-            prevShapeName = prevShape.id
-            if shape.referencingShapes.get(prevShapeName) is not None:
-                val = len(prevShape.bindings)
-                inv = len(prevShape.invalidBindings)
-                print("current", shape.id, "prev", prevShapeName, val, inv)
-                if (val < bestVal and val > 0) or (inv < bestInval and inv > 0):
-                    if inv > 0 and prevShape.targetQuery is not None:
-                        bestRef = prevShapeName
-        print("BEST:", bestRef)
-        return bestRef
-
     def getInstancesList(self, prevEvalShapeName):
         '''
         Returns the valid and invalid instances of the previous evaluated shape (if there is one).
@@ -95,30 +61,6 @@ class RuleBasedValidation:
 
         return self.shapesDict[prevEvalShapeName].bindings, self.shapesDict[prevEvalShapeName].invalidBindings
 
-    def getFormattedInstances(self, instances, separator, maxListLength):
-        '''
-        Depending on the number of instances that are going to be used for filtering the query,
-        the function returns one or more lists with valid/invalid instances of previous shape
-        in the corresponding format: using commas for instances contained in the VALUES clause or
-        using spaces as separator for the instances in the FILTER NOT IN clause.
-
-        :param instances: shortest instances list (either the one with valid or invalid targets)
-        :param separator: string that contains either a comma or a space character.
-        :param maxListLength: integer that sets the max number of instances in a query
-        :return: list(s) containing all instances with the requested format
-        '''
-        chunks = len(instances) / maxListLength
-        N = math.ceil(chunks)
-        if chunks > 1:
-            # Get split list
-            listLen = math.ceil(len(instances) / N)
-            shortestInstancesList = list(instances)
-            splitLists = [shortestInstancesList[i:i + listLen] for i in range(0, len(shortestInstancesList), listLen)]
-
-            return [separator.join(subList) for subList in splitLists]
-        else:
-            return [separator.join(instances)]
-
     def filteringTargetQuery(self, shape, bType, valList, invList):
         '''
         Local variables:
@@ -128,24 +70,8 @@ class RuleBasedValidation:
                             number of characters allowed in a query
         '''
         self.logOutput.write("\n" + bType + " instances shape: " + shape.id + " - child's (" + self.prevEvalShapeName + ")")
-        self.logOutput.write(" instances: " + str(len(valList)) + " val " + str(len(invList)) + " inv")
-        targetQuery = shape.getTargetQuery()
-        shortestList = valList if len(valList) < len(invList) else invList
-        maxSplitNumber = 256
-        maxInstancesPerQuery = 115
-
-        if valList == invList or len(shortestList) > maxSplitNumber or len(valList) == 0 or len(invList) == 0:
-            return [targetQuery]
-
-        if (shortestList == valList and bType == "valid") or (shortestList == invList and bType == "invalid"):
-            queryTemplate = shape.referencingQueries_VALUES[self.prevEvalShapeName].getSparql()
-            separator = " "
-        else:
-            queryTemplate = shape.referencingQueries_FILTER_NOT_IN[self.prevEvalShapeName].getSparql()
-            separator = ","
-
-        formattedInstancesSplit = self.getFormattedInstances(shortestList, separator, maxInstancesPerQuery)
-        return [queryTemplate.replace("$to_be_replaced$", sublist) for sublist in formattedInstancesSplit]
+        #self.logOutput.write(" instances: " + str(len(valList)) + " val " + str(len(invList)) + " inv")
+        return [shape.getTargetQuery()]
 
     def validTargetAtoms(self, shape, bType, prevValList, prevInvList):
         '''
@@ -203,35 +129,6 @@ class RuleBasedValidation:
     def extractTargetAtoms(self, shape):
         return self.targetAtomsNaive(shape, shape.getTargetQuery())
 
-    def extractTargetAtomsWithFiltering(self, shape, depth, state):
-        '''
-        This procedure is run every time a new shape is going to be validated if it is connected to a shape
-        that was already validated ("prevEvalShapeName") in order for the current shape to use queries
-        filtered by those valid/invalid targets that correspond to the previous evaluated shape.
-
-        The valid bindings obtained from the evaluation of the endpoint (targetLiterals) are added to the
-        remaining targets (it's validation is still pending).
-
-        The bindings (invTargetLiterals) retrieved after running the query which uses the invalid instances from
-        previous shape evaluation as a filter, are directly set as invalid targets.
-
-        :param shape: current shape being evaluated
-        :param depth:
-        :param state:
-        :return:
-        '''
-        prevValList, prevInvList = self.getInstancesList(self.prevEvalShapeName)
-
-        targetLiterals = self.validTargetAtoms(shape, "valid", prevValList, prevInvList)
-        state.remainingTargets.update(targetLiterals)
-
-        useFilterQueries = True
-        if self.evalOption == "violated" or self.evalOption == "all" and useFilterQueries:
-            invTargetLiterals = self.invalidTargetAtoms(shape, "invalid", prevValList, prevInvList)
-            state.invalidTargets.update(invTargetLiterals)
-            for b in invTargetLiterals:
-                self.registerTarget(b, False, depth, "", shape)
-
     def evalTargetQuery(self, shape, query):
         if query is None:
             return []  # when a network has only some targets, a shape without a target class returns no new bindings
@@ -274,9 +171,8 @@ class RuleBasedValidation:
 
         # termination condition 2: all shapes have been visited
         if len(state.visitedShapes) == len(self.shapesDict):
-            if self.evalOption == "valid" or self.evalOption == "all":
-                for t in state.remainingTargets:
-                    self.registerTarget(t, True, depth, "not violated after termination", None)
+            for t in state.remainingTargets:
+                self.registerTarget(t, True, depth, "not violated after termination", None)
             return
 
         self.logOutput.write("\n\n********************************")
@@ -292,13 +188,8 @@ class RuleBasedValidation:
                 self.logOutput.write("\n\n****************************************\n********************************")
                 self.logOutput.write("\nRetrieving (next) targets ...")
 
-                self.prevEvalShapeName = self.getEvalPointedShapeName(self.nextEvalShape)
-                instancesClassifIsPending = self.checkPrevShapeValidationIsPending(self.prevEvalShapeName)
-                if self.prevEvalShapeName is None or instancesClassifIsPending:
-                    targets = self.extractTargetAtoms(self.nextEvalShape)
-                    state.remainingTargets.update(targets)
-                else:
-                    self.extractTargetAtomsWithFiltering(self.nextEvalShape, depth + 1, state)
+                targets = self.extractTargetAtoms(self.nextEvalShape)
+                state.remainingTargets.update(targets)
         else:
             self.nextEvalShape = None
 
@@ -316,12 +207,10 @@ class RuleBasedValidation:
 
         if isValid:
             self.shapesDict[t.getPredicate()].bindings.add(instance)
-            if self.evalOption == "valid" or self.evalOption == "all":
-                self.validOutput.write(log)
+            self.validOutput.write(log)
         else:
             self.shapesDict[t.getPredicate()].invalidBindings.add(instance)
-            if self.evalOption == "violated" or self.evalOption == "all":
-                self.violatedOutput.write(log)
+            self.violatedOutput.write(log)
 
     def saturate(self, state, depth, s):
         #startN = time.time()*1000.0

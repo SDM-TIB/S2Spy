@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 __author__ = "Philipp D. Rohde and Monica Figuera"
 
-import re
 import itertools
-from validation.sparql.ASKQuery import ASKQuery
 from validation.VariableGenerator import VariableGenerator
 from validation.core.Literal import Literal
 from validation.core.RulePattern import RulePattern
-from validation.utils.SourceDescription import SourceDescription
 from validation.sparql.QueryGenerator import QueryGenerator
+
 
 class Shape:
 
@@ -17,7 +15,6 @@ class Shape:
         self.id = id
         self.constraints = constraints
         self.constraintsId = constraintsId
-        #self.predicates = self.computePredicateSet()
         self.targetDef = targetDef
         self.targetQuery = targetQuery  # Might be None
         self.rulePatterns = ()
@@ -32,8 +29,6 @@ class Shape:
         self.useSelectiveQueries = useSelectiveQueries
         self.maxSplitSize = maxSplitSize
         self.referencingShapes = referencingShapes
-        self.referencingQueries_VALUES = {}
-        self.referencingQueries_FILTER_NOT_IN = {}  # complement of VALUES
         self.bindings = set()
         self.invalidBindings = set()
         self.hasValidInstances = True
@@ -56,9 +51,9 @@ class Shape:
         return [self.id] + [self.id + "_d1"] + [minQueryId] + [q for q in maxQueriesIds]
 
     def computeTargetDef(self):
-        targets = SourceDescription.instance.get_classes(self.predicates)
-        for c in self.constraints:
-            c.target = targets
+        #targets = SourceDescription.instance.get_classes(self.predicates)
+        #for c in self.constraints:
+        #    c.target = targets
         # fix: set target for constraints only (needed for the queries)
         # but not for the shape since it will interfere with the heuristics
         return None
@@ -97,21 +92,6 @@ class Shape:
     def getShapeRefs(self):
         return [c.getShapeRef() for c in self.constraints if c.getShapeRef() is not None]
 
-    def isSatisfied(self):
-        if self.satisfied is None:
-            for c in self.constraints:  # TODO: heuristics for the constraints within a shape?
-                if not c.isSatisfied():
-                    self.satisfied = False
-                    return self.satisfied
-            self.satisfied = True
-        return self.satisfied
-
-    def getValidInstances(self):
-        return  # TODO
-
-    def getViolations(self):
-        return  # TODO
-
     def getRulePatterns(self):
         return self.rulePatterns
 
@@ -119,24 +99,6 @@ class Shape:
         minConstraints = [c for c in self.constraints if c.min != -1]
         maxConstraints = [c for c in self.constraints if c.max != -1]
         queryGenerator = QueryGenerator()
-
-        self.referencingQueries_VALUES = {ref: queryGenerator.generateQuery(
-                                        "template_VALUES",
-                                        [c for c in self.constraints if c.path == self.referencingShapes[ref]],
-                                        self.targetDef,
-                                        True,
-                                        None,
-                                        None
-                                        ) for ref in self.referencingShapes.keys()}
-
-        self.referencingQueries_FILTER_NOT_IN = {ref: queryGenerator.generateQuery(
-                                        "template_FILTER_NOT_IN",
-                                        [c for c in self.constraints if c.path == self.referencingShapes[ref]],
-                                        self.targetDef,
-                                        True,
-                                        None,
-                                        None
-                                        ) for ref in self.referencingShapes.keys()}
 
         subquery = queryGenerator.generateLocalSubquery(None, minConstraints)
 

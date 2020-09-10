@@ -49,15 +49,3 @@ class Constraint:
     def computeRulePatternBody(self):
         return [Literal(self.shapeRef, v, self.isPos) for v in self.variables] \
                     if self.shapeRef is not None else []
-
-    def isSatisfied(self):
-        """Checks whether the constraint is satisfied in the endpoint or not. Needs to be implemented by subclasses."""
-        raise NotImplementedError("Please implement this method in subclasses")
-
-    def getValidInstances(self):
-        """Reports all instances that validate the constraint. Needs to be implemented by subclasses."""
-        raise NotImplementedError("Please implement this method in subclasses")
-
-    def getViolations(self):
-        """Reports all instances that violate the constraint. Needs to be implemented by subclasses."""
-        raise NotImplementedError("Please implement this method in subclasses")

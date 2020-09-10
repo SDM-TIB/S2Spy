@@ -17,21 +17,6 @@ if __name__ == '__main__':
                         help='SPARQL Endpoint')
     parser.add_argument('outputDir', metavar='outputDir', type=str, default=None,
                         help='Name of the directory where results of validation will be saved')
-    parser.add_argument(dest='graphTraversal', type=str, default='DFS', choices=['BFS', 'DFS'],
-                        help='The algorithm used for graph traversal (BFS / DFS)')
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("-g", action="store_true", help="validate the whole graph")
-    group.add_argument("-s", action="store_true", help="validate each shape")
-    group.add_argument("-t", action="store_true", help="report valid instances")
-    group.add_argument("-v", action="store_true", help="report violating instances")
-    group.add_argument("-a", action="store_true", help="report both valid and violating instances")
-
-    parser.add_argument("--heuristics", nargs="*", type=str, default=[],
-                        help="TARGET if shapes with target definition should be prioritized\n"
-                             "[IN / OUT / INOUT / OUTIN] if a higher in- or outdegree should be prioritized\n"
-                             "[SMALL / BIG] if small or big shapes should be prioritized", required=True)
-
     parser.add_argument("--selective", action='store_true', default=False,
                         help="Use more selective queries", required=False)
 

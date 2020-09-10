@@ -3,7 +3,6 @@ __author__ = "Monica Figuera and Philipp D. Rohde"
 
 from validation.VariableGenerator import VariableType
 from validation.constraints.Constraint import Constraint
-from validation.sparql.ASKQuery import *
 
 
 class MaxOnlyConstraint(Constraint):
@@ -27,15 +26,3 @@ class MaxOnlyConstraint(Constraint):
     @property
     def getPath(self):
         return self.path
-
-    def isSatisfied(self):
-        if self.satisfied is None:
-            self.satisfied = not ASKQueryMaxCardConstraint(self.path, self.target, self.max, self.value).evaluate()
-
-        return self.satisfied
-
-    def getValidInstances(self):
-        return []  # TODO
-
-    def getViolations(self):
-        return []  # TODO
