@@ -7,7 +7,7 @@ import time
 
 class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, logOutput,
-                 validTargetsOutput, invalidTargetsOutput, statsOutput):
+                 validTargetsOutput, invalidTargetsOutput, statsOutput, tracesOutput):
         self.endpoint = endpoint
         self.node_order = node_order
         self.shapesDict = shapesDict
@@ -21,6 +21,10 @@ class RuleBasedValidation:
         self.statsOutput = statsOutput
         self.stats = RuleBasedValidStats()
 
+        self.tracesOutput = tracesOutput
+        self.startOfVerification = time.time() * 1000.0
+        self.tracesOutput.write("Target, #TripleInThatClass, TimeSinceStartOfVerification(ms)\n")
+
         self.evaluatedShapes = []  # used for the filtering queries
         self.prevEvalShapeName = None
 
@@ -33,9 +37,10 @@ class RuleBasedValidation:
         self.logOutput.write("\nNumber of targets:\n" + str(len(targets)))
         self.stats.recordInitialTargets(str(len(targets)))
         start = time.time()*1000.0
+        state = EvalState(targets)
         self.validate(
             depth,
-            EvalState(targets),
+            state,
             firstShapeEval
         )
         finish = time.time()*1000.0
@@ -43,12 +48,14 @@ class RuleBasedValidation:
         self.stats.recordTotalTime(elapsed)
         print("Total execution time: ", str(elapsed), " ms")
         self.logOutput.write("\nMaximal (initial) number or rules in memory: " + str(self.stats.maxRuleNumber))
+        self.writeTargetsToFile(state)
         self.stats.writeAll(self.statsOutput)
 
         fileManagement.closeFile(self.validOutput)
         fileManagement.closeFile(self.violatedOutput)
         fileManagement.closeFile(self.statsOutput)
         fileManagement.closeFile(self.logOutput)
+        fileManagement.closeFile(self.tracesOutput)
 
     def getInstancesList(self, prevEvalShapeName):
         '''
@@ -172,7 +179,7 @@ class RuleBasedValidation:
         # termination condition 2: all shapes have been visited
         if len(state.visitedShapes) == len(self.shapesDict):
             for t in state.remainingTargets:
-                self.registerTarget(t, True, depth, "not violated after termination", None)
+                self.registerTarget(t, True, depth, "not violated after termination", None, state)
             return
 
         self.logOutput.write("\n\n********************************")
@@ -195,7 +202,23 @@ class RuleBasedValidation:
 
         self.validate(depth + 1, state, self.nextEvalShape)
 
-    def registerTarget(self, t, isValid, depth, logMessage, focusShape):
+    def writeTargetsToFile(self, state):
+        """
+        Saves to local file the new validated target
+
+        :param state:
+        :return:
+        """
+        for valid in state.validTargets:
+            self.validOutput.write(valid)
+
+        for invalid in state.invalidTargets:
+            self.violatedOutput.write(invalid)
+
+        for trace in state.traces:
+            self.tracesOutput.write(trace)
+
+    def registerTarget(self, t, isValid, depth, logMessage, focusShape, state):
         fshape = ", focus shape " + focusShape.id if focusShape is not None else ""
         log = t.getStr() + ", depth " + str(depth) + fshape + ", " + logMessage + "\n"
 
@@ -207,19 +230,23 @@ class RuleBasedValidation:
 
         if isValid:
             self.shapesDict[t.getPredicate()].bindings.add(instance)
-            self.validOutput.write(log)
+            state.validTargets.add(log)
         else:
             self.shapesDict[t.getPredicate()].invalidBindings.add(instance)
-            self.violatedOutput.write(log)
+            state.invalidTargets.add(log)
+
+        targetType = "valid" if isValid else "violated"
+        traceLog = targetType + ", " + \
+                    str(state.tracesCount) + ", " + \
+                    str(round(time.time() * 1000.0 - self.startOfVerification)) + "\n"
+
+        state.traces.add(traceLog)
+        state.tracesCount += 1
+
 
     def saturate(self, state, depth, s):
-        #startN = time.time()*1000.0
         negated = self.negateUnMatchableHeads(state, depth, s)
-        #endN = time.time()*1000.0
-
-        #startI = time.time()*1000.0
         inferred = self.applyRules(state, depth, s)
-        #endI = time.time()*1000.0
 
         if negated or inferred:
             self.saturate(state, depth, s)
@@ -246,11 +273,11 @@ class RuleBasedValidation:
         for t in state.remainingTargets:
             if t in candidateValidTargets:
                 if t.getIsPos():
-                    state.validTargets.add(t)
-                    self.registerTarget(t, True, depth, "", s)
+                    #state.validTargets.add(t)
+                    self.registerTarget(t, True, depth, "", s, state)
                 else:
-                    state.invalidTargets.add(t)
-                    self.registerTarget(t, False, depth, "", s)
+                    #state.invalidTargets.add(t)
+                    self.registerTarget(t, False, depth, "", s, state)
             else:
                 remaining.add(t)
 
@@ -450,9 +477,9 @@ class RuleBasedValidation:
             if self.isSatisfiable(a, state, ruleHeads):
                 remaining.add(a)
             else:
-                state.invalidTargets.add(a)
+                #state.invalidTargets.add(a)
                 state.assignment.add(a.getNegation())
-                self.registerTarget(a, False, depth, "", s)
+                self.registerTarget(a, False, depth, "", s, state)
 
         state.remainingTargets = remaining
 
@@ -475,6 +502,8 @@ class EvalState:
         self.evaluatedPredicates = set()
         self.validTargets = set()
         self.invalidTargets = set()
+        self.traces = set()
+        self.tracesCount = 0
 
     def addVisitedShape(self, s):
         self.visitedShapes.add(s)

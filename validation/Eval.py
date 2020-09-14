@@ -15,8 +15,9 @@ class Eval:
         schemaDir = args.d
         useSelectiveQueries = args.selective
         maxSplitSize = args.m
+        ORDERBYinQueries = True
         self.network = ShapeNetwork(schemaDir, self.shapeFormat, args.endpoint, useSelectiveQueries,
-                                    maxSplitSize, self.outputDir)
+                                    maxSplitSize, self.outputDir, ORDERBYinQueries)
 
         report = self.network.validate()  # run the evaluation of the SHACL constraints over the specified endpoint
         print("Report:", report)

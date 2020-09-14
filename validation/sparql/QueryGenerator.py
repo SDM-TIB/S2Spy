@@ -11,15 +11,15 @@ class QueryGenerator:
     def __init__(self):
         pass
 
-    def generateQuery(self, id, constraints, target, isSelective, graph=None, subquery=None):
+    def generateQuery(self, id, constraints, target, isSelective, includeORDERBY, includePrefixes, graph=None, subquery=None):
         # Only one max constraint per query is allowed, then 'constraints' arg contain only 1 element for the max case
         rp = self.computeRulePattern(constraints, id)
 
-        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), isSelective, target, constraints)
+        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), isSelective, target, constraints, includeORDERBY)
         for c in constraints:
             builder.buildClause(c)
 
-        return builder.buildQuery(rp)
+        return builder.buildQuery(rp, includePrefixes)
 
     @staticmethod
     def computeRulePattern(constraints, id):
@@ -54,12 +54,12 @@ class QueryGenerator:
         for c in localPosConstraints:
             builder.buildClause(c)
 
-        return builder.getSparql(False)
+        return builder.getSparql(False, True)
 
 # mutable
     # private class
 class QueryBuilder:
-    def __init__(self, id, graph, subquery, projectedVariables, isSelective=None, targetPath=None, constraints=None):
+    def __init__(self, id, graph, subquery, projectedVariables, isSelective=None, targetPath=None, constraints=None, includeORDERBY=None):
         self.id = id
         self.graph = graph
         self.subQuery = subquery
@@ -71,6 +71,7 @@ class QueryBuilder:
         self.isSelective = isSelective
         self.targetPath = targetPath
         self.constraints = constraints
+        self.includeORDERBY = includeORDERBY if includeORDERBY is not None else False
 
     def addTriple(self, path, object):
         self.triples.append(
@@ -94,33 +95,44 @@ class QueryBuilder:
     def __getDatatypeFilter(self, variable, datatype):
         return "datatype(?" + variable + ") = " + datatype
 
-    def getSparql(self, includePrefixes):  # assuming optional graph
-        grapNotPresent = ""  # ***
-        selectiveClosingBracket = "}}" if self.considerSelectivity else ""
-        prefixes = getPrefixString() if includePrefixes else ""
+    def getSparql(self, includePrefixes, isSubQuery):  # assuming optional graph
+        if isSubQuery:  # creating the subquery
+            return self.getQuery(False)
 
+        prefixes = getPrefixString() if includePrefixes else ''
+        selectiveClosingBracket = "}}" if self.considerSelectivity else ''
+        outerQueryClosing = ''.join(["}\n" if self.subQuery is not None else '',
+                                     "}" if self.getTriplePatterns() != '' and self.subQuery is not None else '',
+                                     "}" if self.getTriplePatterns() != '' else ''])
+
+        return ''.join([prefixes,
+                        self.getSelective(),
+                        self.getQuery(includePrefixes),
+                        self.subQuery if self.subQuery is not None else '',
+                        outerQueryClosing,
+                        selectiveClosingBracket,
+                        " ORDER BY ?" + VariableGenerator.getFocusNodeVar() if self.includeORDERBY else ''])
+
+    def getQuery(self, includePrefixes):
         tempString = ""
         if includePrefixes:
             if "_pos" in self.id or "_max_" in self.id:
                 # add VALUES clause to external query
                 tempString = "$to_be_replaced$"
 
-        return prefixes + \
-                self.getSelective() + \
-                self.getProjectionString() + \
-                " WHERE {" + \
-                (grapNotPresent) + \
-                "\n" + \
-                tempString + \
-                self.getTriplePatterns() + \
-                "\n" + \
-                ("{\n" + self.subQuery + "\n}\n" if self.subQuery is not None else "") + \
-                (grapNotPresent) + \
-                "\n}" + selectiveClosingBracket + " ORDER BY ?" + VariableGenerator.getFocusNodeVar()
+        triplePatterns = self.getTriplePatterns()
+        if triplePatterns != '':
+            return ''.join([self.getProjectionString(),
+                            " WHERE {\n",
+                            tempString,
+                            triplePatterns,
+                            "\n", "{\n" if self.subQuery is not None else ''])
+        else:
+            return ''
 
     def getSelective(self):
         if self.considerSelectivity:
-            return "SELECT " + \
+            return "SELECT DISTINCT" + \
                    ", ".join(["?" + v for v in self.projectedVariables]) + " WHERE {\n" + \
                    "?" + VariableGenerator.getFocusNodeVar() + " a " + self.targetPath + " {\n"
         return ""
@@ -177,9 +189,9 @@ class QueryBuilder:
         if len(variables) > 1:
             self.addCardinalityFilter(variables)
 
-    def buildQuery(self, rulePattern):
+    def buildQuery(self, rulePattern, includePrefixes):
         return Query(
                 self.id,
                 rulePattern,
-                self.getSparql(True)
+                self.getSparql(includePrefixes, False)
         )

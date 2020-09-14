@@ -9,6 +9,7 @@ from validation.constraints.MinMaxConstraint import MinMaxConstraint
 from validation.constraints.MinOnlyConstraint import MinOnlyConstraint
 from validation.constraints.MaxOnlyConstraint import MaxOnlyConstraint
 from validation.Shape import Shape
+from urllib.parse import urlparse
 
 
 class ShapeParser:
@@ -16,7 +17,7 @@ class ShapeParser:
     def __init__(self):
         return
 
-    def parseShapesFromDir(self, path, shapeFormat, useSelectiveQueries, maxSplitSize):
+    def parseShapesFromDir(self, path, shapeFormat, useSelectiveQueries, maxSplitSize, ORDERBYinQueries):
         fileExtension = self.getFileExtension(shapeFormat)
         filesAbsPaths = []
         # r=root, d=directories, f = files
@@ -29,7 +30,7 @@ class ShapeParser:
             raise FileNotFoundError(path + " does not contain any shapes of the format " + shapeFormat)
 
         if shapeFormat == "JSON":
-            return [self.parseJson(p, useSelectiveQueries, maxSplitSize) for p in filesAbsPaths]
+            return [self.parseJson(p, useSelectiveQueries, maxSplitSize, ORDERBYinQueries) for p in filesAbsPaths]
         else:  # TODO: implement parsing of TTL format
             print("Unexpected format: " + shapeFormat)
 
@@ -39,24 +40,43 @@ class ShapeParser:
         else:
             return ".json"  # dot added for convenience
 
-    def parseJson(self, path, useSelectiveQueries, maxSplitSize):
+    def parseJson(self, path, useSelectiveQueries, maxSplitSize, ORDERBYinQueries):
         targetQuery = None
 
         file = open(path, "r")
         obj = json.load(file)
         targetDef = obj.get("targetDef")
 
-        if targetDef is not None:
-            query = targetDef["query"]
-            if query is not None:
-                targetQuery = getPrefixString() + query
-            targetDef = targetDef["class"]
-
         name = obj["name"]
         id = name + "_d1"  # str(i + 1) but there is only one set of conjunctions
         constraints = self.parseConstraints(name, obj["constraintDef"]["conjunctions"], targetDef, id)
-        referencingShapes = self.shapeReferences(obj["constraintDef"]["conjunctions"][0])
-        return Shape(name, targetDef, targetQuery, constraints, id, useSelectiveQueries, maxSplitSize, referencingShapes)
+
+        includeSPARQLPrefixes = self.abbreviatedSyntaxUsed(constraints)
+        referencedShapes = self.shapeReferences(obj["constraintDef"]["conjunctions"][0])
+
+        if targetDef is not None:
+            query = targetDef["query"]
+            if query is not None:
+                targetQuery = ''.join([getPrefixString() if includeSPARQLPrefixes else '', query])
+            if urlparse(targetDef["class"]).netloc != '':  # if the target class is a url, add '<>' to it
+                targetDef = '<' + targetDef["class"] + '>'
+            else:
+                targetDef = targetDef["class"]
+
+        return Shape(name, targetDef, targetQuery, constraints, id, referencedShapes,
+                     useSelectiveQueries, maxSplitSize, ORDERBYinQueries, includeSPARQLPrefixes)
+
+    def abbreviatedSyntaxUsed(self, constraints):
+        """
+        Run after parsingConstraints.
+        Returns false if the constraints' predicates are using absolute paths instead of abbreviated ones
+        :param constraints: all shape constraints
+        :return:
+        """
+        for c in constraints:
+            if c.path.startswith("<") and c.path.endswith(">"):
+                return False
+        return True
 
     def shapeReferences(self, constraints):
         return {c.get("shape"): c.get("path") for c in constraints if c.get("shape") is not None}
@@ -81,6 +101,9 @@ class ShapeParser:
         oValue = None if (value is None) else str(value)
         oPath = None if (path is None) else str(path)
         oNeg = True if (negated is None) else not negated  # True means it is a positive constraint
+
+        if urlparse(path).netloc != '':  # if the predicate is a url, add '<>' to it
+            oPath = '<' + path + '>'
 
         if oPath is not None:
             if oMin is not None:

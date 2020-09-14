@@ -10,8 +10,8 @@ from validation.sparql.QueryGenerator import QueryGenerator
 
 class Shape:
 
-    def __init__(self, id, targetDef, targetQuery, constraints, constraintsId, useSelectiveQueries, maxSplitSize,
-                 referencingShapes):
+    def __init__(self, id, targetDef, targetQuery, constraints, constraintsId, referencedShapes,
+                 useSelectiveQueries, maxSplitSize, ORDERBYinQueries, includeSPARQLPrefixes):
         self.id = id
         self.constraints = constraints
         self.constraintsId = constraintsId
@@ -26,12 +26,15 @@ class Shape:
         self.maxQueries = ""
         self.predicates = []
 
-        self.useSelectiveQueries = useSelectiveQueries
-        self.maxSplitSize = maxSplitSize
-        self.referencingShapes = referencingShapes
+        self.referencedShapes = referencedShapes
         self.bindings = set()
         self.invalidBindings = set()
         self.hasValidInstances = True
+
+        self.useSelectiveQueries = useSelectiveQueries
+        self.maxSplitSize = maxSplitSize
+        self.ORDERBYinQueries = ORDERBYinQueries
+        self.includePrefixes = includeSPARQLPrefixes
 
     def getId(self):
         return self.id
@@ -109,6 +112,8 @@ class Shape:
                 [c for c in minConstraints if c.getShapeRef() is not None],
                 self.targetDef,
                 self.useSelectiveQueries,
+                self.ORDERBYinQueries,
+                self.includePrefixes,
                 None,
                 subquery
         )
@@ -121,6 +126,8 @@ class Shape:
                                         [c],
                                         self.targetDef,
                                         self.useSelectiveQueries,
+                                        self.ORDERBYinQueries,
+                                        self.includePrefixes,
                                         None,
                                         subquery) for c in maxConstraints]
 
