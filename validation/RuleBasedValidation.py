@@ -5,6 +5,7 @@ from validation.core.RuleMap import RuleMap
 from validation.core.Literal import Literal
 import time
 
+
 class RuleBasedValidation:
     def __init__(self, endpoint, node_order, shapesDict, logOutput,
                  validTargetsOutput, invalidTargetsOutput, statsOutput, tracesOutput):
@@ -77,12 +78,10 @@ class RuleBasedValidation:
                             number of characters allowed in a query
         '''
         self.logOutput.write("\n" + bType + " instances shape: " + shape.id + " - child's (" + self.prevEvalShapeName + ")")
-        #self.logOutput.write(" instances: " + str(len(valList)) + " val " + str(len(invList)) + " inv")
         return [shape.getTargetQuery()]
 
     def validTargetAtoms(self, shape, bType, prevValList, prevInvList):
         '''
-
         :param shape: current shape being evaluated
         :param bType: string containing instances type (either "valid" or "invalid")
         :param prevValList:
@@ -106,7 +105,6 @@ class RuleBasedValidation:
 
     def invalidTargetAtoms(self, shape, bType, prevValList, prevInvList):
         '''
-
         :param shape: current shape being evaluated
         :param bType: string containing instances type (either "valid" or "invalid")
         :param prevValList:
@@ -154,7 +152,6 @@ class RuleBasedValidation:
 
     def targetAtomsNaive(self, shape, targetQuery):
         '''
-
         :param shape:
         :param targetQuery: initial targetQuery is set in shape's definition file (json file)
         :return:
@@ -223,10 +220,6 @@ class RuleBasedValidation:
         log = t.getStr() + ", depth " + str(depth) + fshape + ", " + logMessage + "\n"
 
         instance = "<" + t.getArg() + ">"
-        #for key, value in getPrefixes().items():  # for using prefix notation in the instances of the query
-        #    value = value[1:-1]
-        #    if value in t.getArg():
-        #        instance = instance.replace(value, key + ":")[1:-1]
 
         if isValid:
             self.shapesDict[t.getPredicate()].bindings.add(instance)

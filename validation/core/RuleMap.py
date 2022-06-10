@@ -8,8 +8,7 @@ class RuleMap:
             s.add(body)
             self.map[head] = s
         else:
-            self.map[head].add(body)  # does not return a boolean value, therefore summing 1 to ruleNumber
-                                                 # each time is not going to be accurate
+            self.map[head].add(body)  # does not return a boolean value, therefore summing 1 to ruleNumber each time is not going to be accurate
 
     def getAllBodyAtoms(self):
         return set(frozenset().union(*set().union(*self.map.values())))

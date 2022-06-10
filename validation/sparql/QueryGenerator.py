@@ -28,12 +28,8 @@ class QueryGenerator:
             body = body + c.computeRulePatternBody()
 
         return RulePattern(
-                Literal(
-                        id,
-                        VariableGenerator.getFocusNodeVar(),
-                        True
-                ),
-                body
+            Literal(id, VariableGenerator.getFocusNodeVar(), True),
+            body
         )
 
     @staticmethod
@@ -44,11 +40,10 @@ class QueryGenerator:
             return None  # Optional empty
 
         builder = QueryBuilder(
-
-                "tmp",
-                graphName,
-                None,
-                VariableGenerator.getFocusNodeVar()
+            "tmp",
+            graphName,
+            None,
+            VariableGenerator.getFocusNodeVar()
         )
 
         for c in localPosConstraints:
@@ -57,7 +52,7 @@ class QueryGenerator:
         return builder.getSparql(False, True)
 
 # mutable
-    # private class
+# private class
 class QueryBuilder:
     def __init__(self, id, graph, subquery, projectedVariables, isSelective=None, targetPath=None, constraints=None, includeORDERBY=None):
         self.id = id
@@ -75,21 +70,21 @@ class QueryBuilder:
 
     def addTriple(self, path, object):
         self.triples.append(
-                "?" + VariableGenerator.getFocusNodeVar() + " " +
-                        path + " " +
-                        object + "."
+            "?" + VariableGenerator.getFocusNodeVar() + " " +
+                path + " " +
+                object + "."
         )
 
     def addDatatypeFilter(self, variable, datatype, isPos):
         s = self.__getDatatypeFilter(variable, datatype)
         self.filters.append(
-                s if isPos else "!(" + s + ")"
+            s if isPos else "!(" + s + ")"
         )
 
     def addConstantFilter(self, variable, constant, isPos):
         s = variable + " = " + constant
         self.filters.append(
-                s if isPos else "!(" + s + ")"
+            s if isPos else "!(" + s + ")"
         )
 
     def __getDatatypeFilter(self, variable, datatype):

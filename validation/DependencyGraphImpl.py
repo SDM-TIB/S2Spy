@@ -8,7 +8,6 @@ class DependencyGraphImpl:
 
     def __init__(self, shapeMap):
         # e.g., {ActorShape = [[], []], MovieShape = [[ActorShape], []]}
-
         self.references = self.computeDependencyGraph(shapeMap)
 
     def computeDependencyGraph(self, shapeMap):

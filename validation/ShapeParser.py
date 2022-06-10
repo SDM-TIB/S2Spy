@@ -112,6 +112,3 @@ class ShapeParser:
                 return MinOnlyConstraint(varGenerator, id, oPath, oMin, oNeg, oDatatype, oValue, oShapeRef, targetDef)
             if oMax is not None:
                 return MaxOnlyConstraint(varGenerator, id, oPath, oMax, oNeg, oDatatype, oValue, oShapeRef, targetDef)
-
-        # TODO
-        #return new LocalConstraintImpl(id, oDatatype, oValue, oShapeRef, oNeg);

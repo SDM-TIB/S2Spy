@@ -62,7 +62,6 @@ class ShapeNetwork:
         :param node_order:
         :param option: has three possible values: 'all', 'valid', 'violated'
         """
-        #print("Node order", node_order)
         RuleBasedValidation(
             self.endpoint,
             node_order,
