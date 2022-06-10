@@ -4,10 +4,6 @@ from validation.Eval import *
 import time
 
 if __name__ == '__main__':
-    '''input example:
-    python3 main.py -d ./shapes/nonRec/2/ "http://dbpedia.org/sparql" ./output/'''
-    # add the optional flag '--selective' in the command line to use configuration of more selective queries
-
     start = time.time()
 
     parser = argparse.ArgumentParser(description='SHACL Constraint Validation over a SPARQL Endpoint')
