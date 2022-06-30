@@ -5,6 +5,7 @@ from validation.ShapeParser import ShapeParser
 from validation.sparql.SPARQLEndpoint import SPARQLEndpoint
 from validation.utils import fileManagement
 from validation.RuleBasedValidation import RuleBasedValidation
+from validation.utils.globals import PARSING_ORDER
 
 
 class ShapeNetwork:
@@ -16,39 +17,13 @@ class ShapeNetwork:
         self.outputDirName = outputDir
 
     @staticmethod
-    def get_node_order(shapes_count):
-        """Hard-coded execution order based on the order SHACL2SPARQL uses."""
-        if shapes_count == 3:
-            return ['Department',
-                    'University',
-                    'FullProfessor']
-        elif shapes_count == 7:
-            return ['ResearchGroup',
-                    'Department',
-                    'University',
-                    'Course',
-                    'FullProfessor',
-                    'UndergraduateStudent',
-                    'Publication']
-        elif shapes_count == 14:
-            return ['ResearchGroup',
-                    'ResearchAssistant',
-                    'Department',
-                    'University',
-                    'Course',
-                    'FullProfessor',
-                    'AssociateProfessor',
-                    'UndergraduateStudent',
-                    'Lecturer',
-                    'GraduateCourse',
-                    'AssistantProfessor',
-                    'Publication',
-                    'GraduateStudent',
-                    'TeachingAssistant']
+    def get_node_order():
+        """The execution order of SHACL2SPARQL is based on the order of files as returned by the file system."""
+        return PARSING_ORDER
 
     def validate(self):
         """Execute the Validation of the Shape Network."""
-        node_order = self.get_node_order(len(self.shapes))
+        node_order = self.get_node_order()
 
         for s in self.shapes:
             s.computeConstraintQueries()
@@ -60,7 +35,6 @@ class ShapeNetwork:
         """
         Reports valid and violated constraints of the graph
         :param node_order:
-        :param option: has three possible values: 'all', 'valid', 'violated'
         """
         RuleBasedValidation(
             self.endpoint,

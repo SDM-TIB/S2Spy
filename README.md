@@ -14,5 +14,5 @@ python3 main.py -d path/to/your/shacl/shapes http://localhost:14000/sparql /path
 
 # Note
 The reference implementation was used in the WWW '21 paper of [Trav-SHACL](https://github.com/SDM-TIB/Trav-SHACL).
-It is not a fully functional Python version of SHACL2SPARQL. For example, the node order is hard-coded for the shapes of the LUBM benchmark used in the evaluation of Trav-SHACL.
+It is not a fully functional Python version of SHACL2SPARQL. For example, it assumes that all shapes have a target definition.
 It merely served to make SHACL2SPARQL and Trav-SHACL comparable by getting rid of the performance difference in Python and Java.

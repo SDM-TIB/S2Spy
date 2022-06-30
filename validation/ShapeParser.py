@@ -9,6 +9,7 @@ from validation.constraints.MinMaxConstraint import MinMaxConstraint
 from validation.constraints.MinOnlyConstraint import MinOnlyConstraint
 from validation.constraints.MaxOnlyConstraint import MaxOnlyConstraint
 from validation.Shape import Shape
+from validation.utils.globals import PARSING_ORDER
 from urllib.parse import urlparse
 
 
@@ -48,6 +49,7 @@ class ShapeParser:
         targetDef = obj.get("targetDef")
 
         name = obj["name"]
+        PARSING_ORDER.append(name)
         id = name + "_d1"  # str(i + 1) but there is only one set of conjunctions
         constraints = self.parseConstraints(name, obj["constraintDef"]["conjunctions"], targetDef, id)
 
