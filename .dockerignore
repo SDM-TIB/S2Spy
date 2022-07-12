@@ -1,0 +1,6 @@
+output/
+venv/
+Dockerfile
+MANIFEST.in
+setup.cfg
+setup.py
