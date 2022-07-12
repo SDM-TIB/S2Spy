@@ -54,19 +54,25 @@ class ShapeParser:
         constraints = self.parseConstraints(name, obj["constraintDef"]["conjunctions"], targetDef, id)
 
         includeSPARQLPrefixes = self.abbreviatedSyntaxUsed(constraints)
+        prefixes = None
+        if "prefix" in obj.keys():
+            prefixes = obj["prefix"]
+        prefix_string = ''
+        if prefixes:
+            prefix_string = "\n".join(["".join("PREFIX " + key + ": " + value) for (key, value) in prefixes.items()]) + "\n"
         referencedShapes = self.shapeReferences(obj["constraintDef"]["conjunctions"][0])
 
         if targetDef is not None:
             query = targetDef["query"]
             if query is not None:
-                targetQuery = ''.join([getPrefixString() if includeSPARQLPrefixes else '', query])
+                targetQuery = ''.join([prefix_string if includeSPARQLPrefixes else '', query])
             if urlparse(targetDef["class"]).netloc != '':  # if the target class is a url, add '<>' to it
                 targetDef = '<' + targetDef["class"] + '>'
             else:
                 targetDef = targetDef["class"]
 
         return Shape(name, targetDef, targetQuery, constraints, id, referencedShapes,
-                     useSelectiveQueries, maxSplitSize, ORDERBYinQueries, includeSPARQLPrefixes)
+                     useSelectiveQueries, maxSplitSize, ORDERBYinQueries, includeSPARQLPrefixes, prefix_string)
 
     def abbreviatedSyntaxUsed(self, constraints):
         """

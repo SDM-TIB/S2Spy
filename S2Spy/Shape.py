@@ -11,7 +11,7 @@ from S2Spy.sparql.QueryGenerator import QueryGenerator
 class Shape:
 
     def __init__(self, id, targetDef, targetQuery, constraints, constraintsId, referencedShapes,
-                 useSelectiveQueries, maxSplitSize, ORDERBYinQueries, includeSPARQLPrefixes):
+                 useSelectiveQueries, maxSplitSize, ORDERBYinQueries, includeSPARQLPrefixes, prefix_string):
         self.id = id
         self.constraints = constraints
         self.constraintsId = constraintsId
@@ -35,6 +35,7 @@ class Shape:
         self.maxSplitSize = maxSplitSize
         self.ORDERBYinQueries = ORDERBYinQueries
         self.includePrefixes = includeSPARQLPrefixes
+        self.prefix_string = prefix_string
 
     def getId(self):
         return self.id
@@ -101,7 +102,7 @@ class Shape:
     def computeConstraintQueries(self):
         minConstraints = [c for c in self.constraints if c.min != -1]
         maxConstraints = [c for c in self.constraints if c.max != -1]
-        queryGenerator = QueryGenerator()
+        queryGenerator = QueryGenerator(self)
 
         subquery = queryGenerator.generateLocalSubquery(None, minConstraints)
 

@@ -1,5 +1,8 @@
 {
 	"name": "University",
+	"prefix": {
+		"ub": "<http://swat.cse.lehigh.edu/onto/univ-bench.owl#>"
+	},
 	"constraintDef": {
 		"conjunctions": [
 			[

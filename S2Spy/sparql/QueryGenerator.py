@@ -3,19 +3,18 @@ from S2Spy.core.RulePattern import RulePattern
 from S2Spy.core.Literal import Literal
 from S2Spy.core.Query import Query
 from S2Spy.VariableGenerator import VariableGenerator
-from S2Spy.sparql.SPARQLPrefixHandler import getPrefixString
 from S2Spy.constraints.Constraint import Constraint
 
 
 class QueryGenerator:
-    def __init__(self):
-        pass
+    def __init__(self, shape):
+        self.shape = shape
 
     def generateQuery(self, id, constraints, target, isSelective, includeORDERBY, includePrefixes, graph=None, subquery=None):
         # Only one max constraint per query is allowed, then 'constraints' arg contain only 1 element for the max case
         rp = self.computeRulePattern(constraints, id)
 
-        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), isSelective, target, constraints, includeORDERBY)
+        builder = QueryBuilder(id, graph, subquery, rp.getVariables(), isSelective, target, constraints, includeORDERBY, self.shape.prefix_string)
         for c in constraints:
             builder.buildClause(c)
 
@@ -54,7 +53,7 @@ class QueryGenerator:
 # mutable
 # private class
 class QueryBuilder:
-    def __init__(self, id, graph, subquery, projectedVariables, isSelective=None, targetPath=None, constraints=None, includeORDERBY=None):
+    def __init__(self, id, graph, subquery, projectedVariables, isSelective=None, targetPath=None, constraints=None, includeORDERBY=None, prefix_string=''):
         self.id = id
         self.graph = graph
         self.subQuery = subquery
@@ -67,6 +66,7 @@ class QueryBuilder:
         self.targetPath = targetPath
         self.constraints = constraints
         self.includeORDERBY = includeORDERBY if includeORDERBY is not None else False
+        self.prefix_string = prefix_string
 
     def addTriple(self, path, object):
         self.triples.append(
@@ -94,7 +94,7 @@ class QueryBuilder:
         if isSubQuery:  # creating the subquery
             return self.getQuery(False)
 
-        prefixes = getPrefixString() if includePrefixes else ''
+        prefixes = self.prefix_string if includePrefixes else ''
         selectiveClosingBracket = "}}" if self.considerSelectivity else ''
         outerQueryClosing = ''.join(["}\n" if self.subQuery is not None else '',
                                      "}" if self.getTriplePatterns() != '' and self.subQuery is not None else '',
