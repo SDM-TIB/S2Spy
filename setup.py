@@ -4,9 +4,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name='S2Spy',
+    name='S2S-py',
     version='1.0.0',
-    packages=['S2Spy'],
+    packages=['S2Spy', 'S2Spy.constraints', 'S2Spy.core', 'S2Spy.sparql', 'S2Spy.utils'],
     license='MIT',
     author='Mónica Figuera, Philipp D. Rohde',
     author_email='philipp.rohde@tib.eu',
@@ -15,7 +15,7 @@ setup(
     description='Python reference implementation of SHACL2SPARQL',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    install_requires=['SPARQLWrapper==2.0.0'],
+    install_requires=['SPARQLWrapper>=1.8.5'],
     python_requires='>=3.6',
     classifiers=[
         'Development Status :: 4 - Beta',

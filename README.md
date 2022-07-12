@@ -1,3 +1,11 @@
+[![Latest Release](http://img.shields.io/github/release/SDM-TIB/S2Spy.svg?logo=github)](https://github.com/SDM-TIB/S2Spy/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+[![Python Versions](https://img.shields.io/pypi/pyversions/S2S-py)](https://pypi.org/project/S2S-py)
+[![Package Format](https://img.shields.io/pypi/format/S2S-py)](https://pypi.org/project/S2S-py)
+[![Package Status](https://img.shields.io/pypi/status/S2S-py)](https://pypi.org/project/S2S-py)
+[![Package Version](https://img.shields.io/pypi/v/S2S-py)](https://pypi.org/project/S2S-py)
+
 # S2Spy
 
 S2Spy is a Python-based reference implementation of [SHACL2SPARQL](https://github.com/rdfshapes/shacl-sparql).
