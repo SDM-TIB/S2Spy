@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 
-WORKDIR /apps/travshacl
-COPY . /apps/travshacl
+WORKDIR /S2Spy
+COPY . /S2Spy
 
 RUN apt update &&\
     apt upgrade -y &&\
