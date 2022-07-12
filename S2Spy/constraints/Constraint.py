@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = "Monica Figuera and Philipp D. Rohde"
 
-from validation.core.Literal import Literal
+from S2Spy.core.Literal import Literal
 
 
 class Constraint:

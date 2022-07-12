@@ -3,13 +3,13 @@ __author__ = "Monica Figuera and Philipp D. Rohde"
 
 import os
 import json
-from validation.sparql.SPARQLPrefixHandler import getPrefixString
-from validation.VariableGenerator import VariableGenerator
-from validation.constraints.MinMaxConstraint import MinMaxConstraint
-from validation.constraints.MinOnlyConstraint import MinOnlyConstraint
-from validation.constraints.MaxOnlyConstraint import MaxOnlyConstraint
-from validation.Shape import Shape
-from validation.utils.globals import PARSING_ORDER
+from S2Spy.sparql.SPARQLPrefixHandler import getPrefixString
+from S2Spy.VariableGenerator import VariableGenerator
+from S2Spy.constraints.MinMaxConstraint import MinMaxConstraint
+from S2Spy.constraints.MinOnlyConstraint import MinOnlyConstraint
+from S2Spy.constraints.MaxOnlyConstraint import MaxOnlyConstraint
+from S2Spy.Shape import Shape
+from S2Spy.utils.globals import PARSING_ORDER
 from urllib.parse import urlparse
 
 

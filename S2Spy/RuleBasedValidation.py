@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from validation.utils import fileManagement
-from validation.utils.RuleBasedValidStats import RuleBasedValidStats
-from validation.core.RuleMap import RuleMap
-from validation.core.Literal import Literal
+from S2Spy.utils import fileManagement
+from S2Spy.utils.RuleBasedValidStats import RuleBasedValidStats
+from S2Spy.core.RuleMap import RuleMap
+from S2Spy.core.Literal import Literal
 import time
 
 

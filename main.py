@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import argparse
-from validation.Eval import *
+from S2Spy.Eval import *
 import time
 
 if __name__ == '__main__':

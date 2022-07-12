@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from validation.ShapeNetwork import ShapeNetwork
+from S2Spy.ShapeNetwork import ShapeNetwork
 
 
 class Eval:

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from validation.DependencyGraphImpl import DependencyGraphImpl
+from S2Spy.DependencyGraphImpl import DependencyGraphImpl
 
 
 class SchemaImpl:

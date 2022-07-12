@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='S2Spy',
     version='1.0.0',
-    packages=['validation'],
+    packages=['S2Spy'],
     license='MIT',
     author='Mónica Figuera, Philipp D. Rohde',
     author_email='philipp.rohde@tib.eu',

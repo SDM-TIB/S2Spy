@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from validation.core.Literal import Literal
+from S2Spy.core.Literal import Literal
 
 
 class RulePattern:

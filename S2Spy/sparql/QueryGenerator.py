@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from validation.core.RulePattern import RulePattern
-from validation.core.Literal import Literal
-from validation.core.Query import Query
-from validation.VariableGenerator import VariableGenerator
-from validation.sparql.SPARQLPrefixHandler import getPrefixString
-from validation.constraints.Constraint import Constraint
+from S2Spy.core.RulePattern import RulePattern
+from S2Spy.core.Literal import Literal
+from S2Spy.core.Query import Query
+from S2Spy.VariableGenerator import VariableGenerator
+from S2Spy.sparql.SPARQLPrefixHandler import getPrefixString
+from S2Spy.constraints.Constraint import Constraint
 
 
 class QueryGenerator:

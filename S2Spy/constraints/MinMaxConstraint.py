@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 __author__ = "Philipp D. Rohde"
 
-from validation.VariableGenerator import VariableType
-from validation.constraints.Constraint import Constraint
+from S2Spy.VariableGenerator import VariableType
+from S2Spy.constraints.Constraint import Constraint
 
 
 class MinMaxConstraint(Constraint):
