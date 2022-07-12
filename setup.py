@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name='S2S-py',
+    name='SHACL2SPARQLpy',
     version='1.0.0',
     packages=['S2Spy', 'S2Spy.constraints', 'S2Spy.core', 'S2Spy.sparql', 'S2Spy.utils'],
     license='MIT',

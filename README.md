@@ -1,10 +1,10 @@
 [![Latest Release](http://img.shields.io/github/release/SDM-TIB/S2Spy.svg?logo=github)](https://github.com/SDM-TIB/S2Spy/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[![Python Versions](https://img.shields.io/pypi/pyversions/S2S-py)](https://pypi.org/project/S2S-py)
-[![Package Format](https://img.shields.io/pypi/format/S2S-py)](https://pypi.org/project/S2S-py)
-[![Package Status](https://img.shields.io/pypi/status/S2S-py)](https://pypi.org/project/S2S-py)
-[![Package Version](https://img.shields.io/pypi/v/S2S-py)](https://pypi.org/project/S2S-py)
+[![Python Versions](https://img.shields.io/pypi/pyversions/SHACL2SPARQLpy)](https://pypi.org/project/SHACL2SPARQLpy)
+[![Package Format](https://img.shields.io/pypi/format/SHACL2SPARQLpy)](https://pypi.org/project/SHACL2SPARQLpy)
+[![Package Status](https://img.shields.io/pypi/status/SHACL2SPARQLpy)](https://pypi.org/project/SHACL2SPARQLpy)
+[![Package Version](https://img.shields.io/pypi/v/SHACL2SPARQLpy)](https://pypi.org/project/SHACL2SPARQLpy)
 
 # S2Spy
 
