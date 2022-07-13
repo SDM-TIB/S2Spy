@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 __author__ = "Philipp D. Rohde"
 
-from S2Spy.VariableGenerator import VariableType
-from S2Spy.constraints.Constraint import Constraint
+from SHACL2SPARQLpy.VariableGenerator import VariableType
+from SHACL2SPARQLpy.constraints.Constraint import Constraint
 
 
 class MinMaxConstraint(Constraint):

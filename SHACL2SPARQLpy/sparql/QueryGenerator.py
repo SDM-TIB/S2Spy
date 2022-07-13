@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from S2Spy.core.RulePattern import RulePattern
-from S2Spy.core.Literal import Literal
-from S2Spy.core.Query import Query
-from S2Spy.VariableGenerator import VariableGenerator
-from S2Spy.constraints.Constraint import Constraint
+from SHACL2SPARQLpy.core.RulePattern import RulePattern
+from SHACL2SPARQLpy.core.Literal import Literal
+from SHACL2SPARQLpy.core.Query import Query
+from SHACL2SPARQLpy.VariableGenerator import VariableGenerator
+from SHACL2SPARQLpy.constraints.Constraint import Constraint
 
 
 class QueryGenerator:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import argparse
-from S2Spy.Eval import *
+from SHACL2SPARQLpy.Eval import *
 import time
 
 if __name__ == '__main__':

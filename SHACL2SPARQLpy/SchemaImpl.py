@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from S2Spy.DependencyGraphImpl import DependencyGraphImpl
+from SHACL2SPARQLpy.DependencyGraphImpl import DependencyGraphImpl
 
 
 class SchemaImpl:

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from S2Spy.utils import fileManagement
-from S2Spy.utils.RuleBasedValidStats import RuleBasedValidStats
-from S2Spy.core.RuleMap import RuleMap
-from S2Spy.core.Literal import Literal
+from SHACL2SPARQLpy.utils import fileManagement
+from SHACL2SPARQLpy.utils.RuleBasedValidStats import RuleBasedValidStats
+from SHACL2SPARQLpy.core.RuleMap import RuleMap
+from SHACL2SPARQLpy.core.Literal import Literal
 import time
 
 

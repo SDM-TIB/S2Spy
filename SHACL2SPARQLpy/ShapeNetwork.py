@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 __author__ = "Philipp D. Rohde"
 
-from S2Spy.ShapeParser import ShapeParser
-from S2Spy.sparql.SPARQLEndpoint import SPARQLEndpoint
-from S2Spy.utils import fileManagement
-from S2Spy.RuleBasedValidation import RuleBasedValidation
-from S2Spy.utils.globals import PARSING_ORDER
+from SHACL2SPARQLpy.ShapeParser import ShapeParser
+from SHACL2SPARQLpy.sparql.SPARQLEndpoint import SPARQLEndpoint
+from SHACL2SPARQLpy.utils import fileManagement
+from SHACL2SPARQLpy.RuleBasedValidation import RuleBasedValidation
+from SHACL2SPARQLpy.utils.globals import PARSING_ORDER
 
 
 class ShapeNetwork:

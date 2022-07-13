@@ -5,13 +5,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='SHACL2SPARQLpy',
-    version='1.0.0',
-    packages=['S2Spy', 'S2Spy.constraints', 'S2Spy.core', 'S2Spy.sparql', 'S2Spy.utils'],
+    version='1.1.0',
+    packages=['SHACL2SPARQLpy', 'SHACL2SPARQLpy.constraints', 'SHACL2SPARQLpy.core', 'SHACL2SPARQLpy.sparql', 'SHACL2SPARQLpy.utils'],
     license='MIT',
     author='Mónica Figuera, Philipp D. Rohde',
     author_email='philipp.rohde@tib.eu',
-    url='https://github.com/SDM-TIB/S2Spy',
-    download_url='https://github.com/SDM-TIB/S2Spy/archive/refs/tags/v1.0.0.tar.gz',
+    url='https://github.com/SDM-TIB/SHACL2SPARQLpy',
+    download_url='https://github.com/SDM-TIB/SHACL2SPARQLpy/archive/refs/tags/v1.1.0.tar.gz',
     description='Python reference implementation of SHACL2SPARQL',
     long_description=long_description,
     long_description_content_type="text/markdown",

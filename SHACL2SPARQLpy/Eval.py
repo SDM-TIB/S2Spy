@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from S2Spy.ShapeNetwork import ShapeNetwork
+from SHACL2SPARQLpy.ShapeNetwork import ShapeNetwork
 
 
 class Eval:

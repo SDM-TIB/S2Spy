@@ -1,4 +1,4 @@
-[![Latest Release](http://img.shields.io/github/release/SDM-TIB/S2Spy.svg?logo=github)](https://github.com/SDM-TIB/S2Spy/releases)
+[![Latest Release](http://img.shields.io/github/release/SDM-TIB/SHACL2SPARQLpy.svg?logo=github)](https://github.com/SDM-TIB/SHACL2SPARQLpy/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 [![Python Versions](https://img.shields.io/pypi/pyversions/SHACL2SPARQLpy)](https://pypi.org/project/SHACL2SPARQLpy)
@@ -6,9 +6,9 @@
 [![Package Status](https://img.shields.io/pypi/status/SHACL2SPARQLpy)](https://pypi.org/project/SHACL2SPARQLpy)
 [![Package Version](https://img.shields.io/pypi/v/SHACL2SPARQLpy)](https://pypi.org/project/SHACL2SPARQLpy)
 
-# S2Spy
+# SHACL2SPARQLpy
 
-S2Spy is a Python-based reference implementation of [SHACL2SPARQL](https://github.com/rdfshapes/shacl-sparql).
+SHACL2SPARQLpy is a Python-based reference implementation of [SHACL2SPARQL](https://github.com/rdfshapes/shacl-sparql).
 
 First, install the required dependencies:
 ```bash

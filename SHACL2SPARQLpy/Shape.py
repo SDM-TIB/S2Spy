@@ -2,10 +2,10 @@
 __author__ = "Philipp D. Rohde and Monica Figuera"
 
 import itertools
-from S2Spy.VariableGenerator import VariableGenerator
-from S2Spy.core.Literal import Literal
-from S2Spy.core.RulePattern import RulePattern
-from S2Spy.sparql.QueryGenerator import QueryGenerator
+from SHACL2SPARQLpy.VariableGenerator import VariableGenerator
+from SHACL2SPARQLpy.core.Literal import Literal
+from SHACL2SPARQLpy.core.RulePattern import RulePattern
+from SHACL2SPARQLpy.sparql.QueryGenerator import QueryGenerator
 
 
 class Shape:

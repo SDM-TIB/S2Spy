@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from S2Spy.core.Literal import Literal
+from SHACL2SPARQLpy.core.Literal import Literal
 
 
 class RulePattern:

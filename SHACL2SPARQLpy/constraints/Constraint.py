@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 __author__ = "Monica Figuera and Philipp D. Rohde"
 
-from S2Spy.core.Literal import Literal
+from SHACL2SPARQLpy.core.Literal import Literal
 
 
 class Constraint:
