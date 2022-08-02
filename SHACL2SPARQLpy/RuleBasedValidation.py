@@ -174,7 +174,7 @@ class RuleBasedValidation:
         #    return                                                    # all shapes of the network) from the beginning
 
         # termination condition 2: all shapes have been visited
-        if len(state.visitedShapes) == len(self.shapesDict):
+        if len(state.visitedShapes) == len(self.shapesDict) or focusShape is None:
             for t in state.remainingTargets:
                 self.registerTarget(t, True, depth, "not violated after termination", None, state)
             return
