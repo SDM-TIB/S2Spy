@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='SHACL2SPARQLpy',
-    version='1.1.0',
+    version='1.1.1',
     packages=['SHACL2SPARQLpy', 'SHACL2SPARQLpy.constraints', 'SHACL2SPARQLpy.core', 'SHACL2SPARQLpy.sparql', 'SHACL2SPARQLpy.utils'],
     license='MIT',
     author='Mónica Figuera, Philipp D. Rohde',
