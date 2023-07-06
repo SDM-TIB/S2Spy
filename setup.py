@@ -15,7 +15,7 @@ setup(
     description='Python reference implementation of SHACL2SPARQL',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    install_requires=['SPARQLWrapper>=1.8.5'],
+    install_requires=['SPARQLWrapper>=1.8.5', 'rdflib>=6.0.0'],
     python_requires='>=3.6',
     classifiers=[
         'Development Status :: 4 - Beta',
