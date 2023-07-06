@@ -5,11 +5,8 @@ from SHACL2SPARQLpy.ShapeNetwork import ShapeNetwork
 
 class Eval:
     def __init__(self, args):
-        """
-        :type args: ...
-        """
         self.outputDir = args.outputDir
-        self.shapeFormat = "JSON"
+        self.shapeFormat = 'JSON' if args.json else 'SHACL'
 
         self.createOutputDir()
         schemaDir = args.d

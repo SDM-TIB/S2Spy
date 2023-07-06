@@ -13,11 +13,14 @@ if __name__ == '__main__':
                         help='SPARQL Endpoint')
     parser.add_argument('outputDir', metavar='outputDir', type=str, default=None,
                         help='Name of the directory where results of validation will be saved')
-    parser.add_argument("--selective", action='store_true', default=False,
+    parser.add_argument('--selective', action='store_true', default=False,
                         help="Use more selective queries", required=False)
 
     parser.add_argument("-m", metavar="maxSize", type=int, default=256,
                         help='max number of instances allowed to be in a query', required=False)
+
+    parser.add_argument('-j', '--json', action='store_true', default=False, required=False,
+                        help='Indicates that the SHACL shape schema is expressed in JSON')
 
     args = parser.parse_args()
 
