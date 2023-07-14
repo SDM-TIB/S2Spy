@@ -116,12 +116,12 @@ class ShapeParser:
 
             target_query = None
             if target_def is not None and target_type == 'class':
+                if urlparse(target_def).netloc != '':  # if the target node is a url, add '<>' to it
+                    target_def = '<' + target_def + '>'
                 for res in g_file.query(QUERY_TARGET_QUERY.format(shape=name)):
                     target_query = str(res[0])
                 if target_query is None:
-                    target_query = 'SELECT ?x WHERE { ?x a <' + target_def + '> }'  # come up with a query for this
-                    if urlparse(target_def).netloc != '':  # if the target node is a url, add '<>' to it
-                        target_def = '<' + target_def + '>'
+                    target_query = 'SELECT ?x WHERE { ?x a ' + target_def + ' }'  # come up with a query for this
 
             cons_dict = self.parse_all_const(g_file, name=name, target_def=target_def,
                                              target_type=target_type, query=queries)
